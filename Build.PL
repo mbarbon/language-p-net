@@ -28,11 +28,3 @@ my $build = My::Build->new
           },
     );
 $build->create_build_script;
-
-if( my $dlr = $build->args( 'dlr' ) ) {
-    $dlr =~ s{/}{\\\\}g;
-
-    system $^X, '-i', '-p', '-e', 's/<HintPath>.*?\\\\bin\\\\/<HintPath>'
-                            . '..\\\\..\\\\' . $dlr . '\\\\bin\\\\/i', '--',
-                            'support/dotnet/dotnet.csproj';
-}

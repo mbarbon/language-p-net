@@ -69,10 +69,41 @@ sub ACTION_code_p {
 
 =head2 code_dlr
 
+Build the .Net runtime.
+
 =cut
+
+sub _inplace_subst {
+    my( $file, $expr ) = @_;
+
+    open my $in,  '<:raw', $file or die "open '$file': $!";
+    open my $out, '>:raw', "$file.tmp" or die "open '$file.tmp': $!";
+
+    while( <$in> ) {
+        $expr->();
+        print $out $_;
+    }
+
+    close $in;
+    close $out;
+
+    rename "$file.tmp", $file;
+}
+
+sub _fix_dlr_path {
+    my( $self ) = @_;
+    my $dlr = $self->args( 'dlr' );
+
+    $dlr =~ s{/}{\\}g;
+    _inplace_subst( 'support/dotnet/dotnet.csproj', sub {
+                        s{<HintPath>.*?\\bin\\}{<HintPath>..\\..\\$dlr\\bin\\}i;
+                    } );
+}
 
 sub ACTION_code_dlr {
     my( $self ) = @_;
+
+    _fix_dlr_path( $self );
 
     if( !$self->up_to_date( [ 'inc/OpcodesDotNet.pm' ],
                             [ 'support/dotnet/Bytecode/BytecodeGenerated.cs' ] ) ) {
@@ -90,6 +121,58 @@ sub ACTION_code_dlr {
         $self->do_system( 'mdtool', 'build',
                           '--project:dotnet', '--configuration:Debug',
                           'support/dotnet/dotnet.sln' );
+    }
+}
+
+=head2 build_dlr
+
+Build the Dynamic Language Runtime.
+
+=cut
+
+sub ACTION_build_dlr {
+    my( $self ) = @_;
+
+    if( !-d $self->args( 'dlr' ) ) {
+        require Archive::Extract;
+
+        File::Path::rmtree( 'extract_tmp' );
+        File::Path::mkpath( 'extract_tmp' );
+
+        my $ae = Archive::Extract->new( archive => 'dlr-54115.zip' );
+
+        $ae->extract( to => 'extract_tmp' );
+
+        rename( 'extract_tmp/DLR_Main', $self->args( 'dlr' ) );
+
+        File::Path::rmtree( 'extract_tmp' );
+    }
+
+    my $solution = File::Spec->catfile( $self->args( 'dlr' ), 'Solutions',
+                                        'Codeplex-DLR.sln' );
+    my $metadata_prj = File::Spec->catfile( $self->args( 'dlr' ), 'Runtime',
+                                           'Microsoft.Scripting.Metadata',
+                                           'Microsoft.Scripting.Metadata.csproj' );
+    _inplace_subst( $metadata_prj, sub {
+                        s{(<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>)\r?$}
+                         {$1<AllowUnsafeBlocks>true</AllowUnsafeBlocks>}g;
+                    } );
+
+    foreach my $i ( qw(Microsoft.Scripting.Core Microsoft.Scripting
+                       Microsoft.Scripting.Metadata Microsoft.Dynamic) ) {
+        my $prj = File::Spec->catfile( $self->args( 'dlr' ), 'Runtime',
+                                       $i, "$i.csproj" );
+
+        _inplace_subst( $prj, sub {
+                            s{\$\(SolutionDir\)}{..\\}g;
+                        } );
+        _inplace_subst( $prj, sub {
+                            s{(</CodeAnalysisRuleSet>)\r?$}
+                             {$1<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>}g;
+                        } );
+
+        $self->do_system( 'mdtool', 'build', "--project:$i",
+                          '--configuration:v2Debug', $solution );
     }
 }
 
