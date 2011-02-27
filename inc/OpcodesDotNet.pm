@@ -6,12 +6,12 @@ use Exporter 'import';
 
 our @EXPORT = qw(write_dotnet_deserializer);
 
-use Opcodes;
+use Language::P::Parser::OpcodeList;
 
 sub write_dotnet_deserializer {
     my( $file ) = @ARGV;
 
-    my %op = %{parse_opdesc()};
+    my %op = %{Language::P::Parser::OpcodeList::parse_opdesc()};
 
     open my $out, '>', $file;
 

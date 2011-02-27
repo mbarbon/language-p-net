@@ -22,10 +22,11 @@ foo
 *.pt
 *.pb
 
-# Generated parrot files, parrot symlink
-bin/p_parrot
-t/*/*.pbc
-t/*/*.pir
-t/*/*.ir
-support/parrot/runtime/*.pbc
-parrot
+# Language::P symlinks
+support/toy
+t/intermediate
+t/lib
+t/parser
+t/run/*.t
+t/run/files
+t/run/parser

@@ -15,14 +15,20 @@ use File::Path qw();
 
 Creates symlinks for perl5 core tests.
 
+=head2 code_p
+
+Creates symlinks for L<Language::P> tests.
+
 =cut
 
 sub _symlink {
     my( $src, $targ ) = @_;
+    my $dest = File::Spec->catfile( $targ, File::Basename::basename( $src ) );
 
     File::Path::mkpath( $targ ) unless -d $targ;
-    symlink( $src,
-             File::Spec->catfile( $targ, File::Basename::basename( $src ) ) );
+    symlink( $src, $dest );
+
+    return $dest;
 }
 
 sub ACTION_code_perl5 {
@@ -39,6 +45,28 @@ sub ACTION_code_perl5 {
     }
 }
 
+sub ACTION_code_p {
+    my( $self ) = @_;
+    my $p_path = File::Spec->rel2abs( $self->args( 'p' ) );
+
+    foreach my $dir ( qw(t/intermediate t/parser t/run t/lib support/toy) ) {
+        my $base = File::Spec->catdir( $p_path, $dir );
+
+        foreach my $d ( _all_subdirs( $base ) ) {
+            my $rel = File::Spec->abs2rel( $d, $p_path );
+            next if $rel eq 't/run/net';
+
+            for my $f ( glob( File::Spec->catfile( $d, '*.t' ) ),
+                        glob( File::Spec->catfile( $d, '*.pl' ) ),
+                        glob( File::Spec->catfile( $d, '*.pm' ) ) ) {
+                my $test = _symlink( $f, $rel );
+
+                $self->add_to_cleanup( $test );
+            }
+        }
+    }
+}
+
 =head2 code_dlr
 
 =cut
@@ -46,7 +74,7 @@ sub ACTION_code_perl5 {
 sub ACTION_code_dlr {
     my( $self ) = @_;
 
-    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'inc/OpcodesDotNet.pm', 'lib/Language/P/Keywords.pm' ],
+    if( !$self->up_to_date( [ 'inc/OpcodesDotNet.pm' ],
                             [ 'support/dotnet/Bytecode/BytecodeGenerated.cs' ] ) ) {
         $self->do_system( $^X, '-Iinc', '-Ilib',
                           '-MOpcodesDotNet', '-e', 'write_dotnet_deserializer()',
@@ -76,41 +104,18 @@ from the files under F<inc>.
 sub ACTION_code {
     my( $self ) = @_;
 
-    if( !$self->up_to_date( [ 'inc/Keywords.pm' ],
-                            [ 'lib/Language/P/Keywords.pm' ] ) ) {
-        $self->do_system( $^X, '-Iinc', '-Ilib',
-                          '-MKeywords', '-e', 'write_keywords',
-                          '--', 'lib/Language/P/Keywords.pm' );
-        $self->add_to_cleanup( 'lib/Language/P/Keywords.pm' );
-    }
-    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'inc/Keywords.pm',
-                              'lib/Language/P/Keywords.pm' ],
-                            [ 'lib/Language/P/Opcodes.pm', 'lib/Language/P/Toy/Assembly.pm' ] ) ) {
-        $self->do_system( $^X, '-Iinc', '-Ilib',
-                          '-MOpcodes', '-e', 'write_opcodes()',
-                          '--', 'lib/Language/P/Opcodes.pm' );
-        $self->do_system( $^X, '-Iinc', '-Ilib',
-                          '-MOpcodes', '-e', 'write_toy_opclasses()',
-                          '--', 'lib/Language/P/Toy/Assembly.pm' );
-        $self->add_to_cleanup( 'lib/Language/P/Opcodes.pm',
-                               'lib/Language/P/Toy/Assembly.pm' );
-    }
-    if( !$self->up_to_date( [ 'inc/Opcodes.pm', 'lib/Language/P/Keywords.pm' ],
-                            [ 'lib/Language/P/Intermediate/SerializeGenerated.pm' ] ) ) {
-        $self->do_system( $^X, '-Iinc', '-Ilib',
-                          '-MOpcodes', '-e', 'write_perl_serializer()',
-                          '--', 'lib/Language/P/Intermediate/SerializeGenerated.pm' );
-        $self->add_to_cleanup( 'lib/Language/P/Intermediate/SerializeGenerated.pm' );
-    }
-
     $self->depends_on( 'code_dlr' ) if $self->args( 'dlr' );
     $self->depends_on( 'code_perl5' ) if $self->args( 'perl5' );
+    $self->depends_on( 'code_p' ) if $self->args( 'p' );
 
     $self->SUPER::ACTION_code;
 }
 
 sub _all_subdirs {
     my( $dir ) = @_;
+
+    return unless -d $dir;
+
     my @subdirs;
 
     local $_;
@@ -149,10 +154,10 @@ sub _run_p_tests {
                     $cmdline = $interpreter;
                     $run_bc = 1;
                 } else {
-                    $cmdline = [ $self->perl, '-Mblib', '--', @$interpreter ];
+                    $cmdline = [ $self->perl, '-S', '--', @$interpreter ];
                 }
             } else {
-                $cmdline = [ $self->perl, '-Mblib', '--', $interpreter ];
+                $cmdline = [ $self->perl, '-S', '--', $interpreter ];
             }
 
             $harness = TAP::Harness->new
@@ -182,12 +187,11 @@ sub _run_p_tests {
 
 my %test_tags =
   ( 'parser'     => [ [ undef,   _all_subdirs( 't/parser' ) ] ],
-    'runtime'    => [ [ undef,   _all_subdirs( 't/runtime' ) ] ],
     'intermediate' => [ [ undef, _all_subdirs( 't/intermediate' ) ] ],
-    'perl5'      => [ [ 'bin/p', _all_subdirs( 't/perl5' ) ] ],
-    'run_np'     => [ [ 'bin/p', 't/run', 't/run/net' ] ],
-    'run'        => [ [ 'bin/p', _all_subdirs( 't/run' ) ] ],
-    'all'        => [ 'parser', 'intermediate', 'runtime', 'run', 'perl5' ],
+    'perl5'      => [ [ 'p', _all_subdirs( 't/perl5' ) ] ],
+    'run_np'     => [ [ 'p', 't/run', 't/run/net' ] ],
+    'run'        => [ [ 'p', _all_subdirs( 't/run' ) ] ],
+    'all'        => [ 'parser', 'intermediate', 'run', 'perl5' ],
     );
 
 =head2 test_parser
@@ -198,23 +202,18 @@ Runs the tests under F<t/parser>.
 
 Runs the tests under F<t/intermediate>.
 
-=head2 test_runtime
-
-Runs the Toy runtime tests under F<t/runtime>.
-
 =head2 test_run
 
-Runs the tests under F<t/run> using F<bin/p>.
+Runs the tests under F<t/run> using F<p>.
 
 =head2 test_perl5
 
-Runs the tests under F<t/perl5> using F<bin/p>.
+Runs the tests under F<t/perl5> using F<p>.
 
 =cut
 
 sub ACTION_test_parser;
 sub ACTION_test_intermediate;
-sub ACTION_test_runtime;
 sub ACTION_test_run;
 sub ACTION_test_perl5;
 
