@@ -884,7 +884,7 @@ namespace org.mbarbon.p.runtime
         public Expression GenerateJump(Subroutine sub, Opcode op,
                                        string method, ExpressionType type)
         {
-            var ju = (Jump)op;
+            var ju = (CondJump)op;
 
             Expression cmp = Expression.MakeBinary(
                 type,
@@ -1481,7 +1481,7 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[0]),
                     Expression.Constant(null, typeof(object)));
                 Expression jump = Expression.Goto(
-                    BlockLabels[((Jump)op).To],
+                    BlockLabels[((CondJump)op).To],
                     typeof(IP5Any));
 
                 return Expression.IfThen(cmp, jump);
@@ -1533,7 +1533,7 @@ namespace org.mbarbon.p.runtime
                     typeof(IP5Any).GetMethod("AsBoolean"),
                     Runtime);
                 Expression jump = Expression.Goto(
-                    BlockLabels[((Jump)op).To],
+                    BlockLabels[((CondJump)op).To],
                     typeof(IP5Any));
 
                 return Expression.IfThen(cmp, jump);

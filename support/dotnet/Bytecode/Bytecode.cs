@@ -323,6 +323,11 @@ namespace org.mbarbon.p.runtime
         public int To;
     }
 
+    public class CondJump : Opcode
+    {
+        public int To;
+    }
+
     public class LexState : Opcode
     {
         public int Index;
