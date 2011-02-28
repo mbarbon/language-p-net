@@ -76,7 +76,11 @@ namespace org.mbarbon.p.runtime
                 sub.LexicalStates.Add(ReadLexicalState(reader));
 
             for (int i = 0; i < bb_count; ++i)
-                sub.BasicBlocks.Add(ReadBasicBlock(reader, sub));
+                sub.BasicBlocks.Add(new BasicBlock());
+
+            for (int i = 0; i < bb_count; ++i)
+                // returns null if the block is dead
+                sub.BasicBlocks[i] = ReadBasicBlock(reader, i, sub);
 
             return sub;
         }
@@ -138,7 +142,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public static BasicBlock ReadBasicBlock(BinaryReader reader,
-                                                Subroutine sub)
+                                                int index, Subroutine sub)
         {
             int scope = reader.ReadInt32();
             int count = reader.ReadInt32();
@@ -146,7 +150,7 @@ namespace org.mbarbon.p.runtime
             if (count == 0)
                 return null;
 
-            var bb = new BasicBlock();
+            var bb = sub.BasicBlocks[index];
 
             bb.Scope = scope;
 
@@ -316,12 +320,12 @@ namespace org.mbarbon.p.runtime
 
     public class Jump : Opcode
     {
-        public int To;
+        public BasicBlock To;
     }
 
     public class CondJump : Opcode
     {
-        public int To;
+        public BasicBlock To;
     }
 
     public class LexState : Opcode
@@ -389,17 +393,17 @@ namespace org.mbarbon.p.runtime
 
     public class RegexStartGroup : Opcode
     {
-        public int To;
+        public BasicBlock To;
     }
 
     public class RegexTry : Opcode
     {
-        public int To;
+        public BasicBlock To;
     }
 
     public class RegexBacktrack : Opcode
     {
-        public int To;
+        public BasicBlock To;
     }
 
     public class RegexQuantifier : Opcode
@@ -407,7 +411,7 @@ namespace org.mbarbon.p.runtime
         public int Min, Max;
         public byte Greedy;
         public int Group;
-        public int To;
+        public BasicBlock To;
         public int SubgroupsStart, SubgroupsEnd;
     }
 
@@ -429,7 +433,7 @@ namespace org.mbarbon.p.runtime
 
     public class RegexReplace : RegexMatch
     {
-        public int To;
+        public BasicBlock To;
     }
 
     public class RegexEval : Opcode

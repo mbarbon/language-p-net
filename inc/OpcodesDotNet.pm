@@ -92,8 +92,9 @@ EOT
                 opc.%s = reader.ReadByte();
 EOT
             } elsif( $type eq 'b' ) {
-                print $out sprintf <<'EOT', $n;
-                opc.%s = reader.ReadInt32();
+                print $out sprintf <<'EOT', $n, $n, $n;
+                int %s = reader.ReadInt32();
+                opc.%s = sub.BasicBlocks[%s];
 EOT
             } elsif( $type eq 'c' ) {
                 print $out sprintf <<'EOT', $n;

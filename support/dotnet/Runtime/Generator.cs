@@ -164,12 +164,16 @@ namespace org.mbarbon.p.runtime
 
         public IP5Regex GenerateRegex(Subroutine sub)
         {
+            var opmap = new Dictionary<BasicBlock, int>();
             var quantifiers = new List<RxQuantifier>();
             var ops = new List<P5Regex.Op>();
             var targets = new List<int>();
             var exact = new List<string>();
             var classes = new List<RxClass>();
-            int captures = 0, saved = 0;
+            int captures = 0, saved = 0, count = 0;
+
+            foreach (var bb in sub.BasicBlocks)
+                opmap[bb] = count++;
 
             foreach (var bb in sub.BasicBlocks)
             {
@@ -229,21 +233,21 @@ namespace org.mbarbon.p.runtime
                     {
                         var gr = (RegexStartGroup)op;
 
-                        ops.Add(new P5Regex.Op(gr.Number, gr.To));
+                        ops.Add(new P5Regex.Op(gr.Number, opmap[gr.To]));
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_TRY:
                     {
                         var tr = (RegexTry)op;
 
-                        ops.Add(new P5Regex.Op(tr.Number, tr.To));
+                        ops.Add(new P5Regex.Op(tr.Number, opmap[tr.To]));
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_BACKTRACK:
                     {
                         var tr = (RegexBacktrack)op;
 
-                        ops.Add(new P5Regex.Op(tr.Number, tr.To));
+                        ops.Add(new P5Regex.Op(tr.Number, opmap[tr.To]));
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_QUANTIFIER:
@@ -253,7 +257,8 @@ namespace org.mbarbon.p.runtime
                         ops.Add(new P5Regex.Op(qu.Number, quantifiers.Count));
                         quantifiers.Add(
                             new RxQuantifier(qu.Min, qu.Max, qu.Greedy != 0,
-                                             qu.To, qu.Group, qu.SubgroupsStart,
+                                             opmap[qu.To], qu.Group,
+                                             qu.SubgroupsStart,
                                              qu.SubgroupsEnd));
                         if (captures <= qu.Group)
                             captures = qu.Group + 1;
@@ -275,7 +280,7 @@ namespace org.mbarbon.p.runtime
                     {
                         var ju = (Jump)op;
 
-                        ops.Add(new P5Regex.Op(ju.Number, ju.To));
+                        ops.Add(new P5Regex.Op(ju.Number, opmap[ju.To]));
                         break;
                     }
                     default:
@@ -515,9 +520,9 @@ namespace org.mbarbon.p.runtime
             Variables = new List<ParameterExpression>();
             Lexicals = new List<ParameterExpression>();
             Temporaries = new List<ParameterExpression>();
-            BlockLabels = new List<LabelTarget>();
+            BlockLabels = new Dictionary<BasicBlock, LabelTarget>();
             Blocks = new List<Expression>();
-            ValueBlocks = new Dictionary<int, Expression>();
+            ValueBlocks = new Dictionary<BasicBlock, Expression>();
             LexStates = new List<ParameterExpression>();
             RxStates = new List<ParameterExpression>();
             ModuleGenerator = module_generator;
@@ -703,7 +708,7 @@ namespace org.mbarbon.p.runtime
                 return;
             GeneratedScopes.Add(scope.Id, true);
 
-            int first_block = -1;
+            BasicBlock first_block = null;
             for (int i = 0; i < sub.BasicBlocks.Count; ++i)
             {
                 var block = sub.BasicBlocks[i];
@@ -746,8 +751,8 @@ namespace org.mbarbon.p.runtime
                                     )));
                     }
                     // TODO should not rely on block order
-                    if (first_block == -1)
-                        first_block = i;
+                    if (first_block == null)
+                        first_block = block;
 
                     Generate(sub, block, exps);
 
@@ -769,7 +774,7 @@ namespace org.mbarbon.p.runtime
 
                         body = Expression.Block(
                             typeof(IP5Any),
-                            Expression.Label(BlockLabels[i]),
+                            Expression.Label(BlockLabels[block]),
                             Expression.TryCatchFinally(
                                 Expression.Block(typeof(IP5Any), exps),
                                 Expression.Call(
@@ -788,14 +793,14 @@ namespace org.mbarbon.p.runtime
 
                         body = Expression.Block(
                             typeof(IP5Any),
-                            Expression.Label(BlockLabels[i]),
+                            Expression.Label(BlockLabels[block]),
                             Expression.TryFault(
                                 Expression.Block(typeof(IP5Any), exps),
                                 Expression.Block(typeof(void), fault)));
                     }
                     else
                     {
-                        exps.Insert(0, Expression.Label(BlockLabels[i]));
+                        exps.Insert(0, Expression.Label(BlockLabels[block]));
                         body = Expression.Block(typeof(IP5Any), exps);
                     }
 
@@ -814,7 +819,8 @@ namespace org.mbarbon.p.runtime
             SubLabel = Expression.Label(typeof(IP5Any));
 
             for (int i = 0; i < sub.BasicBlocks.Count; ++i)
-                BlockLabels.Add(Expression.Label("L" + i.ToString()));
+                if (sub.BasicBlocks[i] != null)
+                    BlockLabels[sub.BasicBlocks[i]] = Expression.Label("L" + i.ToString());
             for (int i = 0; i < sub.Scopes.Count; ++i)
                 if ((sub.Scopes[i].Flags & Scope.SCOPE_VALUE) != 0)
                     GenerateScope(sub, sub.Scopes[i]);
@@ -2742,9 +2748,9 @@ namespace org.mbarbon.p.runtime
         private LabelTarget SubLabel;
         private ParameterExpression Runtime, Arguments, Context, Pad;
         private List<ParameterExpression> Variables, Lexicals, Temporaries, LexStates, RxStates;
-        private List<LabelTarget> BlockLabels;
+        private Dictionary<BasicBlock, LabelTarget> BlockLabels;
         private List<Expression> Blocks;
-        private Dictionary<int, Expression> ValueBlocks;
+        private Dictionary<BasicBlock, Expression> ValueBlocks;
         private bool IsMain;
         private ModuleGenerator ModuleGenerator;
         private List<ModuleGenerator.SubInfo> Subroutines;
