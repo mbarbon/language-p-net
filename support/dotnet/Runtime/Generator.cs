@@ -36,7 +36,7 @@ namespace org.mbarbon.p.runtime
                 get { return Subroutine.Name; }
             }
 
-            internal LexicalInfo[] Lexicals
+            internal List<LexicalInfo> Lexicals
             {
                 get { return Subroutine.Lexicals; }
             }
@@ -375,7 +375,7 @@ namespace org.mbarbon.p.runtime
 
                 // code.ScratchPad = P5ScratchPad.CreateSubPad(lexicals,
                 //                       main.ScratchPad)
-                Expression[] alllex = new Expression[si.Lexicals.Length];
+                Expression[] alllex = new Expression[si.Lexicals.Count];
                 for (int i = 0; i < alllex.Length; ++i)
                 {
                     LexicalInfo lex = si.Lexicals[i];
@@ -704,7 +704,7 @@ namespace org.mbarbon.p.runtime
             GeneratedScopes.Add(scope.Id, true);
 
             int first_block = -1;
-            for (int i = 0; i < sub.BasicBlocks.Length; ++i)
+            for (int i = 0; i < sub.BasicBlocks.Count; ++i)
             {
                 var block = sub.BasicBlocks[i];
                 if (block == null)
@@ -758,7 +758,7 @@ namespace org.mbarbon.p.runtime
                         var except = new List<Expression>();
                         var ex = Expression.Variable(typeof(P5Exception));
                         var exception_block = sub.BasicBlocks[scope.Exception];
-                        for (int j = scope.Opcodes.Length - 1; j >= 0; --j)
+                        for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
                             Generate(sub, scope.Opcodes[j], except);
                         except.Add(
                             Expression.Call(
@@ -780,10 +780,10 @@ namespace org.mbarbon.p.runtime
                                     Expression.Block(typeof(IP5Any), except))
                                 ));
                     }
-                    else if (scope.Opcodes.Length > 0)
+                    else if (scope.Opcodes.Count > 0)
                     {
                         var fault = new List<Expression>();
-                        for (int j = scope.Opcodes.Length - 1; j >= 0; --j)
+                        for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
                             Generate(sub, scope.Opcodes[j], fault);
 
                         body = Expression.Block(
@@ -813,9 +813,9 @@ namespace org.mbarbon.p.runtime
             IsMain = is_main;
             SubLabel = Expression.Label(typeof(IP5Any));
 
-            for (int i = 0; i < sub.BasicBlocks.Length; ++i)
+            for (int i = 0; i < sub.BasicBlocks.Count; ++i)
                 BlockLabels.Add(Expression.Label("L" + i.ToString()));
-            for (int i = 0; i < sub.Scopes.Length; ++i)
+            for (int i = 0; i < sub.Scopes.Count; ++i)
                 if ((sub.Scopes[i].Flags & Scope.SCOPE_VALUE) != 0)
                     GenerateScope(sub, sub.Scopes[i]);
             GenerateScope(sub, sub.Scopes[0]);
@@ -870,7 +870,7 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        public void Generate(Subroutine sub, Opcode[] ops,
+        public void Generate(Subroutine sub, IList<Opcode> ops,
                              List<Expression> expressions)
         {
             foreach (var o in ops)
@@ -1420,7 +1420,7 @@ namespace org.mbarbon.p.runtime
                     Expression.Assign(value, code));
 
                 for (var s = CurrentScope; s != null; s = s.Outer != -1 ? sub.Scopes[s.Outer] : null)
-                    for (int j = s.Opcodes.Length - 1; j >= 0; --j)
+                    for (int j = s.Opcodes.Count - 1; j >= 0; --j)
                         Generate(sub, s.Opcodes[j], exit_scope);
 
                 exit_scope.Add(

@@ -54,9 +54,9 @@ namespace org.mbarbon.p.runtime
             if (type == (int)Subroutine.CodeType.REGEX)
                 regex = ReadString(reader);
 
-            var lexicals = new LexicalInfo[lex_count];
+            var lexicals = new List<LexicalInfo>(lex_count);
             for (int i = 0; i < lex_count; ++i)
-                lexicals[i] = ReadLexical(reader);
+                lexicals.Add(ReadLexical(reader));
 
             var sub = new Subroutine(bb_count);
 
@@ -67,18 +67,16 @@ namespace org.mbarbon.p.runtime
             sub.Type = type;
             sub.OriginalRegex = regex;
 
-            sub.Scopes = new Scope[scope_count];
+            sub.Scopes = new List<Scope>(scope_count);
             for (int i = 0; i < scope_count; ++i)
-                sub.Scopes[i] = ReadScope(reader, sub);
+                sub.Scopes.Add(ReadScope(reader, sub));
 
-            sub.LexicalStates = new LexicalState[state_count];
+            sub.LexicalStates = new List<LexicalState>(state_count);
             for (int i = 0; i < state_count; ++i)
-                sub.LexicalStates[i] = ReadLexicalState(reader);
+                sub.LexicalStates.Add(ReadLexicalState(reader));
 
             for (int i = 0; i < bb_count; ++i)
-            {
-                sub.BasicBlocks[i] = ReadBasicBlock(reader, sub);
-            }
+                sub.BasicBlocks.Add(ReadBasicBlock(reader, sub));
 
             return sub;
         }
@@ -125,15 +123,15 @@ namespace org.mbarbon.p.runtime
 
             int leave_count = reader.ReadInt32();
 
-            scope.Opcodes = new Opcode[leave_count][];
+            scope.Opcodes = new List<List<Opcode>>(leave_count);
 
             for (int i = 0; i < leave_count; ++i)
             {
                 int op_count = reader.ReadInt32();
-                scope.Opcodes[i] = new Opcode[op_count];
+                scope.Opcodes.Add(new List<Opcode>(op_count));
 
                 for (int j = 0; j < op_count; ++j)
-                    scope.Opcodes[i][j] = ReadOpcode(reader, sub);
+                    scope.Opcodes[i].Add(ReadOpcode(reader, sub));
             }
 
             return scope;
@@ -148,14 +146,12 @@ namespace org.mbarbon.p.runtime
             if (count == 0)
                 return null;
 
-            var bb = new BasicBlock(count);
+            var bb = new BasicBlock();
 
             bb.Scope = scope;
 
             for (int i = 0; i < count; ++i)
-            {
-                bb.Opcodes[i] = ReadOpcode(reader, sub);
-            }
+                bb.Opcodes.Add(ReadOpcode(reader, sub));
 
             return bb;
         }
@@ -457,11 +453,15 @@ namespace org.mbarbon.p.runtime
         public const int SCOPE_REGEX     = 16;
         public const int SCOPE_VALUE     = 32;
 
+        public Scope()
+        {
+        }
+
         public int Outer;
         public int Id;
         public int Flags;
         public int Context;
-        public Opcode[][] Opcodes;
+        public List<List<Opcode>> Opcodes;
         public Position Start;
         public Position End;
         public int LexicalState;
@@ -478,14 +478,14 @@ namespace org.mbarbon.p.runtime
 
     public class BasicBlock
     {
-        public BasicBlock(int opCount)
+        public BasicBlock()
         {
-            Opcodes = new Opcode[opCount];
+            Opcodes = new List<Opcode>();
         }
 
         public int Index;
         public int Scope;
-        public Opcode[] Opcodes;
+        public List<Opcode> Opcodes;
     }
 
     public class Subroutine
@@ -500,7 +500,7 @@ namespace org.mbarbon.p.runtime
 
         public Subroutine(int blockCount)
         {
-            BasicBlocks = new BasicBlock[blockCount];
+            BasicBlocks = new List<BasicBlock>(blockCount);
         }
 
         public bool IsMain
@@ -516,10 +516,11 @@ namespace org.mbarbon.p.runtime
         public int Type;
         public int Outer;
         public string Name;
-        public BasicBlock[] BasicBlocks;
-        public LexicalInfo[] Lexicals;
-        public Scope[] Scopes;
-        public LexicalState[] LexicalStates;
+        public List<BasicBlock> BasicBlocks;
+        public List<LexicalInfo> Lexicals;
+        public List<Scope> Scopes;
+        public List<LexicalState> LexicalStates;
+        public List<Subroutine> Inner;
         public string OriginalRegex;
     }
 
