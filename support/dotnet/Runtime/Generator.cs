@@ -2088,7 +2088,8 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_SUBSTR:
             {
-                Expression value = Generate(sub, op.Childs[0]);
+                Expression value = Expression.Convert(
+                    Generate(sub, op.Childs[0]), typeof(P5Scalar));
                 Expression offset = Expression.Call(
                     Generate(sub, op.Childs[1]),
                     typeof(IP5Any).GetMethod("AsInteger"),
