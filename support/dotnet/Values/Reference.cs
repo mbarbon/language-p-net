@@ -61,6 +61,11 @@ namespace org.mbarbon.p.values
             return AsString(runtime).Length;
         }
 
+        public virtual string KeyString(Runtime runtime)
+        {
+            return AsString(runtime);
+        }
+
         public virtual string ReferenceType(Runtime runtime)
         {
             if (referred.IsBlessed(runtime))

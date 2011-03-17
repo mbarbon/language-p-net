@@ -64,6 +64,11 @@ namespace org.mbarbon.p.values
             return Get(runtime).Body.IsFloat(runtime);
         }
 
+        public virtual string KeyString(Runtime runtime)
+        {
+            return AsString(runtime);
+        }
+
         public virtual string ReferenceTypeString(Runtime runtime)
         {
             return Get(runtime).ReferenceTypeString(runtime);

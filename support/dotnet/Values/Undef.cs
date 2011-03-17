@@ -24,6 +24,11 @@ namespace org.mbarbon.p.values
         public virtual bool IsString(Runtime runtime) { return true; }
         public virtual bool IsFloat(Runtime runtime) { return true; }
 
+        public virtual string KeyString(Runtime runtime)
+        {
+            return AsString(runtime);
+        }
+
         public virtual string ReferenceTypeString(Runtime runtime)
         {
             return "SCALAR";

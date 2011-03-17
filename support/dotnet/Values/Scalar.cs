@@ -146,6 +146,7 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar AsScalar(Runtime runtime) { return this; }
         public virtual string AsString(Runtime runtime) { return body.AsString(runtime); }
+        public virtual string KeyString(Runtime runtime) { return body.KeyString(runtime); }
         public virtual int AsInteger(Runtime runtime) { return body.AsInteger(runtime); }
         public virtual double AsFloat(Runtime runtime) { return body.AsFloat(runtime); }
         public virtual bool AsBoolean(Runtime runtime) { return body.AsBoolean(runtime); }
@@ -505,6 +506,7 @@ namespace org.mbarbon.p.values
     {
         IP5ScalarBody CloneBody(Runtime runtime);
         string AsString(Runtime runtime);
+        string KeyString(Runtime runtime);
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);

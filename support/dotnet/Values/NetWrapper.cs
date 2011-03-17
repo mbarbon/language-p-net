@@ -2,6 +2,7 @@ using Runtime = org.mbarbon.p.runtime.Runtime;
 using Opcode = org.mbarbon.p.runtime.Opcode;
 using Builtins = org.mbarbon.p.runtime.Builtins;
 using NetGlue = org.mbarbon.p.runtime.NetGlue;
+using IdDispenser = Microsoft.Scripting.Runtime.IdDispenser;
 using System.Collections.Generic;
 
 namespace org.mbarbon.p.values
@@ -116,6 +117,11 @@ namespace org.mbarbon.p.values
         public void SetPos(Runtime runtime, int pos, bool pos_set)
         {
             throw new System.NotImplementedException();
+        }
+
+        public virtual string KeyString(Runtime runtime)
+        {
+            return IdDispenser.GetId(Object).ToString();
         }
 
         public string ReferenceTypeString(Runtime runtime)

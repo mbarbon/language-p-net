@@ -38,7 +38,7 @@ namespace org.mbarbon.p.values
 
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any key, bool create)
         {
-            string k = key.AsString(runtime);
+            string k = key.AsScalar(runtime).KeyString(runtime);
             IP5Any v = null;
             if (hash.TryGetValue(k, out v))
                 return v;
@@ -73,14 +73,14 @@ namespace org.mbarbon.p.values
 
         public IP5Any Exists(Runtime runtime, IP5Any key)
         {
-            string k = key.AsString(runtime);
+            string k = key.AsScalar(runtime).KeyString(runtime);
 
             return new P5Scalar(runtime, hash.ContainsKey(k));
         }
 
         public IP5Any Delete(Runtime runtime, IP5Any key)
         {
-            string k = key.AsString(runtime);
+            string k = key.AsScalar(runtime).KeyString(runtime);
             IP5Any value;
             bool has_value = hash.TryGetValue(k, out value);
 
@@ -154,11 +154,11 @@ namespace org.mbarbon.p.values
             hash.Clear();
             while (e.MoveNext())
             {
-                IP5Any k = e.Current;
+                P5Scalar k = e.Current.AsScalar(runtime);
                 e.MoveNext();
                 IP5Any v = e.Current;
 
-                hash[k.AsString(runtime)] = v;
+                hash[k.KeyString(runtime)] = v;
             }
 
             iterator = null;
