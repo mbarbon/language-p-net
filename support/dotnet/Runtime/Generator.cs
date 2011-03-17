@@ -501,8 +501,6 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(bool) };
         private static Type[] ProtoRuntimeDouble =
             new Type[] { typeof(Runtime), typeof(double) };
-        private static Type[] ProtoRuntimeP5Array =
-            new Type[] { typeof(Runtime), typeof(P5Array) };
         private static Type[] ProtoRuntimeAny =
             new Type[] { typeof(Runtime), typeof(IP5Any) };
         private static Type[] ProtoStringString =
@@ -1270,31 +1268,15 @@ namespace org.mbarbon.p.runtime
                         Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_ANONYMOUS_ARRAY:
-            {
-                return
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(
-                            new Type[] { typeof(Runtime),
-                                         typeof(IP5Referrable) }),
-                        Runtime,
-                        Expression.New(
-                            typeof(P5Array).GetConstructor(ProtoRuntimeP5Array),
-                            Runtime,
-                            Generate(sub, op.Childs[0])));
-            }
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("AnonymousArray"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_ANONYMOUS_HASH:
-            {
-                return
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(
-                            new Type[] { typeof(Runtime),
-                                         typeof(IP5Referrable) }),
-                        Runtime,
-                        Expression.New(
-                            typeof(P5Hash).GetConstructor(ProtoRuntimeP5Array),
-                            Runtime,
-                            Generate(sub, op.Childs[0])));
-            }
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("AnonymousHash"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_PRINT:
             {
                 Expression handle = Generate(sub, op.Childs[0]);

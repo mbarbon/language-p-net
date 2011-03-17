@@ -671,6 +671,20 @@ namespace org.mbarbon.p.runtime
             return array.Replace(runtime, start, length, values);
         }
 
+        public static P5Scalar AnonymousArray(Runtime runtime, P5List list)
+        {
+            var clone = list.Clone(runtime, 1) as IP5Enumerable;
+
+            return new P5Scalar(runtime, new P5Array(runtime, clone));
+        }
+
+        public static P5Scalar AnonymousHash(Runtime runtime, P5List list)
+        {
+            var clone = list.Clone(runtime, 1) as IP5Enumerable;
+
+            return new P5Scalar(runtime, new P5Hash(runtime, clone));
+        }
+
         public static P5Scalar Oct(Runtime runtime, P5Scalar value)
         {
             var str = value.AsString(runtime);
