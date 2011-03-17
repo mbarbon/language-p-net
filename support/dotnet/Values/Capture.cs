@@ -20,7 +20,8 @@ namespace org.mbarbon.p.values
         public override P5Scalar Get(Runtime runtime)
         {
             if (   runtime.LastMatch.StringCaptures != null
-                && Index < runtime.LastMatch.StringCaptures.Length)
+                && Index < runtime.LastMatch.StringCaptures.Length
+                && runtime.LastMatch.StringCaptures[Index] != null)
                 return new P5Scalar(runtime, runtime.LastMatch.StringCaptures[Index]);
             else
                 return new P5Scalar(runtime);

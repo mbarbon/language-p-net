@@ -78,9 +78,18 @@ namespace org.mbarbon.p.runtime
                         {
                             var capt = match.Groups[j + 1];
 
-                            res.Captures[j].Start = capt.Index;
-                            res.Captures[j].End = capt.Index + capt.Length;
-                            res.StringCaptures[j] = str.Substring(capt.Index, capt.Length);
+                            if (capt.Success)
+                            {
+                                res.Captures[j].Start = capt.Index;
+                                res.Captures[j].End = capt.Index + capt.Length;
+                                res.StringCaptures[j] = str.Substring(capt.Index, capt.Length);
+                            }
+                            else
+                            {
+                                res.Captures[j].Start = -1;
+                                res.Captures[j].End = -1;
+                                res.StringCaptures[j] = null;
+                            }
                         }
                     }
                     else
