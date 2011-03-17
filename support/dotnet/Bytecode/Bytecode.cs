@@ -318,6 +318,13 @@ namespace org.mbarbon.p.runtime
         public Opcode.Sigil Slot;
     }
 
+    public class Phi : Opcode
+    {
+        public Opcode.Sigil[] Slots;
+        public int[] Indices;
+        public BasicBlock[] Blocks;
+    }
+
     public class Jump : Opcode
     {
         public BasicBlock To;
@@ -376,7 +383,7 @@ namespace org.mbarbon.p.runtime
 
     public class RegexExact : Opcode
     {
-        public string String;
+        public string Characters;
         public int Length;
     }
 

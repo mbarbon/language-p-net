@@ -205,7 +205,7 @@ namespace org.mbarbon.p.runtime
                         var ex = (RegexExact)op;
 
                         ops.Add(new P5Regex.Op(ex.Number, exact.Count));
-                        exact.Add(ex.String);
+                        exact.Add(ex.Characters);
                         break;
                     }
                     case Opcode.OpNumber.OP_RX_SAVE_POS:
