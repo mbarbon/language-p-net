@@ -21,9 +21,10 @@ namespace org.mbarbon.p.runtime
                 cu = new CompilationUnit(file_name, count);
 
                 for (int i = 0; i < count; ++i)
-                {
-                    cu.Subroutines[i] = ReadSubroutine(reader);
-                }
+                    cu.Subroutines[i] = new Subroutine();
+
+                for (int i = 0; i < count; ++i)
+                    ReadSubroutine(reader, cu.Subroutines, cu.Subroutines[i]);
 
                 if (has_data != 0)
                 {
@@ -40,7 +41,7 @@ namespace org.mbarbon.p.runtime
             return cu;
         }
 
-        public static Subroutine ReadSubroutine(BinaryReader reader)
+        public static Subroutine ReadSubroutine(BinaryReader reader, Subroutine[] subs, Subroutine sub)
         {
             var name = ReadString(reader);
             int type = reader.ReadByte();
@@ -58,29 +59,29 @@ namespace org.mbarbon.p.runtime
             for (int i = 0; i < lex_count; ++i)
                 lexicals.Add(ReadLexical(reader));
 
-            var sub = new Subroutine(bb_count);
-
+            sub.BasicBlocks = new List<BasicBlock>();
+            if (outer_sub >= 0)
+                sub.Outer = subs[outer_sub];
             sub.Lexicals = lexicals;
             if (name.Length != 0)
                 sub.Name = name;
-            sub.Outer = outer_sub;
             sub.Type = type;
             sub.OriginalRegex = regex;
 
+            for (int i = 0; i < bb_count; ++i)
+                sub.BasicBlocks.Add(new BasicBlock());
+
             sub.Scopes = new List<Scope>(scope_count);
             for (int i = 0; i < scope_count; ++i)
-                sub.Scopes.Add(ReadScope(reader, sub));
+                sub.Scopes.Add(ReadScope(reader, subs, sub));
 
             sub.LexicalStates = new List<LexicalState>(state_count);
             for (int i = 0; i < state_count; ++i)
                 sub.LexicalStates.Add(ReadLexicalState(reader));
 
             for (int i = 0; i < bb_count; ++i)
-                sub.BasicBlocks.Add(new BasicBlock());
-
-            for (int i = 0; i < bb_count; ++i)
                 // returns null if the block is dead
-                sub.BasicBlocks[i] = ReadBasicBlock(reader, i, sub);
+                sub.BasicBlocks[i] = ReadBasicBlock(reader, i, subs, sub);
 
             return sub;
         }
@@ -112,7 +113,8 @@ namespace org.mbarbon.p.runtime
             return state;
         }
 
-        public static Scope ReadScope(BinaryReader reader, Subroutine sub)
+        public static Scope ReadScope(BinaryReader reader, Subroutine[] subs,
+                                      Subroutine sub)
         {
             var scope = new Scope();
 
@@ -123,7 +125,9 @@ namespace org.mbarbon.p.runtime
             ReadPos(reader, out scope.Start);
             ReadPos(reader, out scope.End);
             scope.LexicalState = reader.ReadInt32();
-            scope.Exception = reader.ReadInt32();
+            int exc_idx = reader.ReadInt32();
+            if (exc_idx >= 0)
+                scope.Exception = sub.BasicBlocks[exc_idx];
 
             int leave_count = reader.ReadInt32();
 
@@ -135,27 +139,31 @@ namespace org.mbarbon.p.runtime
                 scope.Opcodes.Add(new List<Opcode>(op_count));
 
                 for (int j = 0; j < op_count; ++j)
-                    scope.Opcodes[i].Add(ReadOpcode(reader, sub));
+                    scope.Opcodes[i].Add(ReadOpcode(reader, subs, sub));
             }
 
             return scope;
         }
 
         public static BasicBlock ReadBasicBlock(BinaryReader reader,
-                                                int index, Subroutine sub)
+                                                int index, Subroutine[] subs,
+                                                Subroutine sub)
         {
             int scope = reader.ReadInt32();
             int count = reader.ReadInt32();
+            var bb = sub.BasicBlocks[index];
 
             if (count == 0)
-                return null;
+            {
+                bb.Opcodes = null;
 
-            var bb = sub.BasicBlocks[index];
+                return null;
+            }
 
             bb.Scope = scope;
 
             for (int i = 0; i < count; ++i)
-                bb.Opcodes.Add(ReadOpcode(reader, sub));
+                bb.Opcodes.Add(ReadOpcode(reader, subs, sub));
 
             return bb;
         }
@@ -304,7 +312,7 @@ namespace org.mbarbon.p.runtime
 
     public class ConstantSub : Opcode
     {
-        public int Value;
+        public Subroutine Value;
     }
 
     public class ConstantFloat : Opcode
@@ -476,7 +484,7 @@ namespace org.mbarbon.p.runtime
         public Position Start;
         public Position End;
         public int LexicalState;
-        public int Exception;
+        public BasicBlock Exception;
     }
 
     public class LexicalState
@@ -509,9 +517,8 @@ namespace org.mbarbon.p.runtime
             EVAL    = 4,
         }
 
-        public Subroutine(int blockCount)
+        public Subroutine()
         {
-            BasicBlocks = new List<BasicBlock>(blockCount);
         }
 
         public bool IsMain
@@ -525,7 +532,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public int Type;
-        public int Outer;
+        public Subroutine Outer;
         public string Name;
         public List<BasicBlock> BasicBlocks;
         public List<LexicalInfo> Lexicals;

@@ -52,7 +52,7 @@ namespace org.mbarbon.p.runtime
             ClassBuilder = class_builder;
             NativeRegex = native_regex;
             Initializers = new List<Expression>();
-            Subroutines = new List<SubInfo>();
+            Subroutines = new Dictionary<Subroutine, SubInfo>();
             CreatedPackages = new HashSet<string>();
             InitRuntime = Expression.Parameter(typeof(Runtime), "runtime");
         }
@@ -102,7 +102,7 @@ namespace org.mbarbon.p.runtime
                 "regex_" + MethodIndex++.ToString(), typeof(IP5Regex),
                 FieldAttributes.Private|FieldAttributes.Static);
 
-            Subroutines.Add(new SubInfo(null, sub, field));
+            Subroutines[sub] = new SubInfo(null, sub, field);
         }
 
         public void AddSubInfo(Subroutine sub)
@@ -117,10 +117,10 @@ namespace org.mbarbon.p.runtime
                 method_name + "_code", typeof(P5Code),
                 FieldAttributes.Private|FieldAttributes.Static);
 
-            Subroutines.Add(new SubInfo(method_name, sub, field));
+            Subroutines[sub] = new SubInfo(method_name, sub, field);
         }
 
-        public void AddRegex(int index, Subroutine sub)
+        public void AddRegex(Subroutine sub)
         {
             IP5Regex regex = NativeRegex ? GenerateNetRegex(sub) : GenerateRegex(sub);
             var stream = new MemoryStream();
@@ -153,7 +153,7 @@ namespace org.mbarbon.p.runtime
 
             Initializers.Add(
                 Expression.Assign(
-                    Expression.Field(null, Subroutines[index].CodeField),
+                    Expression.Field(null, Subroutines[sub].CodeField),
                     init));
         }
 
@@ -295,14 +295,14 @@ namespace org.mbarbon.p.runtime
                                sub.OriginalRegex);
         }
 
-        public void AddMethod(int index, Subroutine sub)
+        public void AddMethod(Subroutine sub)
         {
             var sg = new SubGenerator(this, Subroutines);
-            var body = sg.Generate(sub, Subroutines[index].IsMain);
+            var body = sg.Generate(sub, Subroutines[sub].IsMain);
 
             MethodBuilder method_builder =
                 ClassBuilder.DefineMethod(
-                    Subroutines[index].MethodName,
+                    Subroutines[sub].MethodName,
                     MethodAttributes.Static|MethodAttributes.Public);
             body.CompileToMethod(method_builder,
                                  DebugInfoGenerator.CreatePdbGenerator());
@@ -329,7 +329,8 @@ namespace org.mbarbon.p.runtime
             constants_init.CompileToMethod(helper);
         }
 
-        FieldInfo AddSubInitialization(bool anonymous, FieldInfo main)
+        FieldInfo AddSubInitialization(Subroutine[] subroutines,
+                                       bool anonymous, FieldInfo main)
         {
             var code_ctor = typeof(P5Code).GetConstructor(
                 new[] { typeof(string), typeof(P5Code.Sub), typeof(bool) });
@@ -350,8 +351,9 @@ namespace org.mbarbon.p.runtime
                 typeof(Type).GetMethod(
                     "GetType", new Type[] { typeof(string) });
 
-            foreach (SubInfo si in Subroutines)
+            foreach (var sub in subroutines)
             {
+                var si = Subroutines[sub];
                 if (si.Subroutine.IsRegex)
                     continue;
                 if (anonymous != (si.SubName == null))
@@ -464,12 +466,13 @@ namespace org.mbarbon.p.runtime
             return main;
         }
 
-        public P5Code CompleteGeneration(Runtime runtime)
+        public P5Code CompleteGeneration(Subroutine[] subroutines,
+                                         Runtime runtime)
         {
             // force generation of anonymous subroutine templates before all
             // other subroutines
-            FieldInfo main = AddSubInitialization(true, null);
-            AddSubInitialization(false, main);
+            FieldInfo main = AddSubInitialization(subroutines, true, null);
+            AddSubInitialization(subroutines, false, main);
 
             AddInitMethod(main);
 
@@ -483,7 +486,7 @@ namespace org.mbarbon.p.runtime
         private TypeBuilder ClassBuilder;
         private bool NativeRegex;
         private List<Expression> Initializers;
-        private List<SubInfo> Subroutines;
+        private Dictionary<Subroutine, SubInfo> Subroutines;
         private int MethodIndex = 0;
         private HashSet<string> CreatedPackages;
         public ParameterExpression InitRuntime;
@@ -509,7 +512,7 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(string), typeof(bool) };
 
         public SubGenerator(ModuleGenerator module_generator,
-                            List<ModuleGenerator.SubInfo> subroutines)
+                            Dictionary<Subroutine, ModuleGenerator.SubInfo> subroutines)
         {
             Runtime = Expression.Parameter(typeof(Runtime), "runtime");
             Arguments = Expression.Parameter(typeof(P5Array), "args");
@@ -760,7 +763,6 @@ namespace org.mbarbon.p.runtime
                     {
                         var except = new List<Expression>();
                         var ex = Expression.Variable(typeof(P5Exception));
-                        var exception_block = sub.BasicBlocks[scope.Exception];
                         for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
                             Generate(sub, scope.Opcodes[j], except);
                         except.Add(
@@ -768,7 +770,7 @@ namespace org.mbarbon.p.runtime
                                 Runtime,
                                 typeof(Runtime).GetMethod("SetException"),
                                 ex));
-                        Generate(sub, exception_block, except);
+                        Generate(sub, scope.Exception, except);
 
                         body = Expression.Block(
                             typeof(IP5Any),
@@ -2736,7 +2738,7 @@ namespace org.mbarbon.p.runtime
         private Dictionary<BasicBlock, Expression> ValueBlocks;
         private bool IsMain;
         private ModuleGenerator ModuleGenerator;
-        private List<ModuleGenerator.SubInfo> Subroutines;
+        private Dictionary<Subroutine, ModuleGenerator.SubInfo> Subroutines;
     }
 
     public class Generator
@@ -2774,27 +2776,24 @@ namespace org.mbarbon.p.runtime
             TypeBuilder perl_module = mod_builder.DefineType(file.Name, TypeAttributes.Public);
             ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module, Runtime.NativeRegex);
 
-            for (int i = 0; i < cu.Subroutines.Length; ++i)
+            foreach (var sub in cu.Subroutines)
             {
-                var sub = cu.Subroutines[i];
-
                 if (sub.IsRegex)
                     perl_mod_generator.AddRegexInfo(sub);
                 else
                     perl_mod_generator.AddSubInfo(sub);
             }
 
-            for (int i = 0; i < cu.Subroutines.Length; ++i)
+            foreach (var sub in cu.Subroutines)
             {
-                var sub = cu.Subroutines[i];
-
                 if (sub.IsRegex)
-                    perl_mod_generator.AddRegex(i, sub);
+                    perl_mod_generator.AddRegex(sub);
                 else
-                    perl_mod_generator.AddMethod(i, sub);
+                    perl_mod_generator.AddMethod(sub);
             }
 
-            return perl_mod_generator.CompleteGeneration(Runtime);
+            return perl_mod_generator.CompleteGeneration(cu.Subroutines,
+                                                         Runtime);
         }
 
         Runtime Runtime;

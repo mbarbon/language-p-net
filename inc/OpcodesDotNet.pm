@@ -22,7 +22,7 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Serializer
     {
-        public static Opcode ReadOpcode(BinaryReader reader, Subroutine sub)
+        public static Opcode ReadOpcode(BinaryReader reader, Subroutine[] subroutines, Subroutine sub)
         {
             var num = (Opcode.OpNumber)reader.ReadInt16();
             string file;
@@ -97,8 +97,9 @@ EOT
                 opc.%s = sub.BasicBlocks[%s];
 EOT
             } elsif( $type eq 'c' ) {
-                print $out sprintf <<'EOT', $n;
-                opc.%s = reader.ReadInt32();
+                print $out sprintf <<'EOT', $n, $n, $n;
+                int %s = reader.ReadInt32();
+                opc.%s = subroutines[%s];
 EOT
             } elsif( $type eq 'ls' || $type eq 'lp' ) {
                 print $out sprintf <<'EOT';
@@ -129,7 +130,7 @@ EOT
 
             for (int i = 0; i < count; ++i)
             {
-                op.Childs[i] = ReadOpcode(reader, sub);
+                op.Childs[i] = ReadOpcode(reader, subroutines, sub);
             }
 
             return op;
