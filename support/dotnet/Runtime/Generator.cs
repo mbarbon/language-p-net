@@ -1072,20 +1072,20 @@ namespace org.mbarbon.p.runtime
 
         private Expression Assign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
         {
-                if (   typeof(IP5Array).IsAssignableFrom(lvalue.Type)
-                    || typeof(P5Hash).IsAssignableFrom(lvalue.Type))
-                    return BinaryOperator<object>(
-                        sub, lvalue, rvalue,
-                        Expression.New(
-                            typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
-                            ModuleGenerator.InitRuntime,
-                            Expression.Constant(cxt)));
-                else
-                    return BinaryOperator<P5Scalar>(
-                        sub, lvalue, rvalue,
-                        Expression.New(
-                            typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
-                            ModuleGenerator.InitRuntime));
+            if (   typeof(IP5Array).IsAssignableFrom(lvalue.Type)
+                || typeof(P5Hash).IsAssignableFrom(lvalue.Type))
+                return BinaryOperator<object>(
+                    sub, lvalue, rvalue,
+                    Expression.New(
+                        typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
+                        ModuleGenerator.InitRuntime,
+                        Expression.Constant(cxt)));
+            else
+                return BinaryOperator<P5Scalar>(
+                    sub, lvalue, rvalue,
+                    Expression.New(
+                        typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
+                        ModuleGenerator.InitRuntime));
         }
 
         private Expression ForceScalar(Expression e)
