@@ -96,12 +96,18 @@ namespace org.mbarbon.p.runtime
         {
             var parms = meth.GetParameters();
 
-            if (parms.Length != args.Length)
+            int index = 0;
+            // special case: if the first argument is a Runtime, pass
+            // it implicity
+            if (parms.Length > 0 && parms[0].ParameterType == typeof(Runtime))
+                index = -1;
+            if (parms.Length + index != args.Length)
                 return false;
 
-            int index = 0;
             foreach (var parm in parms)
             {
+                if (index < 0)
+                    continue;
                 if (!Matches(runtime, parm.ParameterType, args[index]))
                     return false;
                 ++index;
@@ -138,10 +144,17 @@ namespace org.mbarbon.p.runtime
         private static object[] ConvertArgs(Runtime runtime, MethodBase meth, P5Scalar[] args)
         {
             var parms = meth.GetParameters();
-            var res = new object[args.Length];
+            var res = new object[parms.Length];
 
+            int offset = 0;
+            // see the comment in Matches()
+            if (parms.Length > 0 && parms[0].ParameterType == typeof(Runtime))
+            {
+                offset = 1;
+                res[0] = runtime;
+            }
             for (int i = 0; i < args.Length; ++i)
-                res[i] = Convert(runtime, args[i], parms[i].ParameterType);
+                res[i + offset] = Convert(runtime, args[i], parms[i + offset].ParameterType);
 
             return res;
         }
