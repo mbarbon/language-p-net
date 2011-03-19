@@ -6,6 +6,56 @@ namespace org.mbarbon.p.runtime
 {
     public class NetGlue
     {
+        private static bool IsAnyType(Type type)
+        {
+            return    type == typeof(bool)
+                   || type == typeof(string)
+                   || type == typeof(char);
+        }
+
+        private static bool IsIntegerType(Type type)
+        {
+            return type == typeof(int);
+        }
+
+        private static int CompareSignatures(ParameterInfo[] a, ParameterInfo[] b)
+        {
+            if (a.Length != b.Length)
+                return a.Length - b.Length;
+
+            for (int i = 0; i < a.Length; ++i)
+            {
+                Type at = a[i].ParameterType, bt = b[i].ParameterType;
+                bool aa = IsAnyType(at), ba = IsAnyType(bt);
+                bool ai = IsIntegerType(at), bi = IsIntegerType(bt);
+
+                // TODO handle subtype sorting
+
+                // string/char/bool sort at the end
+                if ( aa && !ba) return  1;
+                if (!aa &&  ba) return -1;
+
+                // then integer types
+                if ( ai && !bi) return  1;
+                if (!ai &&  bi) return -1;
+
+                // other types aren't tie-breakers
+            }
+
+            return 0;
+        }
+
+        private static MethodBase[] SortMethods(MethodBase[] methods)
+        {
+            System.Array.Sort(methods, delegate(MethodBase a, MethodBase b)
+                              {
+                                  return CompareSignatures(a.GetParameters(),
+                                                           b.GetParameters());
+                              });
+
+            return methods;
+        }
+
         private static bool Matches(Runtime runtime, Type type, IP5Any value)
         {
             var scalar = value as P5Scalar;
@@ -156,13 +206,13 @@ namespace org.mbarbon.p.runtime
         public static IP5Any CallConstructor(Runtime runtime, System.Type type,
                                              P5Scalar[] args)
         {
-            foreach (var ctor in type.GetConstructors())
+            foreach (var ctor in SortMethods(type.GetConstructors()))
             {
                 if (!Matches(runtime, ctor, args))
                     continue;
                 var net_args = ConvertArgs(runtime, ctor, args);
 
-                var res = ctor.Invoke(net_args);
+                var res = ctor.Invoke(null, net_args);
 
                 return WrapValue(res);
             }
@@ -184,7 +234,7 @@ namespace org.mbarbon.p.runtime
         {
             var type = obj.GetType();
 
-            foreach (var meth in type.GetMethods())
+            foreach (var meth in SortMethods(type.GetMethods()))
             {
                 if (meth.Name != method)
                     continue;
@@ -203,7 +253,7 @@ namespace org.mbarbon.p.runtime
         public static IP5Any CallStaticMethod(Runtime runtime, System.Type type,
                                               string method, P5Scalar[] args)
         {
-            foreach (var meth in type.GetMethods(BindingFlags.FlattenHierarchy|BindingFlags.Public|BindingFlags.Static))
+            foreach (var meth in SortMethods(type.GetMethods(BindingFlags.FlattenHierarchy|BindingFlags.Public|BindingFlags.Static)))
             {
                 if (meth.Name != method)
                     continue;
