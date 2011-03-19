@@ -123,7 +123,8 @@ namespace org.mbarbon.p.runtime
             return res;
         }
 
-        public static IP5Any Extend(Runtime runtime, string pack, string name)
+        public static IP5Any Extend(Runtime runtime, string pack, string name,
+                                    string method)
         {
             var cls = System.Type.GetType(name);
             var wrapper = new P5Scalar(new P5NetWrapper(cls));
@@ -133,9 +134,9 @@ namespace org.mbarbon.p.runtime
             pad.Add(wrapper);
             pad.Add(stash);
 
-            var glob = stash.GetStashGlob(runtime, "new", true);
+            var glob = stash.GetStashGlob(runtime, method, true);
 
-            var code = new P5NativeCode(pack + "::new", new P5Code.Sub(WrapNew));
+            var code = new P5NativeCode(pack + "::" + method, new P5Code.Sub(WrapNew));
 
             code.ScratchPad = pad;
             glob.Code = code;
