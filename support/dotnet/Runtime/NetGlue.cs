@@ -303,6 +303,15 @@ namespace org.mbarbon.p.runtime
             if (scalar == null)
                 return null;
 
+            // automatically dereference values created by Extend
+            var refbody = scalar.Body as P5Reference;
+            if (refbody != null)
+            {
+                scalar = refbody.Referred as P5Scalar;
+                if (scalar == null)
+                    return null;
+            }
+
             var wrapper = scalar.Body as P5NetWrapper;
             if (wrapper == null)
             {

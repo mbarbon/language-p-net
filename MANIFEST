@@ -67,3 +67,4 @@ t/run/net/040_extend.t
 t/run/net/050_array_base.t
 t/run/net/050_list_base.t
 t/run/net/052_iteration.t
+t/run/net/054_array_extend.t
