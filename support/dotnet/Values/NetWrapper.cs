@@ -39,7 +39,7 @@ namespace org.mbarbon.p.values
             if (type == typeof(string))
                 return Builtins.ParseInteger((string)obj);
 
-            throw new System.NotImplementedException();
+            throw new System.NotImplementedException(string.Format("Integer coercion not implemented for {0:S}", type));
         }
 
         public double AsFloat(Runtime runtime)
@@ -56,7 +56,7 @@ namespace org.mbarbon.p.values
                 return (bool)obj ? 1.0 : 0.0;
             // TODO string
 
-            throw new System.NotImplementedException();
+            throw new System.NotImplementedException(string.Format("Float coercion not implemented for {0:S}", type));
         }
 
         public bool AsBoolean(Runtime runtime)

@@ -332,7 +332,7 @@ namespace org.mbarbon.p.runtime
 
             var scalar = value as P5Scalar;
             if (scalar == null)
-                return null;
+                throw new System.NotImplementedException("Can only unwrap scalars");
 
             // automatically dereference values created by Extend
             var refbody = scalar.Body as P5Reference;
@@ -340,7 +340,7 @@ namespace org.mbarbon.p.runtime
             {
                 scalar = refbody.Referred as P5Scalar;
                 if (scalar == null)
-                    return null;
+                    throw new System.NotImplementedException("Can't unwrap reference to non-scalar");
             }
 
             var wrapper = scalar.Body as P5NetWrapper;
@@ -349,13 +349,13 @@ namespace org.mbarbon.p.runtime
                 if (type.IsAssignableFrom(value.GetType()))
                     return value;
 
-                return null;
+                throw new System.NotImplementedException(string.Format("Can't coerce {0:S} to {1:S}", value.GetType(), type));
             }
 
             if (type.IsAssignableFrom(wrapper.Object.GetType()))
                 return wrapper.Object;
 
-            return null;
+            throw new System.NotImplementedException(string.Format("Can't coerce {0:S} to {1:S}", wrapper.Object.GetType(), type));
         }
 
         public static P5Scalar WrapValue(object value)
