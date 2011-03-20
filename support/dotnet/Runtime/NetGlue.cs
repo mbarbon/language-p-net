@@ -369,5 +369,30 @@ namespace org.mbarbon.p.runtime
 
             return new P5Scalar(new P5NetWrapper(value));
         }
+
+        public static System.Type GetListType(object obj)
+        {
+            if ((obj as System.Collections.IList) == null)
+                return null;
+
+            return GetListType(obj.GetType());
+        }
+
+        public static System.Type GetListType(System.Type list_type)
+        {
+            // TODO maybe cache this check
+            var type = typeof(object);
+
+            foreach (var iface in list_type.GetInterfaces())
+            {
+                if (iface.IsGenericType && iface.GetGenericTypeDefinition() == typeof(System.Collections.Generic.IList<>))
+                {
+                    type = iface.GetGenericArguments()[0];
+                    break;
+                }
+            }
+
+            return type;
+        }
     }
 }
