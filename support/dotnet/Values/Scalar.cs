@@ -382,6 +382,9 @@ namespace org.mbarbon.p.values
         public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
                                  string method, P5Array args)
         {
+            if (!IsDefined(runtime))
+                throw new P5Exception(runtime, string.Format("Can't call method \"{0:S}\" on an undefined value", method));
+
             P5Exception error;
             var pmethod = FindMethod(runtime, method, out error);
             var wrapper = NetWrapper(runtime);
@@ -446,6 +449,7 @@ namespace org.mbarbon.p.values
             int colon = method.LastIndexOf("::");
             bool is_super = false;
             P5SymbolTable stash;
+            string stash_name;
 
             error = null;
 
@@ -454,24 +458,43 @@ namespace org.mbarbon.p.values
                 is_super = method.StartsWith("SUPER::");
 
                 if (is_super)
+                {
+                    stash_name = runtime.Package;
                     stash = runtime.SymbolTable.GetPackage(runtime, runtime.Package);
+                }
                 else
+                {
+                    stash_name = method;
                     stash = runtime.SymbolTable.GetPackage(runtime, method, true, false);
+                }
 
                 method = method.Substring(colon + 2);
             }
             else if (refbody != null)
+            {
                 stash = refbody.Referred.Blessed(runtime);
+                if (stash == null)
+                {
+                    error = new P5Exception(runtime, string.Format("Can't call method \"{0:S}\" on unblessed reference", method));
+
+                    return null;
+                }
+                stash_name = stash.GetName(runtime);
+            }
             else
-                stash = runtime.SymbolTable.GetPackage(runtime, AsString(runtime), false);
+            {
+                stash_name = AsString(runtime);
+                stash = runtime.SymbolTable.GetPackage(runtime, stash_name, false);
+            }
 
-            if (stash == null)
-                return null;
+            P5Code res = null;
+            if (stash != null)
+                res = stash.FindMethod(runtime, method, is_super);
 
-            var res = stash.FindMethod(runtime, method, is_super);
-
-            if (res == null)
-                error = new P5Exception(runtime, string.Format("Can't locate object method \"{0:S}\" via package \"{1:S}\"", method, stash.GetName(runtime)));
+            if (res == null && stash != null)
+                error = new P5Exception(runtime, string.Format("Can't locate object method \"{0:S}\" via package \"{1:S}\"", method, stash_name));
+            else if (res == null && stash == null)
+                error = new P5Exception(runtime, string.Format("Can't locate object method \"{0:S}\" via package \"{1:S}\" (perhaps you forgot to load \"{1:S}\"?)", method, stash_name));
 
             return res;
         }
