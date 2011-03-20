@@ -167,6 +167,21 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(wrapper);
         }
 
+        private static IP5Any WrapNewNoBless(Runtime runtime, Opcode.ContextValues context,
+                                             P5ScratchPad pad, P5Array args)
+        {
+            var count = args.GetCount(runtime);
+            var arg = new P5Scalar[count - 1];
+
+            for (int i = 1; i < count; ++i)
+                arg[i - 1] = args.GetItem(runtime, i) as P5Scalar;
+
+            var cls = pad[0] as P5Scalar;
+            var res = CallConstructor(runtime, cls, arg);
+
+            return res;
+        }
+
         private static IP5Any WrapNew(Runtime runtime, Opcode.ContextValues context,
                                       P5ScratchPad pad, P5Array args)
         {
@@ -187,7 +202,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public static IP5Any Extend(Runtime runtime, string pack, string name,
-                                    string method)
+                                    string method, bool bless)
         {
             var cls = System.Type.GetType(name);
             var wrapper = new P5Scalar(new P5NetWrapper(cls));
@@ -195,11 +210,14 @@ namespace org.mbarbon.p.runtime
             var pad = new P5ScratchPad();
 
             pad.Add(wrapper);
-            pad.Add(stash);
+            if (bless)
+                pad.Add(stash);
 
             var glob = stash.GetStashGlob(runtime, method, true);
-
-            var code = new P5NativeCode(pack + "::" + method, new P5Code.Sub(WrapNew));
+            var code = new P5NativeCode(pack + "::" + method,
+                                        bless ?
+                                            new P5Code.Sub(WrapNew) :
+                                            new P5Code.Sub(WrapNewNoBless));
 
             code.ScratchPad = pad;
             glob.Code = code;

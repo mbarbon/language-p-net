@@ -445,7 +445,7 @@ namespace org.mbarbon.p.values
             var cls = args.GetItem(runtime, 1);
 
             return Glue.Extend(runtime, pack.AsString(runtime),
-                               cls.AsString(runtime), "new");
+                               cls.AsString(runtime), "new", true);
         }
 
         public override bool IsMain
