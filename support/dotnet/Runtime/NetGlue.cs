@@ -331,6 +331,17 @@ namespace org.mbarbon.p.runtime
 
         public static object UnwrapValue(IP5Any value, System.Type type)
         {
+            return UnwrapValue(null, value, type);
+        }
+
+        public static T UnwrapValue<T>(Runtime runtime, IP5Any value)
+        {
+            return (T)UnwrapValue(runtime, value, typeof(T));
+        }
+
+        public static object UnwrapValue(Runtime runtime, IP5Any value,
+                                         System.Type type)
+        {
             if (value == null)
                 return null;
 

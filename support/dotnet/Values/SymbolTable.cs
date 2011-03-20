@@ -367,11 +367,11 @@ namespace org.mbarbon.p.values
         private static IP5Any WrapSpecializeType(Runtime runtime, Opcode.ContextValues context,
                                                  P5ScratchPad pad, P5Array args)
         {
-            var type = Glue.UnwrapValue(args.GetItem(runtime, 0), typeof(System.Type)) as System.Type;
+            var type = Glue.UnwrapValue<System.Type>(runtime, args.GetItem(runtime, 0));
             var tyargs = new System.Type[args.GetCount(runtime) - 1];
 
             for (int i = args.GetCount(runtime) - 1; i > 0; --i)
-                tyargs[i - 1] = Glue.UnwrapValue(args.GetItem(runtime, i), typeof(System.Type)) as System.Type;
+                tyargs[i - 1] = Glue.UnwrapValue<System.Type>(runtime, args.GetItem(runtime, i));
 
             return new P5Scalar(new P5NetWrapper(type.MakeGenericType(tyargs)));
         }
@@ -406,7 +406,7 @@ namespace org.mbarbon.p.values
         private static IP5Any WrapCallStatic(Runtime runtime, Opcode.ContextValues context,
                                              P5ScratchPad pad, P5Array args)
         {
-            var type = Glue.UnwrapValue(args.GetItem(runtime, 0), typeof(System.Type)) as System.Type;
+            var type = Glue.UnwrapValue<System.Type>(runtime, args.GetItem(runtime, 0));
             var name = args.GetItem(runtime, 1).AsString(runtime);
             int count = args.GetCount(runtime);
             var arg = new P5Scalar[count - 2];

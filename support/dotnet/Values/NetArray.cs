@@ -39,7 +39,7 @@ namespace org.mbarbon.p.values
             for (int i = 0; i < array.Count; ++i)
             {
                 if (e.MoveNext())
-                    array[i] = NetGlue.UnwrapValue(e.Current, typeof(object));
+                    array[i] = NetGlue.UnwrapValue<object>(runtime, e.Current);
                 else
                     array[i] = null;
             }
@@ -103,7 +103,7 @@ namespace org.mbarbon.p.values
         public P5Scalar PushList(Runtime runtime, P5Array items)
         {
             foreach (var item in items)
-                array.Add(NetGlue.UnwrapValue(item, type));
+                array.Add(NetGlue.UnwrapValue(runtime, item, type));
 
             return new P5Scalar(runtime, array.Count);
         }
@@ -112,7 +112,7 @@ namespace org.mbarbon.p.values
         {
             int i = 0;
             foreach (var item in items)
-                array.Insert(i++, NetGlue.UnwrapValue(item, type));
+                array.Insert(i++, NetGlue.UnwrapValue(runtime, item, type));
 
             return new P5Scalar(runtime, array.Count);
         }
@@ -223,7 +223,7 @@ namespace org.mbarbon.p.values
 
         public override void Set(Runtime runtime, IP5Any other)
         {
-            array[index] = NetGlue.UnwrapValue(other, type);
+            array[index] = NetGlue.UnwrapValue(runtime, other, type);
         }
 
         public override P5Scalar Get(Runtime runtime)
