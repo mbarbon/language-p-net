@@ -102,22 +102,41 @@ namespace org.mbarbon.p.values
 
         public P5Scalar PushList(Runtime runtime, P5Array items)
         {
-            throw new System.NotImplementedException();
+            foreach (var item in items)
+                array.Add(NetGlue.UnwrapValue(item, type));
+
+            return new P5Scalar(runtime, array.Count);
         }
 
         public P5Scalar UnshiftList(Runtime runtime, P5Array items)
         {
-            throw new System.NotImplementedException();
+            int i = 0;
+            foreach (var item in items)
+                array.Insert(i++, NetGlue.UnwrapValue(item, type));
+
+            return new P5Scalar(runtime, array.Count);
         }
 
         public IP5Any PopElement(Runtime runtime)
         {
-            throw new System.NotImplementedException();
+            if (array.Count == 0)
+                return new P5Scalar(runtime);
+
+            var res = array[array.Count - 1];
+            array.RemoveAt(array.Count - 1);
+
+            return NetGlue.WrapValue(res);
         }
 
         public IP5Any ShiftElement(Runtime runtime)
         {
-            throw new System.NotImplementedException();
+            if (array.Count == 0)
+                return new P5Scalar(runtime);
+
+            var res = array[0];
+            array.RemoveAt(0);
+
+            return NetGlue.WrapValue(res);
         }
 
         public P5List Splice(Runtime runtime, int start, int length)
