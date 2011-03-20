@@ -1,5 +1,6 @@
 using org.mbarbon.p.values;
 using System.Reflection;
+using System.Collections.Generic;
 using Type = System.Type;
 
 namespace org.mbarbon.p.runtime
@@ -349,14 +350,35 @@ namespace org.mbarbon.p.runtime
             if (scalar == null)
                 throw new System.NotImplementedException("Can only unwrap scalars");
 
+            // TODO more integral types
+            if (type.IsEnum && runtime != null)
+                return System.Enum.ToObject(type, value.AsInteger(runtime));
+            if (type == typeof(int) && runtime != null)
+                return value.AsInteger(runtime);
+
             // automatically dereference values created by Extend
             var refbody = scalar.Body as P5Reference;
             if (refbody != null)
             {
                 scalar = refbody.Referred as P5Scalar;
                 if (scalar == null)
-                    throw new System.NotImplementedException("Can't unwrap reference to non-scalar");
+                {
+                    var array = refbody.Referred as IP5Array;
+
+                    // TODO check element type
+                    if (array == null)
+                        throw new System.NotImplementedException(string.Format("Can't unwrap reference to {0:S} as {1:S}", refbody.Referred.GetType(), type));
+
+                    var element_type = GetListType(type);
+                    if (element_type != null)
+                        return UnwrapList(runtime, refbody.Referred as IP5Any, element_type);
+
+                    throw new System.NotImplementedException(string.Format("Can't unwrap reference to {0:S} as {1:S}", refbody.Referred.GetType(), type));
+                }
             }
+
+            if (!scalar.IsDefined(runtime))
+                return null;
 
             var wrapper = scalar.Body as P5NetWrapper;
             if (wrapper == null)
@@ -383,6 +405,42 @@ namespace org.mbarbon.p.runtime
                 return scalar;
 
             return new P5Scalar(new P5NetWrapper(value));
+        }
+
+        public static System.Collections.IList UnwrapList(Runtime runtime, IP5Any arr, System.Type type)
+        {
+            IP5Array array = arr as IP5Array;
+
+            // TODO dereference
+            var list_type = typeof(System.Collections.Generic.List<>).MakeGenericType(type);
+            System.Collections.IList list = list_type.GetConstructor(new System.Type[0]).Invoke(new object[0]) as System.Collections.IList;
+
+            foreach (var obj in array)
+                list.Add(UnwrapValue(runtime, obj, type));
+
+            return list;
+        }
+
+        public static T[] UnwrapArray<T>(Runtime runtime, IP5Any arr)
+        {
+            IP5Array array = arr as IP5Array;
+
+            if (array == null)
+            {
+                P5Scalar scalar = arr as P5Scalar;
+
+                array = scalar.DereferenceArray(runtime);
+            }
+
+            int count = array.GetCount(runtime);
+            var iter = array.GetEnumerator();
+
+            var values = new T[count];
+
+            for (int i = 0; i < count && iter.MoveNext(); ++i)
+                values.SetValue(UnwrapValue(runtime, iter.Current, typeof(T)), i);
+
+            return values;
         }
 
         public static System.Type GetListType(object obj)
