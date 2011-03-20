@@ -140,9 +140,9 @@ namespace org.mbarbon.p.values
             if (array != null)
                 return new P5NetArray(array, obj.GetType().GetElementType());
 
-            var list = obj as System.Collections.IList;
-            if (list != null)
-                return new P5NetArray(list, typeof(object));
+            var type = NetGlue.GetListType(obj);
+            if (type != null)
+                return new P5NetArray(obj as System.Collections.IList, type);
 
             throw new System.NotImplementedException();
         }
