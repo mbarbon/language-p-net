@@ -8,8 +8,8 @@ if( defined &Internals::Net::get_class ) {
 
     print $string eq 'aaaaaaaaaaaaaaaaaaaa' ? "ok\n" : "not ok - $string\n";
 
-    $idx = Internals::Net::call_method( $string, 'IndexOf', 'aaaa', 4 );
-    print $idx == 4 ? "ok\n" : "not ok\n";
+    $idx = Internals::Net::call_method( $string, 'IndexOf', 'aaaa', 4, 10, 0 );
+    print $idx == 4 ? "ok\n" : "not ok - $idx\n";
 
     $up = Internals::Net::call_method( $string, 'ToUpper' );
     print $up eq 'AAAAAAAAAAAAAAAAAAAA' ? "ok\n" : "not ok - $up\n";

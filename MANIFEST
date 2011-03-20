@@ -56,6 +56,7 @@ support/dotnet/dotnet.csproj
 support/dotnet/dotnet.sln
 t/run/net/001_base.t
 t/run/net/002_bool.t
+t/run/net/002_enum.t
 t/run/net/002_null.t
 t/run/net/002_string.t
 t/run/net/006_generics.t

@@ -38,6 +38,8 @@ namespace org.mbarbon.p.values
                 return (bool)obj ? 1 : 0;
             if (type == typeof(string))
                 return Builtins.ParseInteger((string)obj);
+            if (type.IsEnum)
+                return System.Convert.ToInt32(obj);
 
             throw new System.NotImplementedException(string.Format("Integer coercion not implemented for {0:S}", type));
         }
@@ -54,6 +56,9 @@ namespace org.mbarbon.p.values
                 return (double)(char)obj;
             if (type == typeof(bool))
                 return (bool)obj ? 1.0 : 0.0;
+            if (type.IsEnum)
+                return System.Convert.ToDouble(obj);
+
             // TODO string
 
             throw new System.NotImplementedException(string.Format("Float coercion not implemented for {0:S}", type));

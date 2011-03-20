@@ -15,7 +15,7 @@ namespace org.mbarbon.p.runtime
 
         private static bool IsIntegerType(Type type)
         {
-            return type == typeof(int);
+            return type == typeof(int) || type.IsEnum;
         }
 
         private static int CompareSignatures(ParameterInfo[] a, ParameterInfo[] b)
@@ -65,9 +65,11 @@ namespace org.mbarbon.p.runtime
                 || type == typeof(char))
                 return true;
 
-            if (type == typeof(int))
+            if (type == typeof(int) || type.IsEnum)
             {
-                if (scalar != null && !scalar.IsInteger(runtime))
+                if (   scalar != null
+                    && !scalar.IsInteger(runtime)
+                    && !scalar.IsFloat(runtime))
                     return false;
 
                 return true;
@@ -120,6 +122,8 @@ namespace org.mbarbon.p.runtime
         {
             if (type == typeof(int))
                 return arg.AsInteger(runtime);
+            if (type.IsEnum)
+                return System.Enum.ToObject(type, arg.AsInteger(runtime));
             if (type == typeof(char))
                 return arg.AsString(runtime)[0];
             if (type == typeof(bool))
