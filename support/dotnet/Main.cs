@@ -9,6 +9,32 @@ namespace org.mbarbon.p
 {
     class MainClass
     {
+        public static void ParseCommandLine(Runtime runtime, string[] args,
+                                            out string[] argv)
+        {
+            for (int i = 0; i < args.Length; ++i)
+            {
+                string arg = args[i];
+
+                switch (arg)
+                {
+                case "-Znative-regex":
+                    runtime.NativeRegex = true;
+                    break;
+                default:
+                    argv = new string[args.Length - i];
+                    for (int j = i; j < args.Length; ++j)
+                        argv[j - i] = args[j];
+
+                    return;
+                }
+            }
+
+            argv = null;
+
+            return;
+        }
+
         public static void Main(string[] args)
         {
             // use the invariant locale as the default
@@ -16,13 +42,13 @@ namespace org.mbarbon.p
                System.Globalization.CultureInfo.InvariantCulture;
 
             var runtime = new Runtime();
-            var cu = Serializer.ReadCompilationUnit(runtime, args[0]);
+            string[] argv;
 
-            // TODO used for bootstrap, add a flag to choose it a runtime
-            runtime.NativeRegex = true;
+            ParseCommandLine(runtime, args, out argv);
 
             try
             {
+                var cu = Serializer.ReadCompilationUnit(runtime, argv[0]);
                 P5Code main = new Generator(runtime).Generate(null, cu);
                 main.CallMain(runtime);
             }

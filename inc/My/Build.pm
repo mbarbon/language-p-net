@@ -215,7 +215,7 @@ sub _all_subdirs {
 }
 
 sub _run_p_tests {
-    my( $self, @test_dirs ) = @_;
+    my( $self, $suffix, @test_dirs ) = @_;
 
     $self->depends_on( 'code' );
 
@@ -228,14 +228,13 @@ sub _run_p_tests {
     $aggregator->start();
     foreach my $test_dir ( @test_dirs ) {
         my( $interpreter, @directories ) = @$test_dir;
-        my( $run_bc, $harness ) = ( 0 );
+        my $harness;
 
         if( $interpreter ) {
             my $cmdline;
             if( ref $interpreter ) {
-                if( $interpreter->[-1] =~ /\.exe$/ ) {
+                if( $interpreter->[0] =~ /^mono$/ ) {
                     $cmdline = $interpreter;
-                    $run_bc = 1;
                 } else {
                     $cmdline = [ $self->perl, '-S', '--', @$interpreter ];
                 }
@@ -256,9 +255,7 @@ sub _run_p_tests {
 
         my @tests = sort map $self->expand_test_dir( $_ ), @directories;
 
-        if( $run_bc ) {
-            $_ .= '.pb' foreach @tests;
-        }
+        $_ .= $suffix foreach @tests;
 
         local $ENV{PERL5OPT} = $ENV{HARNESS_PERL_SWITCHES}
           if $ENV{HARNESS_PERL_SWITCHES};
@@ -319,17 +316,17 @@ sub _expand_tags {
 }
 
 sub _run_dotnet {
-    my( $self, @tags ) = @_;
+    my( $self, $suffix, $args, @tags ) = @_;
 
-    my( @byte_compile, @run );
+    my @run;
     foreach my $tag ( @tags ) {
         my( $interpreter, @directories ) = @$tag;
 
-        push @run, [ [ 'mono', 'support/dotnet/bin/Debug/dotnet.exe' ],
+        push @run, [ [ 'mono', 'support/dotnet/bin/Debug/dotnet.exe', @$args ],
                      @directories ];
     }
 
-    $self->_run_p_tests( @run );
+    $self->_run_p_tests( $suffix, @run );
 }
 
 sub _byte_compile {
@@ -344,13 +341,14 @@ sub _byte_compile {
     }
 
     local $ENV{P_BYTECODE_PATH} = 'support/bytecode';
-    $self->_run_p_tests( @byte_compile );
+    $self->_run_p_tests( '', @byte_compile );
 }
 
 sub ACTION_test_dotnet_run {
     my( $self ) = @_;
 
-    $self->_run_dotnet( _expand_tags( $self, 'run_np' ) );
+    $self->_run_dotnet( '.pb', [ '-Znative-regex' ],
+                        _expand_tags( $self, 'run_np' ) );
 }
 
 sub ACTION_test_dump_bytecode {
@@ -369,7 +367,7 @@ running code).
 sub ACTION_test {
     my( $self ) = @_;
 
-    $self->_run_p_tests( _expand_tags( $self, 'all' ) );
+    $self->_run_p_tests( '', _expand_tags( $self, 'all' ) );
 }
 
 our $AUTOLOAD;
@@ -380,7 +378,7 @@ sub AUTOLOAD {
     die "Unknown action '$function'"
         unless $function =~ /^ACTION_test_(\w+)/;
 
-    $_[0]->_run_p_tests( _expand_tags( $_[0], $1 ) );
+    $_[0]->_run_p_tests( '', _expand_tags( $_[0], $1 ) );
 }
 
 1;
