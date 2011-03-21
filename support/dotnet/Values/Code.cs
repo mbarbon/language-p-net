@@ -5,12 +5,13 @@ namespace org.mbarbon.p.values
 {
     public class P5Code : IP5Referrable
     {
-        public P5Code(string _name)
+        public P5Code(string _name, string _proto)
         {
             subref = new Sub(UndefinedSub);
             scratchpad = null;
             is_main = false;
             name = _name;
+            proto = _proto;
         }
 
         public bool IsDefined(Runtime runtime)
@@ -18,17 +19,20 @@ namespace org.mbarbon.p.values
             return subref != (Sub)UndefinedSub;
         }
 
-        public P5Code(string _name, System.Delegate code, bool main)
+        public P5Code(string _name, string _proto,
+                      System.Delegate code, bool main)
         {
             subref = (Sub)code;
             scratchpad = null;
             is_main = main;
             name = _name;
+            proto = _proto;
         }
 
         public void Assign(Runtime runtime, P5Code other)
         {
             subref = other.subref;
+            proto = other.proto;
             scratchpad = other.scratchpad;
         }
 
@@ -89,7 +93,7 @@ namespace org.mbarbon.p.values
 
         public P5Scalar MakeClosure(Runtime runtime, P5ScratchPad outer)
         {
-            P5Code closure = new P5Code(name, subref, is_main);
+            P5Code closure = new P5Code(name, proto, subref, is_main);
             closure.scratchpad = scratchpad.CloseOver(runtime, outer);
 
             return new P5Scalar(runtime, closure);
@@ -126,6 +130,8 @@ namespace org.mbarbon.p.values
             get { return name.IndexOf("::") == -1 ? "main::" + name : name; }
         }
 
+        public string Prototype { get { return proto; } }
+
         protected Sub Subref { get { return subref; } }
 
         public delegate IP5Any Sub(Runtime runtime,
@@ -136,13 +142,13 @@ namespace org.mbarbon.p.values
         private Sub subref;
         private P5ScratchPad scratchpad;
         private bool is_main;
-        private string name;
+        private string name, proto;
     }
 
     public class P5NativeCode : P5Code
     {
         public P5NativeCode(string name, System.Delegate code) :
-            base(name, code, false)
+            base(name, null, code, false)
         {
         }
 

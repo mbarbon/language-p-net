@@ -43,7 +43,8 @@ namespace org.mbarbon.p.runtime
 
         public static Subroutine ReadSubroutine(BinaryReader reader, Subroutine[] subs, Subroutine sub)
         {
-            var name = ReadString(reader);
+            var name = ReadStringUndef(reader);
+            var proto = ReadStringUndef(reader);
             int type = reader.ReadByte();
             int outer_sub = reader.ReadInt32();
             int lex_count = reader.ReadInt32();
@@ -63,8 +64,8 @@ namespace org.mbarbon.p.runtime
             if (outer_sub >= 0)
                 sub.Outer = subs[outer_sub];
             sub.Lexicals = lexicals;
-            if (name.Length != 0)
-                sub.Name = name;
+            sub.Name = name;
+            sub.Prototype = proto;
             sub.Type = type;
             sub.OriginalRegex = regex;
 
@@ -177,6 +178,19 @@ namespace org.mbarbon.p.runtime
                 return "";
 
             byte[] bytes = reader.ReadBytes(size);
+
+            return System.Text.Encoding.UTF8.GetString(bytes);
+        }
+
+        public static string ReadStringUndef(BinaryReader reader)
+        {
+            uint size = reader.ReadUInt32();
+            if (size == 0xffffffff)
+                return null;
+            if (size == 0)
+                return "";
+
+            byte[] bytes = reader.ReadBytes((int)size);
 
             return System.Text.Encoding.UTF8.GetString(bytes);
         }
@@ -533,7 +547,7 @@ namespace org.mbarbon.p.runtime
 
         public int Type;
         public Subroutine Outer;
-        public string Name;
+        public string Name, Prototype;
         public List<BasicBlock> BasicBlocks;
         public List<LexicalInfo> Lexicals;
         public List<Scope> Scopes;

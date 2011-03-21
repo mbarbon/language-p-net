@@ -95,7 +95,7 @@ namespace org.mbarbon.p.values
             P5Typeglob glob = GetGlob(runtime, name, true);
             P5Code code;
             if ((code = glob.Code) == null && create)
-                code = glob.Code = new P5Code(name);
+                code = glob.Code = new P5Code(name, null);
 
             return code;
         }
@@ -105,7 +105,7 @@ namespace org.mbarbon.p.values
             P5Typeglob glob = GetStashGlob(runtime, name, true);
             P5Code code;
             if ((code = glob.Code) == null && create)
-                code = glob.Code = new P5Code(name);
+                code = glob.Code = new P5Code(name, null);
 
             return code;
         }

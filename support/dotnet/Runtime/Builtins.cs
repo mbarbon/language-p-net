@@ -373,7 +373,7 @@ namespace org.mbarbon.p.runtime
             if (glob.Code != null || !create)
                 return glob.Code;
 
-            return glob.Code = new P5Code(name);
+            return glob.Code = new P5Code(name, null);
         }
 
         public static P5Handle SymbolicReferenceHandle(Runtime runtime, IP5ScalarBody any, bool create)
