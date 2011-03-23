@@ -5,6 +5,8 @@ using Opcode = org.mbarbon.p.runtime.Opcode;
 using Builtins = org.mbarbon.p.runtime.Builtins;
 using Overloads = org.mbarbon.p.runtime.Overloads;
 using Glue = org.mbarbon.p.runtime.NetGlue;
+using Generator = org.mbarbon.p.runtime.Generator;
+using Serializer = org.mbarbon.p.runtime.Serializer;
 
 namespace org.mbarbon.p.values
 {
@@ -306,7 +308,7 @@ namespace org.mbarbon.p.values
             var add_overload = internals.GetStashGlob(runtime, "add_overload", true);
             add_overload.Code = new P5NativeCode("Internals::add_overload", new P5Code.Sub(WrapAddOverload));
 
-            // Internals::Net
+            // Internals::Net (TODO move to external assembly)
             var internals_net = GetPackage(runtime, "Internals::Net", true);
 
             var get_class = internals_net.GetStashGlob(runtime, "get_class", true);
@@ -332,6 +334,9 @@ namespace org.mbarbon.p.values
 
             var extend = internals_net.GetStashGlob(runtime, "extend", true);
             extend.Code = new P5NativeCode("Internals::Net::extend", new P5Code.Sub(WrapExtend));
+
+            var compile = internals_net.GetStashGlob(runtime, "compile_assembly", true);
+            compile.Code = new P5NativeCode("Internals::Net::compile_assembly", new P5Code.Sub(WrapCompileAssembly));
         }
 
         private static IP5Any WrapIsa(Runtime runtime, Opcode.ContextValues context,
@@ -446,6 +451,29 @@ namespace org.mbarbon.p.values
 
             return Glue.Extend(runtime, pack.AsString(runtime),
                                cls.AsString(runtime), "new", true);
+        }
+
+        private static IP5Any WrapCompileAssembly(Runtime runtime, Opcode.ContextValues context,
+                                                  P5ScratchPad pad, P5Array args)
+        {
+            var asm_path = args.GetItem(runtime, 0).AsString(runtime);
+            var generator = new Generator(runtime, asm_path);
+
+            for (int i = 1; i < args.GetCount(runtime); ++i)
+            {
+                var pack = args.GetItem(runtime, i).AsString(runtime);
+                var file = pack.Replace("::", "/") + ".pm";
+                var path = Builtins.SearchFile(runtime, file);
+
+                var cu = Serializer.ReadCompilationUnit(runtime, path);
+                cu.FileName = file;
+
+                generator.Generate(cu);
+            }
+
+            generator.Assembly.Save(new System.IO.FileInfo(asm_path + ".dll").Name);
+
+            return new P5Scalar(runtime);
         }
 
         public override bool IsMain

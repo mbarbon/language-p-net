@@ -30,6 +30,34 @@ namespace org.mbarbon.p.runtime
         }
     }
 
+    internal class AssemblyModuleLoader : IModuleLoader
+    {
+        public AssemblyModuleLoader(System.Reflection.Assembly _assembly)
+        {
+            assembly = _assembly;
+        }
+
+        public IP5Any TryLoad(Runtime runtime, Opcode.ContextValues context, string file)
+        {
+            System.Type module = assembly.GetType(file);
+            if (module == null)
+                return null;
+
+            object main_sub = module.GetMethod("InitModule")
+                                    .Invoke(null, new object[] { runtime });
+            P5Code main  = main_sub as P5Code;
+
+            var res = main.Call(runtime, context, null);
+
+            var inc = runtime.SymbolTable.GetHash(runtime, "INC", true);
+            inc.SetItem(runtime, file, new P5Scalar(runtime, module.FullName));
+
+            return res;
+        }
+
+        private System.Reflection.Assembly assembly;
+    }
+
     public partial class Builtins
     {
         internal static string SearchFile(Runtime runtime, string file)
