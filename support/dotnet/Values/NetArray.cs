@@ -141,12 +141,58 @@ namespace org.mbarbon.p.values
 
         public P5List Splice(Runtime runtime, int start, int length)
         {
-            throw new System.NotImplementedException();
+            var res = new List<IP5Any>();
+
+            // TODO _very_ inefficient, but IList does not have the
+            // right interface
+            for (int i = 0; i < length; ++i)
+            {
+                // TODO only in list context
+                res.Add(NetGlue.WrapValue(array[start]));
+                array.RemoveAt(start);
+            }
+
+            return new P5List(runtime, res);
         }
 
         public P5List Replace(Runtime runtime, int start, int length, IP5Any[] values)
         {
-            throw new System.NotImplementedException();
+            // TODO duplicated
+            var spliced = new List<IP5Any>();
+
+            foreach (var i in values)
+            {
+                var a = i as P5Array;
+                var h = i as P5Hash;
+                IEnumerator<IP5Any> enumerator = null;
+
+                if (h != null)
+                    enumerator = ((P5Hash)h.Clone(runtime, 1)).GetEnumerator(runtime);
+                else if (a != null)
+                    enumerator = ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime);
+
+                if (enumerator != null)
+                    while (enumerator.MoveNext())
+                        spliced.Add(enumerator.Current);
+                else
+                    spliced.Add(i.Clone(runtime, 0));
+            }
+
+            var res = new List<IP5Any>();
+
+            // TODO _very_ inefficient, but IList does not have the
+            // right interface
+            for (int i = 0; i < length; ++i)
+            {
+                // TODO only in list context
+                res.Add(NetGlue.WrapValue(array[start]));
+                array.RemoveAt(start);
+            }
+
+            for (int i = 0; i < spliced.Count; ++i)
+                array.Insert(start + i, NetGlue.UnwrapValue(runtime, spliced[i], type));
+
+            return new P5List(runtime, res);
         }
 
         public IP5Any LocalizeElement(Runtime runtime, int index)
