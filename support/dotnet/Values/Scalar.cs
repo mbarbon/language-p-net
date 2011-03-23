@@ -88,12 +88,20 @@ namespace org.mbarbon.p.values
                 offset = value.Length + offset;
             if (length < 0)
                 length = (value.Length + length) - offset;
+            if (offset + length > value.Length)
+                length = value.Length - offset;
+
+            // TODO warn if offset is outside string and warnings are
+            // active
         }
 
         private void AdjustOffsets(string value, ref int offset)
         {
             if (offset < 0)
                 offset = value.Length + offset;
+
+            // TODO warn if offset is outside string and warnings are
+            // active
         }
 
         public P5Scalar SpliceSubstring(Runtime runtime, int start, int length,
