@@ -83,6 +83,17 @@ namespace org.mbarbon.p.runtime
             return int.Parse(s);
         }
 
+        public static double ParseFloat(string s)
+        {
+            if (s.Length == 0)
+                return 0;
+            if (s[0] != '-' && !char.IsDigit(s[0]) && !char.IsWhiteSpace(s[0]) && s[0] != '.')
+                return 0;
+
+            // TODO this does not work for " 123", "-1_234", "12abc"
+            return double.Parse(s);
+        }
+
         public static int ParseBaseInteger(string s, int start, int num_base)
         {
             int rem = s.Length - start;

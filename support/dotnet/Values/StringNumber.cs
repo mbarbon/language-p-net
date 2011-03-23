@@ -46,7 +46,7 @@ namespace org.mbarbon.p.values
 
         public virtual int AsInteger(Runtime runtime)
         {
-            if ((flags & HasString) != 0) return System.Int32.Parse(stringValue);
+            if ((flags & HasString) != 0) return Builtins.ParseInteger(stringValue);
             if ((flags & HasInteger) != 0) return integerValue;
             if ((flags & HasFloat) != 0) return (int)floatValue;
 
@@ -55,7 +55,7 @@ namespace org.mbarbon.p.values
 
         public virtual double AsFloat(Runtime runtime)
         {
-            if ((flags & HasString) != 0) return System.Double.Parse(stringValue);
+            if ((flags & HasString) != 0) return Builtins.ParseFloat(stringValue);
             if ((flags & HasInteger) != 0) return integerValue;
             if ((flags & HasFloat) != 0) return floatValue;
 
