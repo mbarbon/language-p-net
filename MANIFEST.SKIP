@@ -5,6 +5,7 @@
 .pb$
 ^support/dotnet/bin/
 ^support/dotnet/Bytecode/BytecodeGenerated\.cs$
+^support/dotnet/Bytecode/BytecodeFactory\.cs$
 ^support/dotnet/Bytecode/Opclasses\.cs$
 ^support/dotnet/dotnet.pidb$
 ^support/dotnet/dotnet.userprefs$

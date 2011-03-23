@@ -374,7 +374,7 @@ namespace org.mbarbon.p.runtime
 
     public partial class CondJump : Opcode
     {
-        public BasicBlock To;
+        public BasicBlock To, True, False;
     }
 
     public partial class LexState : Opcode
@@ -460,7 +460,7 @@ namespace org.mbarbon.p.runtime
         public int Min, Max;
         public byte Greedy;
         public int Group;
-        public BasicBlock To;
+        public BasicBlock To, True, False;
         public int SubgroupsStart, SubgroupsEnd;
     }
 

@@ -7,4 +7,5 @@ dotnet.in
 *.usertasks
 *.pidb
 Bytecode/BytecodeGenerated.cs
+Bytecode/BytecodeFactory.cs
 Bytecode/Opclasses.cs
