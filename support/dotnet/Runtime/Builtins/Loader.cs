@@ -4,6 +4,32 @@ using File = System.IO.File;
 
 namespace org.mbarbon.p.runtime
 {
+    public interface IModuleLoader
+    {
+        IP5Any TryLoad(Runtime runtime, Opcode.ContextValues context, string file);
+    }
+
+    internal class IncModuleLoader : IModuleLoader
+    {
+        public IP5Any TryLoad(Runtime runtime, Opcode.ContextValues context, string file)
+        {
+            var path = Builtins.SearchFile(runtime, file);
+            if (path == null)
+                return null;
+
+            P5Code mod;
+            var cu = Serializer.ReadCompilationUnit(runtime, path);
+            mod = new Generator(runtime).Generate(null, cu);
+
+            var ret = mod.Call(runtime, context, null);
+
+            var inc = runtime.SymbolTable.GetHash(runtime, "INC", true);
+            inc.SetItem(runtime, file, new P5Scalar(runtime, path));
+
+            return ret;
+        }
+    }
+
     public partial class Builtins
     {
         internal static string SearchFile(Runtime runtime, string file)
@@ -31,22 +57,32 @@ namespace org.mbarbon.p.runtime
             return null;
         }
 
+        public static IP5Any LoadFile(Runtime runtime,
+                                      Opcode.ContextValues context,
+                                      string file)
+        {
+            IP5Any ret = null;
+
+            foreach (var loader in runtime.ModuleLoaders)
+            {
+                ret = loader.TryLoad(runtime, context, file);
+
+                if (ret != null)
+                    return ret;
+            }
+
+            return ret;
+        }
+
         public static IP5Any DoFile(Runtime runtime,
                                     Opcode.ContextValues context,
                                     P5Scalar file)
         {
             var file_s = file.AsString(runtime);
-            var path = SearchFile(runtime, file_s);
 
-            if (path == null)
+            var ret = LoadFile(runtime, context, file_s);
+            if (ret == null)
                 return new P5Scalar(runtime);
-
-            var cu = Serializer.ReadCompilationUnit(runtime, path);
-            P5Code main = new Generator(runtime).Generate(null, cu);
-            var ret = main.Call(runtime, context, null);
-
-            var inc = runtime.SymbolTable.GetHash(runtime, "INC", true);
-            inc.SetItem(runtime, file_s, new P5Scalar(runtime, path));
 
             return ret;
         }
@@ -75,15 +111,22 @@ namespace org.mbarbon.p.runtime
             if (inc.ExistsKey(runtime, file_s))
                 return new P5Scalar(runtime, 1);
 
-            var path = SearchFile(runtime, file_s);
-            if (path == null)
-                throw new P5Exception(runtime, string.Format("Can't locate {0:S} in @INC", file_s));
+            var ret = LoadFile(runtime, context, file_s);
+            if (ret == null)
+            {
+                var message = new System.Text.StringBuilder();
+                var inc_a = runtime.SymbolTable.GetArray(runtime, "INC", true);
 
-            var cu = Serializer.ReadCompilationUnit(runtime, path);
-            P5Code main = new Generator(runtime).Generate(null, cu);
-            var ret = main.Call(runtime, context, null);
+                message.Append(string.Format("Can't locate {0:S} in @INC (@INC contains:", file_s));
+                foreach (var dir in inc_a)
+                {
+                    message.Append(" ");
+                    message.Append(dir.AsString(runtime));
+                }
+                message.Append(")");
 
-            inc.SetItem(runtime, file_s, new P5Scalar(runtime, path));
+                throw new P5Exception(runtime, message.ToString());
+            }
 
             return ret;
         }

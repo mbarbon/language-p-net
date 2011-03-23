@@ -49,8 +49,12 @@ namespace org.mbarbon.p.runtime
             CallStack = new Stack<StackFrame>();
 
             // set up INC
-            SymbolTable.GetArray(this, "INC", true).Push(
-                this, new P5Scalar(this, "."));
+            ModuleLoaders = new List<IModuleLoader>();
+            ModuleLoaders.Add(new IncModuleLoader());
+
+            var inc = SymbolTable.GetArray(this, "INC", true);
+
+            inc.Push(this, new P5Scalar(this, "."));
         }
 
         public void SetException(P5Exception e)
@@ -141,6 +145,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public P5MainSymbolTable SymbolTable;
+        public List<IModuleLoader> ModuleLoaders;
         public Stack<StackFrame> CallStack;
         public string File, Package;
         public int Line, Hints;
