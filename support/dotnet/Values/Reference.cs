@@ -22,10 +22,15 @@ namespace org.mbarbon.p.values
             // TODO use overloading
             if (rx != null)
                 return rx.GetOriginal();
-
-            return string.Format("{0:s}(0x{1:x8})",
-                                 referred.ReferenceTypeString(runtime),
-                                 AsInteger(runtime));
+            if (referred.IsBlessed(runtime))
+                return string.Format("{2:s}={0:s}(0x{1:x8})",
+                                     referred.ReferenceTypeString(runtime),
+                                     AsInteger(runtime),
+                                     referred.Blessed(runtime).GetName(runtime));
+            else
+                return string.Format("{0:s}(0x{1:x8})",
+                                     referred.ReferenceTypeString(runtime),
+                                     AsInteger(runtime));
         }
 
         public virtual int AsInteger(Runtime runtime)
