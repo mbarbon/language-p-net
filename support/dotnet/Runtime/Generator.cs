@@ -472,8 +472,8 @@ namespace org.mbarbon.p.runtime
             return main;
         }
 
-        public P5Code CompleteGeneration(Subroutine[] subroutines,
-                                         Runtime runtime)
+        public Type CompleteGeneration(Subroutine[] subroutines,
+                                       Runtime runtime)
         {
             // force generation of anonymous subroutine templates before all
             // other subroutines
@@ -482,11 +482,7 @@ namespace org.mbarbon.p.runtime
 
             AddInitMethod(main);
 
-            Type mod = ClassBuilder.CreateType();
-            object main_sub = mod.GetMethod("InitModule")
-                                  .Invoke(null, new object[] { runtime });
-
-            return (P5Code)main_sub;
+            return ClassBuilder.CreateType();
         }
 
         private TypeBuilder ClassBuilder;
@@ -2749,19 +2745,18 @@ namespace org.mbarbon.p.runtime
 
     public class Generator
     {
-        public Generator(Runtime r)
+        public Generator(Runtime _runtime, string _assembly_name)
         {
-            Runtime = r;
-        }
+            runtime = _runtime;
 
-        public P5Code Generate(string assembly_name, CompilationUnit cu)
-        {
-            var file = new System.IO.FileInfo(cu.FileName);
-            AssemblyName asm_name = new AssemblyName(assembly_name != null ? assembly_name : file.Name);
-            AssemblyBuilder asm_builder =
+            // create module builder
+            var file_info = new System.IO.FileInfo(_assembly_name);
+            var asm_name = new AssemblyName(file_info.Name  + ".dll");
+            var asm_builder =
                 System.AppDomain.CurrentDomain.DefineDynamicAssembly(
-                    asm_name, AssemblyBuilderAccess.RunAndSave);
+                    asm_name, AssemblyBuilderAccess.RunAndSave, file_info.Directory.FullName);
 
+            // TODO make this an option
             Type daType = typeof(DebuggableAttribute);
             ConstructorInfo daCtor = daType.GetConstructor(
                 new Type[] { typeof(DebuggableAttribute.DebuggingModes) });
@@ -2771,16 +2766,14 @@ namespace org.mbarbon.p.runtime
                     DebuggableAttribute.DebuggingModes.Default });
             asm_builder.SetCustomAttribute(daBuilder);
 
-            ModuleBuilder mod_builder =
-                asm_builder.DefineDynamicModule(asm_name.Name,
-                                                asm_name.Name + ".dll",
-                                                true);
+            mod_builder = asm_builder.DefineDynamicModule(
+                file_info.Name, file_info.Name + ".dll", true);
+        }
 
-            // FIXME should at least be the module name with which the
-            //       file was loaded, in case multiple modules are
-            //       compiled to the same file; works for now
-            TypeBuilder perl_module = mod_builder.DefineType(file.Name, TypeAttributes.Public);
-            ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module, Runtime.NativeRegex);
+        public Type Generate(CompilationUnit cu)
+        {
+            TypeBuilder perl_module = mod_builder.DefineType(cu.FileName, TypeAttributes.Public);
+            ModuleGenerator perl_mod_generator = new ModuleGenerator(perl_module, runtime.NativeRegex);
 
             foreach (var sub in cu.Subroutines)
             {
@@ -2799,9 +2792,24 @@ namespace org.mbarbon.p.runtime
             }
 
             return perl_mod_generator.CompleteGeneration(cu.Subroutines,
-                                                         Runtime);
+                                                         runtime);
         }
 
-        Runtime Runtime;
+        public P5Code GenerateAndLoad(CompilationUnit cu)
+        {
+            Type mod = Generate(cu);
+            object main_sub = mod.GetMethod("InitModule")
+                                  .Invoke(null, new object[] { runtime });
+
+            return (P5Code)main_sub;
+        }
+
+        public AssemblyBuilder Assembly
+        {
+            get { return mod_builder.Assembly as AssemblyBuilder; }
+        }
+
+        Runtime runtime;
+        ModuleBuilder mod_builder;
     }
 }
