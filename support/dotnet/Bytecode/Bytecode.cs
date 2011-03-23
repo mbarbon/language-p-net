@@ -316,84 +316,84 @@ namespace org.mbarbon.p.runtime
     }
 
     // TODO autogenerate all opcode subclasses
-    public class Global : Opcode
+    public partial class Global : Opcode
     {
         public string Name;
         public Opcode.Sigil Slot;
     }
 
-    public class LocalGlobSlot : Opcode
+    public partial class LocalGlobSlot : Opcode
     {
         public string Name;
         public Opcode.Sigil Slot;
         public int Index;
     }
 
-    public class GlobSlot : Opcode
+    public partial class GlobSlot : Opcode
     {
         public Opcode.Sigil Slot;
     }
 
-    public class ConstantInt : Opcode
+    public partial class ConstantInt : Opcode
     {
         public int Value;
     }
 
-    public class ConstantString : Opcode
+    public partial class ConstantString : Opcode
     {
         public string Value;
     }
 
-    public class ConstantSub : Opcode
+    public partial class ConstantSub : Opcode
     {
         public Subroutine Value;
     }
 
-    public class ConstantFloat : Opcode
+    public partial class ConstantFloat : Opcode
     {
         public double Value;
     }
 
-    public class GetSet : Opcode
+    public partial class GetSet : Opcode
     {
         public int Index;
         public Opcode.Sigil Slot;
     }
 
-    public class Phi : Opcode
+    public partial class Phi : Opcode
     {
         public Opcode.Sigil[] Slots;
         public int[] Indices;
         public BasicBlock[] Blocks;
     }
 
-    public class Jump : Opcode
+    public partial class Jump : Opcode
     {
         public BasicBlock To;
     }
 
-    public class CondJump : Opcode
+    public partial class CondJump : Opcode
     {
         public BasicBlock To;
     }
 
-    public class LexState : Opcode
+    public partial class LexState : Opcode
     {
         public int Index;
     }
 
-    public class Temporary : Opcode
+    public partial class Temporary : Opcode
     {
         public int Index;
         public Opcode.Sigil Slot;
     }
 
-    public class ElementAccess : Opcode
+    public partial class ElementAccess : Opcode
     {
         public int Create;
     }
 
-    public class Lexical : Opcode
+    public partial class Lexical : Opcode
     {
         public LexicalInfo LexicalInfo;
 
@@ -408,54 +408,54 @@ namespace org.mbarbon.p.runtime
         }
     }
 
-    public class LocalLexical : Lexical
+    public partial class LocalLexical : Lexical
     {
         public int Index;
     }
 
-    public class LocalElement : Opcode
+    public partial class LocalElement : Opcode
     {
         public int Index;
     }
 
-    public class CallMethod : Opcode
+    public partial class CallMethod : Opcode
     {
         public string Method;
     }
 
-    public class RegexExact : Opcode
+    public partial class RegexExact : Opcode
     {
         public string Characters;
         public int Length;
     }
 
-    public class RegexClass : Opcode
+    public partial class RegexClass : Opcode
     {
         public string Elements, Ranges;
         public int Flags;
     }
 
-    public class RegexAccept : Opcode
+    public partial class RegexAccept : Opcode
     {
         public int Groups;
     }
 
-    public class RegexStartGroup : Opcode
+    public partial class RegexStartGroup : Opcode
     {
         public BasicBlock To;
     }
 
-    public class RegexTry : Opcode
+    public partial class RegexTry : Opcode
     {
         public BasicBlock To;
     }
 
-    public class RegexBacktrack : Opcode
+    public partial class RegexBacktrack : Opcode
     {
         public BasicBlock To;
     }
 
-    public class RegexQuantifier : Opcode
+    public partial class RegexQuantifier : Opcode
     {
         public int Min, Max;
         public byte Greedy;
@@ -464,33 +464,33 @@ namespace org.mbarbon.p.runtime
         public int SubgroupsStart, SubgroupsEnd;
     }
 
-    public class RegexCapture : Opcode
+    public partial class RegexCapture : Opcode
     {
         public int Group;
     }
 
-    public class RegexState : Opcode
+    public partial class RegexState : Opcode
     {
         public int Index;
     }
 
-    public class RegexMatch : Opcode
+    public partial class RegexMatch : Opcode
     {
         public int Index;
         public int Flags;
     }
 
-    public class RegexReplace : RegexMatch
+    public partial class RegexReplace : RegexMatch
     {
         public BasicBlock To;
     }
 
-    public class RegexEval : Opcode
+    public partial class RegexEval : Opcode
     {
         public int Flags;
     }
 
-    public class RegexTransliterate : Opcode
+    public partial class RegexTransliterate : Opcode
     {
         public string Match;
         public string Replacement;

@@ -4,7 +4,8 @@ use strict;
 use warnings;
 use Exporter 'import';
 
-our @EXPORT = qw(write_dotnet_deserializer);
+our @EXPORT = qw(write_dotnet_deserializer
+                 write_bytecode_classes);
 
 use Language::P::Parser::OpcodeList;
 
@@ -154,6 +155,80 @@ EOT
     print $out <<'EOT';
         }
     }
+}
+EOT
+}
+
+sub write_bytecode_classes {
+    my( $file ) = @ARGV;
+
+    my %op = %{Language::P::Parser::OpcodeList::parse_opdesc()};
+    my %classes = %{Language::P::Parser::OpcodeList::group_opcode_numbers( \%op )};
+    my %attributes = %{Language::P::Parser::OpcodeList::group_opcode_attributes( \%op )};
+
+    open my $out, '>', $file;
+
+    print $out <<'EOT';
+using org.mbarbon.p.values;
+
+namespace org.mbarbon.p.runtime
+{
+EOT
+
+    while( my( $class, $ops ) = each %classes ) {
+        my $attrs = $attributes{$class};
+
+        printf $out <<'EOT', $class;
+    public partial class %s
+    {
+EOT
+
+        for( my $i = 0; $i < @$attrs; $i += 2 ) {
+            my $type = $attrs->[$i + 1];
+            my $name = $attrs->[$i];
+            next if $name eq 'arg_count' || $name eq 'context';
+            next if    $class eq 'RegexReplace'
+                    && ( $name eq 'index' || $name eq 'flags' );
+            my $n = join '', map ucfirst, split /_/, $name;
+            my $ctype;
+
+            if( $type eq 's' ) {
+                $ctype = 'string';
+            } elsif( $type eq 'i' || $type eq 'i4' || $type eq 'i1' ) {
+                $ctype = 'int';
+            } elsif( $type eq 'i_a' ) {
+                $ctype = 'int[]';
+            } elsif( $type eq 'f' ) {
+                $ctype = 'double';
+            } elsif( $type eq 'i_sigil' ) {
+                $ctype = 'Opcode.Sigil';
+            } elsif( $type eq 'i_sigil_a' ) {
+                $ctype = 'Opcode.Sigil[]';
+            } elsif( $type eq 'b' ) {
+                $ctype = 'BasicBlock';
+            } elsif( $type eq 'b_a' ) {
+                $ctype = 'BasicBlock[]';
+            } elsif( $type eq 'c' ) {
+                $ctype = 'Subroutine';
+            } elsif( $type eq 'ls' || $type eq 'lp' ) {
+                # skipped for now
+                next;
+            } else {
+                die "Unhandled type '$type'";
+            }
+
+            printf $out <<'EOT', $ctype, $name, $n;
+        public %s %s() { return %s; }
+EOT
+        }
+
+        print $out <<'EOT';
+    }
+
+EOT
+    }
+
+    print $out <<'EOT';
 }
 EOT
 }

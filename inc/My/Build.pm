@@ -106,11 +106,16 @@ sub ACTION_code_dlr {
     _fix_dlr_path( $self );
 
     if( !$self->up_to_date( [ 'inc/OpcodesDotNet.pm' ],
-                            [ 'support/dotnet/Bytecode/BytecodeGenerated.cs' ] ) ) {
+                            [ 'support/dotnet/Bytecode/BytecodeGenerated.cs',
+                              'support/dotnet/Bytecode/Opclasses.cs' ] ) ) {
         $self->do_system( $^X, '-Iinc', '-Ilib',
                           '-MOpcodesDotNet', '-e', 'write_dotnet_deserializer()',
                           '--', 'support/dotnet/Bytecode/BytecodeGenerated.cs' );
-        $self->add_to_cleanup( 'support/dotnet/Bytecode/BytecodeGenerated.cs' );
+        $self->do_system( $^X, '-Iinc', '-Ilib',
+                          '-MOpcodesDotNet', '-e', 'write_bytecode_classes()',
+                          '--', 'support/dotnet/Bytecode/Opclasses.cs' );
+        $self->add_to_cleanup( 'support/dotnet/Bytecode/BytecodeGenerated.cs',
+                               'support/dotnet/Bytecode/Opclasses.cs' );
     }
 
     my @files = map glob( "support/dotnet/$_" ), qw(*.cs */*.cs */*/*.cs);

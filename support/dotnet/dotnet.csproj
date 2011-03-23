@@ -73,6 +73,7 @@
     <Compile Include="Runtime\Generator\DynamicGenerator.cs" />
     <Compile Include="Runtime\Generator\DynamicModuleGenerator.cs" />
     <Compile Include="Runtime\Generator\DynamicSubGenerator.cs" />
+    <Compile Include="Bytecode\Opclasses.cs" />
     <Compile Include="Runtime\Regex.cs" />
     <Compile Include="Runtime\NetRegex.cs" />
     <Compile Include="Runtime\Binders\BinaryOperationBinder.cs" />
