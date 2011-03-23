@@ -47,7 +47,7 @@ namespace org.mbarbon.p.runtime
                 var path = Path.Combine(iStr, file);
                 var path_pb = Path.Combine(iStr, file_pb);
 
-                if (File.Exists(path_pb))
+                if (!runtime.IgnoreBytecode && File.Exists(path_pb))
                     return path_pb;
                 // TODO can only load bytecode files for now
                 if (File.Exists(path))

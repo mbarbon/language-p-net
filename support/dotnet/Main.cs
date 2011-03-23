@@ -21,6 +21,9 @@ namespace org.mbarbon.p
                 case "-Znative-regex":
                     runtime.NativeRegex = true;
                     break;
+                case "-Zignore-bytecode":
+                    runtime.IgnoreBytecode = true;
+                    break;
                 default:
                     argv = new string[args.Length - i];
                     for (int j = i; j < args.Length; ++j)
