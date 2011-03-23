@@ -11,6 +11,13 @@ namespace org.mbarbon.p.values
             line = runtime.Line;
         }
 
+        public P5Exception(Runtime runtime, string str, string _file, int _line)
+        {
+            message = str;
+            file = _file;
+            line = _line;
+        }
+
         public P5Exception(Runtime runtime, P5Scalar objref)
         {
             reference = objref;
