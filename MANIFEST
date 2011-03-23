@@ -11,6 +11,7 @@ lib/Language/P/Net.pm
 support/.gitignore
 support/dotnet/AssemblyInfo.cs
 support/dotnet/Bytecode/Bytecode.cs
+support/dotnet/Bytecode/BytecodeGlue.cs
 support/dotnet/Main.cs
 support/dotnet/Runtime/Binders/ArrayAssignmentBinder.cs
 support/dotnet/Runtime/Binders/BinaryOperationBinder.cs
@@ -29,6 +30,7 @@ support/dotnet/Runtime/Builtins/Sprintf.cs
 support/dotnet/Runtime/Generator/DynamicGenerator.cs
 support/dotnet/Runtime/Generator/DynamicModuleGenerator.cs
 support/dotnet/Runtime/Generator/DynamicSubGenerator.cs
+support/dotnet/Runtime/Generator/GeneratorGlue.cs
 support/dotnet/Runtime/Generator/RegexGenerator.cs
 support/dotnet/Runtime/Generator/StaticGenerator.cs
 support/dotnet/Runtime/Generator/StaticModuleGenerator.cs
@@ -37,8 +39,10 @@ support/dotnet/Runtime/Generator/SubGenerator.cs
 support/dotnet/Runtime/NetGlue.cs
 support/dotnet/Runtime/NetRegex.cs
 support/dotnet/Runtime/Overload.cs
+support/dotnet/Runtime/Parser.cs
 support/dotnet/Runtime/Regex.cs
 support/dotnet/Runtime/Runtime.cs
+support/dotnet/Runtime/RuntimeGlue.cs
 support/dotnet/Runtime/Utils.cs
 support/dotnet/Values/ActiveScalar.cs
 support/dotnet/Values/Array.cs

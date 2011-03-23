@@ -7,7 +7,7 @@ using DebuggableAttribute = System.Diagnostics.DebuggableAttribute;
 
 namespace org.mbarbon.p.runtime
 {
-    public class Generator
+    public partial class Generator
     {
         public Generator(Runtime _runtime, string _assembly_name)
         {

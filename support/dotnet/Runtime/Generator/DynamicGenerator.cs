@@ -2,7 +2,7 @@ using org.mbarbon.p.values;
 
 namespace org.mbarbon.p.runtime
 {
-    public class DynamicGenerator
+    public partial class DynamicGenerator
     {
         public DynamicGenerator(Runtime _runtime)
         {

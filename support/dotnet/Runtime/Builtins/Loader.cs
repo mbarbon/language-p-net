@@ -18,8 +18,16 @@ namespace org.mbarbon.p.runtime
                 return null;
 
             P5Code mod;
-            var cu = Serializer.ReadCompilationUnit(runtime, path);
-            mod = new DynamicGenerator(runtime).GenerateAndLoad(cu);
+            if (path.EndsWith(".pb"))
+            {
+                var cu = Serializer.ReadCompilationUnit(runtime, path);
+                mod = new DynamicGenerator(runtime).GenerateAndLoad(cu);
+            }
+            else
+            {
+                var parser = runtime.parser;
+                mod = parser.ParseFile(runtime, path, false);
+            }
 
             var ret = mod.Call(runtime, context, null);
 

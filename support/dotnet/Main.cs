@@ -51,9 +51,19 @@ namespace org.mbarbon.p
 
             try
             {
-                var cu = Serializer.ReadCompilationUnit(runtime, argv[0]);
-                P5Code main = new DynamicGenerator(runtime).GenerateAndLoad(cu);
-                main.CallMain(runtime);
+                if (argv[0].EndsWith(".pb"))
+                {
+                    var cu = Serializer.ReadCompilationUnit(runtime, argv[0]);
+                    P5Code main = new DynamicGenerator(runtime).GenerateAndLoad(cu);
+
+                    main.CallMain(runtime);
+                }
+                else
+                {
+                    var parser = runtime.parser;
+
+                    parser.Run(runtime, argv);
+                }
             }
             catch (System.Reflection.TargetInvocationException te)
             {

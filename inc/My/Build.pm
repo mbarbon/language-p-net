@@ -3,6 +3,7 @@ package My::Build;
 use strict;
 use warnings;
 use parent qw(Module::Build);
+use Config;
 
 use File::Basename qw();
 use File::Path qw();
@@ -388,6 +389,15 @@ sub ACTION_test_dotnet_run_bytecode {
     my( $self ) = @_;
 
     $self->_run_dotnet( '.pb', [ '-Znative-regex' ],
+                        _expand_tags( $self, 'run_np' ) );
+}
+
+sub ACTION_test_dotnet_run {
+    my( $self ) = @_;
+
+    local $ENV{PERL5LIB} = join ":", grep !m{/$Config{archname}$}, @INC;
+
+    $self->_run_dotnet( '',  [ '-Zignore-bytecode', '-Znative-regex' ],
                         _expand_tags( $self, 'run_np' ) );
 }
 

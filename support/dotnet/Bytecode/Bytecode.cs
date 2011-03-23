@@ -497,7 +497,7 @@ namespace org.mbarbon.p.runtime
         public int Flags;
     }
 
-    public class Scope
+    public partial class Scope
     {
         public const int SCOPE_SUB       = 1;
         public const int SCOPE_EVAL      = 2;
@@ -521,28 +521,34 @@ namespace org.mbarbon.p.runtime
         public BasicBlock Exception;
     }
 
-    public class LexicalState
+    public partial class LexicalState
     {
+        public LexicalState() { }
+
         public int Scope;
         public int Hints;
         public string Package;
         public string Warnings;
     }
 
-    public class BasicBlock
+    public partial class BasicBlock
     {
         public BasicBlock()
         {
             Opcodes = new List<Opcode>();
+            Predecessors = new List<BasicBlock>();
+            Successors = new List<BasicBlock>();
         }
 
+        public string StartLabel;
         public int Index;
         public int Scope;
         public int Dead;
         public List<Opcode> Opcodes;
+        public List<BasicBlock> Predecessors, Successors;
     }
 
-    public class Subroutine
+    public partial class Subroutine
     {
         public enum CodeType
         {
@@ -590,7 +596,7 @@ namespace org.mbarbon.p.runtime
         public Subroutine[] Subroutines;
     }
 
-    public class LexicalInfo
+    public partial class LexicalInfo
     {
         public LexicalInfo()
             : this(null, 0, -1, -1, -1, false, false)

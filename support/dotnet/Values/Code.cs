@@ -3,7 +3,7 @@ using org.mbarbon.p.values;
 
 namespace org.mbarbon.p.values
 {
-    public class P5Code : IP5Referrable
+    public partial class P5Code : IP5Referrable
     {
         public static readonly int[] EMPTY_PROTO = new int[] { 0, 0, 0 };
 

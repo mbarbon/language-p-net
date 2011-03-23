@@ -62,8 +62,11 @@
     <Compile Include="Values\List.cs" />
     <Compile Include="Values\Typeglob.cs" />
     <Compile Include="Values\SymbolTable.cs" />
+    <Compile Include="Runtime\Parser.cs" />
     <Compile Include="Runtime\Runtime.cs" />
+    <Compile Include="Runtime\RuntimeGlue.cs" />
     <Compile Include="Bytecode\Bytecode.cs" />
+    <Compile Include="Bytecode\BytecodeGlue.cs" />
     <Compile Include="Bytecode\BytecodeGenerated.cs" />
     <Compile Include="Runtime\Generator\SubGenerator.cs" />
     <Compile Include="Runtime\Generator\RegexGenerator.cs" />
@@ -73,6 +76,7 @@
     <Compile Include="Runtime\Generator\DynamicGenerator.cs" />
     <Compile Include="Runtime\Generator\DynamicModuleGenerator.cs" />
     <Compile Include="Runtime\Generator\DynamicSubGenerator.cs" />
+    <Compile Include="Runtime\Generator\GeneratorGlue.cs" />
     <Compile Include="Bytecode\BytecodeFactory.cs" />
     <Compile Include="Bytecode\Opclasses.cs" />
     <Compile Include="Runtime\Regex.cs" />

@@ -38,7 +38,7 @@ namespace org.mbarbon.p.runtime
         public bool IsEval;
     }
 
-    public class Runtime
+    public partial class Runtime
     {
         public static System.Guid PerlGuid3 =
             new System.Guid("3FC48569-0551-4114-BF17-735ED691526B");
