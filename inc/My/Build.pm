@@ -345,7 +345,7 @@ sub _byte_compile {
     $self->_run_p_tests( '', @byte_compile );
 }
 
-sub ACTION_test_dotnet_run {
+sub ACTION_test_dotnet_run_bytecode {
     my( $self ) = @_;
 
     $self->_run_dotnet( '.pb', [ '-Znative-regex' ],
