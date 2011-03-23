@@ -28,6 +28,9 @@ namespace org.mbarbon.p.values
         {
             get
             {
+                if (message == null)
+                    return string.Format("Reference exception at {0:S} line {1}.\n",
+                                         file, line);
                 if (message.EndsWith("\n"))
                     return message;
 
