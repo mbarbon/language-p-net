@@ -226,7 +226,7 @@ namespace org.mbarbon.p.runtime
             for (int i = 0; i < sub.BasicBlocks.Count; ++i)
             {
                 var block = sub.BasicBlocks[i];
-                if (block == null)
+                if (block == null || block.Dead != 0) // TODO enumeration
                     continue;
                 if (block.Scope != scope.Id)
                 {

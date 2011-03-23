@@ -171,6 +171,7 @@ namespace org.mbarbon.p.runtime
             if (count == 0)
             {
                 bb.Opcodes = null;
+                bb.Dead = 2; // TODO enumeration
 
                 return null;
             }
@@ -537,6 +538,7 @@ namespace org.mbarbon.p.runtime
 
         public int Index;
         public int Scope;
+        public int Dead;
         public List<Opcode> Opcodes;
     }
 
