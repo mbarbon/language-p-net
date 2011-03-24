@@ -65,7 +65,10 @@
     <Compile Include="Runtime\Runtime.cs" />
     <Compile Include="Bytecode\Bytecode.cs" />
     <Compile Include="Bytecode\BytecodeGenerated.cs" />
-    <Compile Include="Runtime\Generator.cs" />
+    <Compile Include="Runtime\Generator\SubGenerator.cs" />
+    <Compile Include="Runtime\Generator\RegexGenerator.cs" />
+    <Compile Include="Runtime\Generator\StaticGenerator.cs" />
+    <Compile Include="Runtime\Generator\StaticModuleGenerator.cs" />
     <Compile Include="Runtime\Regex.cs" />
     <Compile Include="Runtime\NetRegex.cs" />
     <Compile Include="Runtime\Binders\BinaryOperationBinder.cs" />
