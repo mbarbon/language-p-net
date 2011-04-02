@@ -17,7 +17,7 @@ namespace org.mbarbon.p.values
             Lexicals = lexicals;
         }
 
-        public static P5ScratchPad CreateSubPad(LexicalInfo[] lexicals,
+        public static P5ScratchPad CreateSubPad(IList<LexicalInfo> lexicals,
                                                 P5ScratchPad main)
         {
             var pad = new P5ScratchPad();
