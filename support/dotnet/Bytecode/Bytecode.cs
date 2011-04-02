@@ -62,7 +62,12 @@ namespace org.mbarbon.p.runtime
 
             sub.BasicBlocks = new List<BasicBlock>();
             if (outer_sub >= 0)
+            {
                 sub.Outer = subs[outer_sub];
+                if (subs[outer_sub].Inner == null)
+                    subs[outer_sub].Inner = new List<Subroutine>();
+                subs[outer_sub].Inner.Add(sub);
+            }
             sub.Lexicals = lexicals;
             sub.Name = name;
             sub.Prototype = proto;
