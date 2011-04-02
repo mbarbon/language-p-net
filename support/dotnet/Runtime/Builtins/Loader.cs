@@ -19,7 +19,7 @@ namespace org.mbarbon.p.runtime
 
             P5Code mod;
             var cu = Serializer.ReadCompilationUnit(runtime, path);
-            mod = new Generator(runtime, cu.FileName).GenerateAndLoad(cu);
+            mod = new DynamicGenerator(runtime).GenerateAndLoad(cu);
 
             var ret = mod.Call(runtime, context, null);
 

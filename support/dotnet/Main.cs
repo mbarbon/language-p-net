@@ -49,7 +49,7 @@ namespace org.mbarbon.p
             try
             {
                 var cu = Serializer.ReadCompilationUnit(runtime, argv[0]);
-                P5Code main = new Generator(runtime, cu.FileName).GenerateAndLoad(cu);
+                P5Code main = new DynamicGenerator(runtime).GenerateAndLoad(cu);
                 main.CallMain(runtime);
             }
             catch (System.Reflection.TargetInvocationException te)

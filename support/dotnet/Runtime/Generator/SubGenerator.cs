@@ -10,7 +10,7 @@ using IEnumerator = System.Collections.IEnumerator;
 
 namespace org.mbarbon.p.runtime
 {
-    internal class SubGenerator
+    internal abstract class SubGenerator
     {
         private static Type[] ProtoRuntime =
             new Type[] { typeof(Runtime) };
@@ -20,8 +20,6 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(int) };
         private static Type[] ProtoRuntimeBool =
             new Type[] { typeof(Runtime), typeof(bool) };
-        private static Type[] ProtoRuntimeDouble =
-            new Type[] { typeof(Runtime), typeof(double) };
         private static Type[] ProtoRuntimeAny =
             new Type[] { typeof(Runtime), typeof(IP5Any) };
         private static Type[] ProtoStringString =
@@ -29,8 +27,7 @@ namespace org.mbarbon.p.runtime
         private static Type[] ProtoRuntimeStringBool =
             new Type[] { typeof(Runtime), typeof(string), typeof(bool) };
 
-        public SubGenerator(StaticModuleGenerator module_generator,
-                            Dictionary<Subroutine, StaticModuleGenerator.SubInfo> subroutines)
+        public SubGenerator()
         {
             Runtime = Expression.Parameter(typeof(Runtime), "runtime");
             Arguments = Expression.Parameter(typeof(P5Array), "args");
@@ -44,8 +41,6 @@ namespace org.mbarbon.p.runtime
             ValueBlocks = new Dictionary<BasicBlock, Expression>();
             LexStates = new List<ParameterExpression>();
             RxStates = new List<ParameterExpression>();
-            ModuleGenerator = module_generator;
-            Subroutines = subroutines;
         }
 
         private Expression OpContext(Opcode op)
@@ -482,129 +477,19 @@ namespace org.mbarbon.p.runtime
                     exps);
         }
 
-        private Expression UnaryOperator(Subroutine sub, Opcode op, Expression binder)
-        {
-            var delegateType = typeof(Func<CallSite, object, object>);
-            var siteType = typeof(CallSite<Func<CallSite, object, object>>);
-            var initExpr = Expression.Call(
-                siteType.GetMethod("Create"),
-                binder);
-            var staticField = ModuleGenerator.AddField(initExpr, siteType);
+        protected abstract Expression ConstantInteger(int value);
+        protected abstract Expression ConstantFloat(double value);
+        protected abstract Expression ConstantSub(Subroutine sub);
+        protected abstract Expression ConstantRegex(Subroutine sub);
 
-            var res =
-                Expression.Call(
-                    Expression.Field(
-                        Expression.Field(null, staticField),
-                        siteType.GetField("Target")
-                        ),
-                    delegateType.GetMethod("Invoke"),
-                    Expression.Field(null, staticField),
-                    Generate(sub, op.Childs[0]));
-
-            return Expression.Convert(res, typeof(IP5Any));
-        }
-
-        private Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
-        {
-            return UnaryOperator(
-                sub, op,
-                Expression.New(
-                    typeof(P5UnaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
-        }
-
-        private Expression UnaryIncrement(Subroutine sub, Opcode op, ExpressionType operation)
-        {
-            return UnaryOperator(
-                sub, op,
-                Expression.New(
-                    typeof(P5UnaryIncrementBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
-        }
-
-        private Expression BinaryOperator<Result>(Subroutine sub, Expression left, Expression right, Expression binder)
-        {
-            var delegateType = typeof(Func<CallSite, object, object, Result>);
-            var siteType = typeof(CallSite<Func<CallSite, object, object, Result>>);
-            var initExpr = Expression.Call(
-                siteType.GetMethod("Create"),
-                binder);
-            var staticField = ModuleGenerator.AddField(initExpr, siteType);
-
-            var res =
-                Expression.Call(
-                    Expression.Field(
-                        Expression.Field(null, staticField),
-                        siteType.GetField("Target")
-                        ),
-                    delegateType.GetMethod("Invoke"),
-                    Expression.Field(null, staticField),
-                    left,
-                    right);
-
-            if (res.Type == typeof(object))
-                return Expression.Convert(res, typeof(IP5Any));
-            else
-                return res;
-        }
-
-        private Expression BinaryOperator<Result>(Subroutine sub, Opcode op, Expression binder)
-        {
-            var left = Generate(sub, op.Childs[0]);
-            var right = Generate(sub, op.Childs[1]);
-
-            return BinaryOperator<Result>(sub, left, right, binder);
-        }
-
-        private Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
-        {
-            return BinaryOperator<object>(
-                sub, op,
-                Expression.New(
-                    typeof(P5BinaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
-        }
-
-        private Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
-        {
-            return BinaryOperator<object>(
-                sub, op,
-                Expression.New(
-                    typeof(P5NumericCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
-        }
-
-        private Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
-        {
-            return BinaryOperator<object>(
-                sub, op,
-                Expression.New(
-                    typeof(P5StringCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
-        }
-
-        private Expression Assign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
-        {
-            if (   typeof(IP5Array).IsAssignableFrom(lvalue.Type)
-                || typeof(P5Hash).IsAssignableFrom(lvalue.Type))
-                return BinaryOperator<object>(
-                    sub, lvalue, rvalue,
-                    Expression.New(
-                        typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
-                        ModuleGenerator.InitRuntime,
-                        Expression.Constant(cxt)));
-            else
-                return BinaryOperator<P5Scalar>(
-                    sub, lvalue, rvalue,
-                    Expression.New(
-                        typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
-                        ModuleGenerator.InitRuntime));
-        }
+        protected abstract Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation);
+        protected abstract Expression UnaryIncrement(Subroutine sub, Opcode op, ExpressionType operation);
+        protected abstract Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation);
+        protected abstract Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation);
+        protected abstract Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation);
+        protected abstract Expression Assign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue);
+        protected abstract Expression Defined(Subroutine sub, Opcode op);
+        protected abstract void DefinePackage(string pack);
 
         private Expression ForceScalar(Expression e)
         {
@@ -640,36 +525,14 @@ namespace org.mbarbon.p.runtime
                 return Expression.New(ctor, new Expression[] { Runtime });
             }
             case Opcode.OpNumber.OP_CONSTANT_INTEGER:
-            {
-                var ctor = typeof(P5Scalar).GetConstructor(ProtoRuntimeInt);
-                var ci = (ConstantInt)op;
-                var init =
-                    Expression.New(ctor,
-                                   new Expression[] {
-                                       ModuleGenerator.InitRuntime,
-                                       Expression.Constant(ci.Value) });
-                FieldInfo field = ModuleGenerator.AddField(init);
-
-                return Expression.Field(null, field);
-            }
+                return ConstantInteger(((ConstantInt)op).Value);
             case Opcode.OpNumber.OP_CONSTANT_FLOAT:
-            {
-                var ctor = typeof(P5Scalar).GetConstructor(ProtoRuntimeDouble);
-                var cf = (ConstantFloat)op;
-                var init =
-                    Expression.New(ctor,
-                                   new Expression[] {
-                                       ModuleGenerator.InitRuntime,
-                                       Expression.Constant(cf.Value) });
-                FieldInfo field = ModuleGenerator.AddField(init);
-
-                return Expression.Field(null, field);
-            }
+                return ConstantFloat(((ConstantFloat)op).Value);
             case Opcode.OpNumber.OP_CONSTANT_SUB:
             {
-                ConstantSub cs = (ConstantSub)op;
+                var cs = (ConstantSub)op;
 
-                return Expression.Field(null, Subroutines[cs.Value].CodeField);
+                return ConstantSub(cs.Value);
             }
             case Opcode.OpNumber.OP_UNDEF:
             {
@@ -1051,11 +914,7 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_MINUS:
                 return UnaryOperator(sub, op, ExpressionType.Negate);
             case Opcode.OpNumber.OP_DEFINED:
-                return UnaryOperator(
-                    sub, op,
-                    Expression.New(
-                        typeof(P5DefinedBinder).GetConstructor(new[] { typeof(Runtime) }),
-                        ModuleGenerator.InitRuntime));
+                return Defined(sub, op);
             case Opcode.OpNumber.OP_ORD:
                 return Expression.Call(
                     typeof(Builtins).GetMethod("Ord"),
@@ -1889,7 +1748,7 @@ namespace org.mbarbon.p.runtime
 
                 // force package creation
                 if (state.Package != null)
-                    ModuleGenerator.AddInitPackage(state.Package);
+                    DefinePackage(state.Package);
 
                 return Expression.Block(
                     typeof(void),
@@ -1943,9 +1802,9 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_CONSTANT_REGEX:
             {
-                ConstantSub cs = (ConstantSub)op;
+                var cs = (ConstantSub)op;
 
-                return Expression.Field(null, Subroutines[cs.Value].CodeField);
+                return ConstantRegex(cs.Value);
             }
             case Opcode.OpNumber.OP_EVAL_REGEX:
             {
@@ -2255,7 +2114,5 @@ namespace org.mbarbon.p.runtime
         private List<Expression> Blocks;
         private Dictionary<BasicBlock, Expression> ValueBlocks;
         private bool IsMain;
-        private StaticModuleGenerator ModuleGenerator;
-        private Dictionary<Subroutine, StaticModuleGenerator.SubInfo> Subroutines;
     }
 }

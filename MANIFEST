@@ -24,9 +24,13 @@ support/dotnet/Runtime/Builtins/FileSystem.cs
 support/dotnet/Runtime/Builtins/IO.cs
 support/dotnet/Runtime/Builtins/Loader.cs
 support/dotnet/Runtime/Builtins/Sprintf.cs
+support/dotnet/Runtime/Generator/DynamicGenerator.cs
+support/dotnet/Runtime/Generator/DynamicModuleGenerator.cs
+support/dotnet/Runtime/Generator/DynamicSubGenerator.cs
 support/dotnet/Runtime/Generator/RegexGenerator.cs
 support/dotnet/Runtime/Generator/StaticGenerator.cs
 support/dotnet/Runtime/Generator/StaticModuleGenerator.cs
+support/dotnet/Runtime/Generator/StaticSubGenerator.cs
 support/dotnet/Runtime/Generator/SubGenerator.cs
 support/dotnet/Runtime/NetGlue.cs
 support/dotnet/Runtime/NetRegex.cs

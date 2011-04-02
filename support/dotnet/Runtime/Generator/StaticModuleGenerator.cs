@@ -159,7 +159,7 @@ namespace org.mbarbon.p.runtime
 
         public void AddMethod(Subroutine sub)
         {
-            var sg = new SubGenerator(this, Subroutines);
+            var sg = new StaticSubGenerator(this, Subroutines);
             var body = sg.Generate(sub, Subroutines[sub].IsMain);
 
             MethodBuilder method_builder =
