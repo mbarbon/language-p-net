@@ -92,7 +92,16 @@ namespace org.mbarbon.p.values
 
         public P5List Slice(Runtime runtime, P5Array keys, bool create)
         {
-            throw new System.NotImplementedException();
+            var res = new P5List(runtime);
+            var list = new List<IP5Any>();
+
+            foreach (var key in keys)
+            {
+                list.Add(GetItemOrUndef(runtime, key, create));
+            }
+            res.SetArray(list);
+
+            return res;
         }
 
         public void PushFlatten(Runtime runtime, IP5Value value)
