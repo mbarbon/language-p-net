@@ -17,7 +17,23 @@ namespace org.mbarbon.p.values
             Lexicals = lexicals;
         }
 
-        public static P5ScratchPad CreateSubPad(IList<LexicalInfo> lexicals,
+        public static P5ScratchPad CreateMainPad(Runtime runtime,
+                                                 IList<LexicalInfo> lexicals,
+                                                 P5ScratchPad main)
+        {
+            foreach (var lex in lexicals)
+            {
+                main.AddValue(lex);
+                if (!lex.InPad)
+                    continue;
+                main.GetOrCreateValue(runtime, lex.Slot, lex.Index);
+            }
+
+            return main;
+        }
+
+        public static P5ScratchPad CreateSubPad(Runtime runtime,
+                                                IList<LexicalInfo> lexicals,
                                                 P5ScratchPad main)
         {
             var pad = new P5ScratchPad();
@@ -32,7 +48,8 @@ namespace org.mbarbon.p.values
                 {
                     while (pad.Count <= lex.Index)
                         pad.Add(null);
-                    pad[lex.Index] = main[lex.OuterIndex];
+                    pad[lex.Index] = main.GetOrCreateValue(runtime, lex.Slot,
+                                                           lex.OuterIndex);
                 }
             }
 
@@ -85,6 +102,24 @@ namespace org.mbarbon.p.values
             }
 
             return closure;
+        }
+
+        public IP5Any GetOrCreateValue(Runtime runtime, Opcode.Sigil slot,
+                                       int index)
+        {
+            if (Count > index && this[index] != null)
+                return this[index];
+
+            while (Count <= index)
+                Add(null);
+            if (slot == Opcode.Sigil.SCALAR)
+                this[index] = new P5Scalar(runtime);
+            else if (slot == Opcode.Sigil.ARRAY)
+                this[index] = new P5Array(runtime);
+            else if (slot == Opcode.Sigil.HASH)
+                this[index] = new P5Hash(runtime);
+
+            return this[index];
         }
 
         public IP5Any GetScalar(Runtime runtime, int index)

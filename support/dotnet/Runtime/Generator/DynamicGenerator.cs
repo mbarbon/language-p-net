@@ -14,9 +14,6 @@ namespace org.mbarbon.p.runtime
         {
             P5Code main = null;
 
-            // assume main is index 0
-            mod_generator.CreateMainPad(cu.Subroutines[0]);
-
             foreach (var sub in cu.Subroutines)
             {
                 if (sub.IsRegex)

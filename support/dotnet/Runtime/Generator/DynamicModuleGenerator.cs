@@ -10,11 +10,7 @@ namespace org.mbarbon.p.runtime
             runtime = _runtime;
             subroutines = new Dictionary<Subroutine, P5Code>();
             regexes = new Dictionary<Subroutine, IP5Regex>();
-        }
-
-        internal void CreateMainPad(Subroutine sub)
-        {
-            main_pad = P5ScratchPad.CreateSubPad(sub.Lexicals, null).NewScope(runtime);
+            main_pad = new P5ScratchPad();
         }
 
         internal void Generate(Subroutine sub)
@@ -49,9 +45,12 @@ namespace org.mbarbon.p.runtime
             var code = new P5Code(sub.Name, sub.Prototype, deleg, sub.IsMain);
 
             if (sub.IsMain)
-                code.ScratchPad = main_pad;
+                code.ScratchPad = P5ScratchPad.CreateMainPad(runtime,
+                                                             sub.Lexicals,
+                                                             main_pad);
             else
-                code.ScratchPad = P5ScratchPad.CreateSubPad(sub.Lexicals,
+                code.ScratchPad = P5ScratchPad.CreateSubPad(runtime,
+                                                            sub.Lexicals,
                                                             main_pad);
 
             if (sub.Name != null)

@@ -243,8 +243,8 @@ namespace org.mbarbon.p.runtime
                         Expression.Field(null, si.CodeField),
                         initcode));
 
-                // code.ScratchPad = P5ScratchPad.CreateSubPad(lexicals,
-                //                       main.ScratchPad)
+                // code.ScratchPad = P5ScratchPad.CreateSubPad(runtime,
+                //                       lexicals, main.ScratchPad)
                 Expression[] alllex = new Expression[si.Lexicals.Count];
                 for (int i = 0; i < alllex.Length; ++i)
                 {
@@ -271,6 +271,7 @@ namespace org.mbarbon.p.runtime
                             "ScratchPad"),
                         Expression.Call(
                             typeof(P5ScratchPad).GetMethod("CreateSubPad"),
+                            InitRuntime,
                             lexicals,
                             main != null ?
                             (Expression)Expression.Property(
