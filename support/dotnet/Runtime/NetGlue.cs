@@ -80,6 +80,23 @@ namespace org.mbarbon.p.runtime
             if (scalar != null && !scalar.IsDefined(runtime))
                 return true;
 
+            if (type.IsArray)
+            {
+                var refbody = scalar.Body as P5Reference;
+                var wrapper = scalar.Body as P5NetWrapper;
+
+                if (refbody != null)
+                {
+                    var array = refbody.Referred as IP5Array;
+
+                    if (array != null)
+                        return true;
+                }
+
+                if (wrapper != null)
+                    return wrapper.Object.GetType().IsArray;
+            }
+
             if (typeof(IP5Any).IsAssignableFrom(type))
             {
                 if (type == value.GetType())
@@ -141,8 +158,13 @@ namespace org.mbarbon.p.runtime
             if (typeof(IP5Any).IsAssignableFrom(type))
                 return arg;
 
+            // array
+            if (type.IsArray)
+                return UnwrapArray(runtime, scalar, type.GetElementType());
+
             // fallback
             var net_wrapper = scalar.NetWrapper(runtime);
+
             return net_wrapper.Object;
         }
 
@@ -351,10 +373,15 @@ namespace org.mbarbon.p.runtime
                 throw new System.NotImplementedException("Can only unwrap scalars");
 
             // TODO more integral types
-            if (type.IsEnum && runtime != null)
-                return System.Enum.ToObject(type, value.AsInteger(runtime));
-            if (type == typeof(int) && runtime != null)
-                return value.AsInteger(runtime);
+            if (runtime != null)
+            {
+                if (type.IsEnum)
+                    return System.Enum.ToObject(type, value.AsInteger(runtime));
+                if (type == typeof(int))
+                    return value.AsInteger(runtime);
+                if (type == typeof(char))
+                    return (char)value.AsInteger(runtime);
+            }
 
             // automatically dereference values created by Extend
             var refbody = scalar.Body as P5Reference;
@@ -423,6 +450,12 @@ namespace org.mbarbon.p.runtime
 
         public static T[] UnwrapArray<T>(Runtime runtime, IP5Any arr)
         {
+            return (T[])UnwrapArray(runtime, arr, typeof(T));
+        }
+
+        public static System.Array UnwrapArray(Runtime runtime, IP5Any arr,
+                                               Type type)
+        {
             IP5Array array = arr as IP5Array;
 
             if (array == null)
@@ -435,10 +468,10 @@ namespace org.mbarbon.p.runtime
             int count = array.GetCount(runtime);
             var iter = array.GetEnumerator();
 
-            var values = new T[count];
+            var values = System.Array.CreateInstance(type, count);
 
             for (int i = 0; i < count && iter.MoveNext(); ++i)
-                values.SetValue(UnwrapValue(runtime, iter.Current, typeof(T)), i);
+                values.SetValue(UnwrapValue(runtime, iter.Current, type), i);
 
             return values;
         }

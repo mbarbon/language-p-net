@@ -79,3 +79,4 @@ t/run/net/051_list_array_ops.t
 t/run/net/052_iteration.t
 t/run/net/054_array_extend.t
 t/run/net/055_list_splice.t
+t/run/net/056_array_argument.t
