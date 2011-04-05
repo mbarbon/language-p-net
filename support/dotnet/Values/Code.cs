@@ -5,6 +5,8 @@ namespace org.mbarbon.p.values
 {
     public class P5Code : IP5Referrable
     {
+        public static readonly int[] EMPTY_PROTO = new int[] { 0, 0, 0 };
+
         public P5Code(string _name, int[] _proto)
         {
             subref = new Sub(UndefinedSub);

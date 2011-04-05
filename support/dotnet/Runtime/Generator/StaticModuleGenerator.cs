@@ -222,10 +222,28 @@ namespace org.mbarbon.p.runtime
                     continue;
 
                 // new P5Code(System.Delegate.CreateDelegate(method, null)
+                Expression proto;
+                if (si.Prototype == null)
+                    proto = Expression.Constant(null, typeof(int[]));
+                else if (   si.Prototype.Length == 3
+                         && si.Prototype[0] == 0
+                         && si.Prototype[1] == 0
+                         && si.Prototype[2] == 0)
+                    proto = Expression.Field(null, typeof(P5Code).GetField("EMPTY_PROTO"));
+                else
+                {
+                    Expression[] values = new Expression[si.Prototype.Length];
+
+                    for (int i = 0; i < si.Prototype.Length; ++i)
+                        values[i] = Expression.Constant(si.Prototype[i]);
+
+                    proto = Expression.NewArrayInit(typeof(int), values);
+                }
+
                 Expression initcode =
                     Expression.New(code_ctor, new Expression[] {
                             Expression.Constant(si.SubName ?? "ANONCODE"),
-                            Expression.Constant(si.Prototype, typeof(int[])),
+                            proto,
                             Expression.Call(
                                 create_delegate,
                                 Expression.Constant(typeof(P5Code.Sub)),
