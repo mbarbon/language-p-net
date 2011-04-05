@@ -275,6 +275,11 @@ namespace org.mbarbon.p.runtime
         public const int FLAG_RX_DELETE       = 2;
         public const int FLAG_RX_SQUEEZE      = 4;
 
+        public const int CHANGED_HINTS        = 1;
+        public const int CHANGED_WARNINGS     = 2;
+        public const int CHANGED_PACKAGE      = 4;
+        public const int CHANGED_ALL          = 7;
+
         public enum Sigil
         {
             SCALAR    = 1,
