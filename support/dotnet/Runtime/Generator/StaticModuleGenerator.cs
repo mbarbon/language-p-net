@@ -31,7 +31,7 @@ namespace org.mbarbon.p.runtime
                 get { return Subroutine.Name; }
             }
 
-            internal string Prototype
+            internal int[] Prototype
             {
                 get { return Subroutine.Prototype; }
             }
@@ -195,7 +195,7 @@ namespace org.mbarbon.p.runtime
                                        bool anonymous, FieldInfo main)
         {
             var code_ctor = typeof(P5Code).GetConstructor(
-                new[] { typeof(string), typeof(string), typeof(P5Code.Sub), typeof(bool) });
+                new[] { typeof(string), typeof(int[]), typeof(P5Code.Sub), typeof(bool) });
             var get_method =
                 typeof(Type).GetMethod(
                     "GetMethod", new Type[] { typeof(string) });
@@ -225,7 +225,7 @@ namespace org.mbarbon.p.runtime
                 Expression initcode =
                     Expression.New(code_ctor, new Expression[] {
                             Expression.Constant(si.SubName ?? "ANONCODE"),
-                            Expression.Constant(si.Prototype, typeof(string)),
+                            Expression.Constant(si.Prototype, typeof(int[])),
                             Expression.Call(
                                 create_delegate,
                                 Expression.Constant(typeof(P5Code.Sub)),

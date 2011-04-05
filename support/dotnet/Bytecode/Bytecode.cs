@@ -44,7 +44,16 @@ namespace org.mbarbon.p.runtime
         public static Subroutine ReadSubroutine(BinaryReader reader, Subroutine[] subs, Subroutine sub)
         {
             var name = ReadStringUndef(reader);
-            var proto = ReadStringUndef(reader);
+            int proto_count = reader.ReadInt32();
+            int[] proto = null;
+
+            if (proto_count >= 0)
+            {
+                proto = new int[proto_count];
+                for (int i = 0; i < proto_count; ++i)
+                    proto[i] = reader.ReadInt32();
+            }
+
             int type = reader.ReadByte();
             int outer_sub = reader.ReadInt32();
             int lex_count = reader.ReadInt32();
@@ -556,8 +565,9 @@ namespace org.mbarbon.p.runtime
         }
 
         public int Type;
+        public int[] Prototype;
         public Subroutine Outer;
-        public string Name, Prototype;
+        public string Name;
         public List<BasicBlock> BasicBlocks;
         public List<LexicalInfo> Lexicals;
         public List<Scope> Scopes;

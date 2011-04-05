@@ -5,7 +5,7 @@ namespace org.mbarbon.p.values
 {
     public class P5Code : IP5Referrable
     {
-        public P5Code(string _name, string _proto)
+        public P5Code(string _name, int[] _proto)
         {
             subref = new Sub(UndefinedSub);
             scratchpad = null;
@@ -19,7 +19,7 @@ namespace org.mbarbon.p.values
             return subref != (Sub)UndefinedSub;
         }
 
-        public P5Code(string _name, string _proto,
+        public P5Code(string _name, int[] _proto,
                       System.Delegate code, bool main)
         {
             subref = (Sub)code;
@@ -130,7 +130,7 @@ namespace org.mbarbon.p.values
             get { return name.IndexOf("::") == -1 ? "main::" + name : name; }
         }
 
-        public string Prototype { get { return proto; } }
+        public int[] Prototype { get { return proto; } }
 
         protected Sub Subref { get { return subref; } }
 
@@ -142,7 +142,8 @@ namespace org.mbarbon.p.values
         private Sub subref;
         private P5ScratchPad scratchpad;
         private bool is_main;
-        private string name, proto;
+        private string name;
+        private int[] proto;
     }
 
     public class P5NativeCode : P5Code
