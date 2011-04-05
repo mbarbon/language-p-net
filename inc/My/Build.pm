@@ -120,7 +120,8 @@ sub ACTION_code_dlr {
                             [ 'support/dotnet/bin/Debug/dotnet.exe' ] ) ) {
         $self->do_system( 'mdtool', 'build',
                           '--project:dotnet', '--configuration:Debug',
-                          'support/dotnet/dotnet.sln' );
+                          'support/dotnet/dotnet.sln' )
+          or die 'Error building runtime';
     }
 }
 
