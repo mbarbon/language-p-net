@@ -100,6 +100,35 @@ sub _fix_dlr_path {
                     } );
 }
 
+=head2 build_parser
+
+Build the Perl parser.
+
+=cut
+
+sub ACTION_build_parser {
+    my( $self ) = @_;
+
+    $self->depends_on( 'code_dlr' );
+
+    local $ENV{P_BYTECODE_PATH} = 'support/bytecode';
+
+    $self->log_info( "Dumping bytecode\n" );
+    $self->do_system( $^X, '-S', 'p', '-Zdump-bytecode',
+                      'inc/My/dump_bytecode.pl' )
+      or die 'Error dumping bytecode';
+
+    $self->log_info( "Compiling inc/My/compile_parser.pl\n" );
+    $self->do_system( $^X, '-S', 'p', '-Zdump-bytecode',
+                      'inc/My/compile_parser.pl' )
+      or die 'Error compiling inc/My/compile_parser.pl';
+
+    $self->log_info( "Compiling the parser\n" );
+    $self->do_system( 'mono', 'support/dotnet/bin/Debug/dotnet.exe',
+                      '-Znative-regex', 'inc/My/compile_parser.pl.pb' )
+      or die 'Error compiling the parser';
+}
+
 sub ACTION_code_dlr {
     my( $self ) = @_;
 

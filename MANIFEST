@@ -4,6 +4,8 @@ MANIFEST
 MANIFEST.SKIP
 META.yml
 inc/My/Build.pm
+inc/My/compile_parser.pl
+inc/My/dump_bytecode.pl
 inc/OpcodesDotNet.pm
 lib/Language/P/Net.pm
 support/.gitignore
