@@ -42,6 +42,7 @@ namespace org.mbarbon.p.runtime
     {
         public static System.Guid PerlGuid3 =
             new System.Guid("3FC48569-0551-4114-BF17-735ED691526B");
+        private readonly string[] pathsep = new string[] {":"};
 
         public Runtime()
         {
@@ -52,7 +53,12 @@ namespace org.mbarbon.p.runtime
             ModuleLoaders = new List<IModuleLoader>();
             ModuleLoaders.Add(new IncModuleLoader());
 
+            var p5lib = System.Environment.GetEnvironmentVariable("PERL5LIB");
             var inc = SymbolTable.GetArray(this, "INC", true);
+
+            if (p5lib != null)
+                foreach (var dir in p5lib.Split(pathsep, System.StringSplitOptions.None))
+                    inc.Push(this, new P5Scalar(this, dir));
 
             inc.Push(this, new P5Scalar(this, "."));
         }
