@@ -5,13 +5,15 @@ namespace org.mbarbon.p.values
 {
     public class P5Undef : IP5ScalarBody
     {
+        public static readonly P5Undef Undef = new P5Undef(null);
+
         public P5Undef(Runtime runtime)
         {
         }
 
         public virtual IP5ScalarBody CloneBody(Runtime runtime)
         {
-            return new P5Undef(runtime);
+            return this;
         }
 
         public virtual string AsString(Runtime runtime) { return ""; }

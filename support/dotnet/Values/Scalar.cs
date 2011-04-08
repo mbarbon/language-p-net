@@ -6,7 +6,7 @@ namespace org.mbarbon.p.values
 {
     public class P5Scalar : IP5Any, IP5Referrable
     {
-        public P5Scalar(Runtime runtime) : this(new P5Undef(runtime))
+        public P5Scalar(Runtime runtime) : this(P5Undef.Undef)
         {
         }
 
@@ -21,7 +21,7 @@ namespace org.mbarbon.p.values
 
         public static P5Scalar Undef()
         {
-            return new P5Scalar(new P5Undef(null));
+            return new P5Scalar(P5Undef.Undef);
         }
 
         public P5Scalar(Runtime runtime, string val) : this(new P5StringNumber(runtime, val)) {}
@@ -34,7 +34,7 @@ namespace org.mbarbon.p.values
         public virtual void Undef(Runtime runtime)
         {
             if (!(body is P5Undef))
-                body = new P5Undef(runtime);
+                body = P5Undef.Undef;
         }
 
         public virtual P5Scalar Assign(Runtime runtime, IP5Any other)
@@ -49,7 +49,7 @@ namespace org.mbarbon.p.values
             if (iter.MoveNext())
                 Assign(runtime, iter.Current);
             else
-                body = new P5Undef(runtime);
+                body = P5Undef.Undef;
 
             return this;
         }
