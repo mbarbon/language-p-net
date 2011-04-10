@@ -29,7 +29,6 @@ if( defined &Internals::Net::compile_assembly ) {
              Language::P
              parent
              strict
-             subs
              vars
              warnings::register
              warnings
