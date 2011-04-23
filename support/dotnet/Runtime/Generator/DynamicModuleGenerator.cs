@@ -42,7 +42,41 @@ namespace org.mbarbon.p.runtime
             var sg = new DynamicSubGenerator(runtime, this);
             var body = sg.Generate(sub, sub.IsMain);
             var deleg = body.Compile();
-            var code = new P5Code(sub.Name, sub.Prototype, deleg, sub.IsMain);
+            P5Code code;
+
+            if (sub.IsConstant)
+            {
+                var const_op = sub.BasicBlocks[sub.BasicBlocks.Count - 2].Opcodes[1].Childs[0].Childs[0];
+                object value;
+                int flags;
+
+                if (const_op.Number == Opcode.OpNumber.OP_CONSTANT_STRING)
+                {
+                    value = ((ConstantString)const_op).Value;
+                    flags = 1; // CONST_STRING
+                }
+                else if (const_op.Number == Opcode.OpNumber.OP_CONSTANT_INTEGER)
+                {
+                    value = ((ConstantInt)const_op).Value;
+                    flags = 10; // CONST_NUMBER|NUM_INTEGER
+                }
+                else if (const_op.Number == Opcode.OpNumber.OP_CONSTANT_FLOAT)
+                {
+                    value = ((ConstantFloat)const_op).Value;
+                    flags = 18; // CONST_NUMBER|NUM_FLOAT
+                }
+                else if (sub.IsConstantPrototype)
+                {
+                    value = null;
+                    flags = -1;
+                }
+                else
+                    throw new System.Exception("Invalid constant value");
+
+                code = new P5Code(sub.Name, deleg, value, flags);
+            }
+            else
+                code = new P5Code(sub.Name, sub.Prototype, deleg, sub.IsMain);
 
             if (sub.IsMain)
                 code.ScratchPad = P5ScratchPad.CreateMainPad(runtime,

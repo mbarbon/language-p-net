@@ -552,10 +552,12 @@ namespace org.mbarbon.p.runtime
     {
         public enum CodeType
         {
-            MAIN    = 1,
-            SUB     = 2,
-            REGEX   = 3,
-            EVAL    = 4,
+            MAIN     = 1,
+            SUB      = 2,
+            REGEX    = 4,
+            EVAL     = 8,
+            CONSTANT = 16,
+            CONSTANT_PROTOTYPE = 16|32,
         }
 
         public Subroutine()
@@ -570,6 +572,16 @@ namespace org.mbarbon.p.runtime
         public bool IsRegex
         {
             get { return Type == (int)CodeType.REGEX; }
+        }
+
+        public bool IsConstant
+        {
+            get { return (Type & (int)CodeType.CONSTANT) != 0; }
+        }
+
+        public bool IsConstantPrototype
+        {
+            get { return (Type & (int)CodeType.CONSTANT_PROTOTYPE) != 0; }
         }
 
         public int Type;

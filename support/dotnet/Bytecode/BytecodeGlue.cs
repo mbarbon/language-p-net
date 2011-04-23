@@ -48,9 +48,10 @@ namespace org.mbarbon.p.runtime
 
         public bool is_main()  { return    Type == (int)CodeType.MAIN
                                         || Type == (int)CodeType.EVAL; }
-        public bool is_sub()   { return Type == (int)CodeType.SUB; }
+        public bool is_sub()   { return (Type & (int)CodeType.SUB) != 0; }
         public bool is_regex() { return Type == (int)CodeType.REGEX; }
         public bool is_eval()  { return Type == (int)CodeType.EVAL; }
+        public bool is_constant() { return (Type & (int)CodeType.CONSTANT) != 0; }
 
         public void find_alive_blocks()
         {

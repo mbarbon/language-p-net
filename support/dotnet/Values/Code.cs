@@ -7,13 +7,10 @@ namespace org.mbarbon.p.values
     {
         public static readonly int[] EMPTY_PROTO = new int[] { 0, 0, 0 };
 
-        public P5Code(string _name, int[] _proto)
+        public P5Code(string _name, int[] _proto) :
+            this(_name, _proto, null, false)
         {
             subref = new Sub(UndefinedSub);
-            scratchpad = null;
-            is_main = false;
-            name = _name;
-            proto = _proto;
         }
 
         public bool IsDefined(Runtime runtime)
@@ -31,11 +28,21 @@ namespace org.mbarbon.p.values
             proto = _proto;
         }
 
+        public P5Code(string _name, System.Delegate code,
+                      object _value, int _flags) :
+            this(_name, EMPTY_PROTO, code, false)
+        {
+            const_value = _value;
+            const_flags = _flags;
+        }
+
         public void Assign(Runtime runtime, P5Code other)
         {
             subref = other.subref;
             proto = other.proto;
             scratchpad = other.scratchpad;
+            const_value = other.const_value;
+            const_flags = other.const_flags;
         }
 
         private IP5Any UndefinedSub(Runtime runtime,
@@ -93,10 +100,50 @@ namespace org.mbarbon.p.values
                 scratchpad = scratchpad.NewScope(runtime);
         }
 
-        public P5Scalar MakeClosure(Runtime runtime, P5ScratchPad outer)
+        public virtual P5Scalar MakeClosure(Runtime runtime, P5ScratchPad outer)
         {
             P5Code closure = new P5Code(name, proto, subref, is_main);
             closure.scratchpad = scratchpad.CloseOver(runtime, outer);
+
+            if (const_flags == 0)
+                return new P5Scalar(runtime, closure);
+
+            // constant sub optimization
+            var value = closure.scratchpad.GetScalar(runtime, 0) as P5Scalar;
+            if (value == null)
+                return new P5Scalar(runtime, closure);
+
+            var body = value.Body as P5StringNumber;
+            if (body == null)
+                return new P5Scalar(runtime, closure);
+
+            int constant_flags = 0;
+            object constant_value = null;
+
+            if (body.IsString(runtime))
+            {
+                constant_value = body.AsString(runtime);
+                constant_flags = 1; // CONST_STRING
+            }
+            else if (body.IsInteger(runtime))
+            {
+                constant_value = body.AsInteger(runtime);
+                constant_flags = 10; // CONST_NUMBER|NUM_INTEGER
+            }
+            else if (body.IsFloat(runtime))
+            {
+                constant_value = body.AsFloat(runtime);
+                constant_flags = 18; // CONST_NUMBER|NUM_FLOAT
+            }
+
+            if (constant_flags != 0)
+            {
+                var const_sub = new P5Code(null, subref,
+                                           constant_value, constant_flags);
+                const_sub.scratchpad = closure.scratchpad;
+
+                closure = const_sub;
+            }
 
             return new P5Scalar(runtime, closure);
         }
@@ -146,6 +193,8 @@ namespace org.mbarbon.p.values
         private bool is_main;
         private string name;
         private int[] proto;
+        private object const_value;
+        private int const_flags;
     }
 
     public class P5NativeCode : P5Code

@@ -67,5 +67,8 @@ namespace org.mbarbon.p.values
     public partial class P5Code
     {
         public int[] prototype() { return proto; }
+        public bool is_constant() { return const_flags != 0; }
+        public object constant_value() { return const_value; }
+        public int constant_flags() { return const_flags; }
     }
 }
