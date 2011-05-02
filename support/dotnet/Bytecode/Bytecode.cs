@@ -316,6 +316,11 @@ namespace org.mbarbon.p.runtime
     }
 
     // TODO autogenerate all opcode subclasses
+    public partial class ListAssign : Opcode
+    {
+        public byte Common;
+    }
+
     public partial class Global : Opcode
     {
         public string Name;

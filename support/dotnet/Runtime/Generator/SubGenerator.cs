@@ -811,6 +811,7 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Block(typeof(IP5Any), new[] { value }, exit_scope);
             }
+            case Opcode.OpNumber.OP_ASSIGN_LIST:
             case Opcode.OpNumber.OP_ASSIGN:
             {
                 var lvalue = Generate(sub, op.Childs[1]);
