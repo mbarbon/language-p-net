@@ -130,12 +130,26 @@ sub ACTION_build_parser {
       or die 'Error compiling the parser';
 }
 
+sub _find_module {
+    ( my $file = $_[0] . '.pm' ) =~ s{::}{/}g;
+
+    foreach my $dir ( @INC ) {
+        my $path = File::Spec->catfile( $dir, $file );
+        return $path if -f $path;
+    }
+
+    die "Could not find module '$_[0]' in \@INC";
+}
+
 sub ACTION_code_dlr {
     my( $self ) = @_;
 
     _fix_dlr_path( $self );
 
-    if( !$self->up_to_date( [ 'inc/OpcodesDotNet.pm' ],
+    if( !$self->up_to_date( [ 'inc/OpcodesDotNet.pm',
+                              _find_module( 'Language::P::Parser::OpcodeList' ),
+                              _find_module( 'Language::P::Parser::KeywordList' )
+                              ],
                             [ 'support/dotnet/Bytecode/BytecodeGenerated.cs',
                               'support/dotnet/Bytecode/BytecodeFactory.cs',
                               'support/dotnet/Bytecode/Opclasses.cs' ] ) ) {
