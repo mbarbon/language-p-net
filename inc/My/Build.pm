@@ -22,6 +22,26 @@ Creates symlinks for L<Language::P> tests.
 
 =cut
 
+sub _dlr_config {
+    my( $self ) = @_;
+    my $cfg = $self->args( 'configuration' );
+
+    return !$cfg              ? 'v2Release' :
+            $cfg eq 'debug'   ? 'v2Debug' :
+            $cfg eq 'release' ? 'v2Release' :
+            die "Invalid configuration: $cfg";
+}
+
+sub _p_config {
+    my( $self ) = @_;
+    my $cfg = $self->args( 'configuration' );
+
+    return !$cfg              ? 'Release' :
+            $cfg eq 'debug'   ? 'Debug' :
+            $cfg eq 'release' ? 'Release' :
+            die "Invalid configuration: $cfg";
+}
+
 sub _symlink {
     my( $src, $targ ) = @_;
     my $dest = File::Spec->catfile( $targ, File::Basename::basename( $src ) );
@@ -94,10 +114,12 @@ sub _inplace_subst {
 sub _fix_dlr_path {
     my( $self ) = @_;
     my $dlr = $self->args( 'dlr' );
+    my $cfg = $self->_dlr_config;
 
     $dlr =~ s{/}{\\}g;
     _inplace_subst( 'support/dotnet/dotnet.csproj', sub {
-                        s{<HintPath>.*?\\bin\\}{<HintPath>..\\..\\$dlr\\bin\\}i;
+                        s{<HintPath>.*?\\bin\\\w+}
+                         {<HintPath>..\\..\\$dlr\\bin\\$cfg}i;
                     } );
 }
 
@@ -124,8 +146,9 @@ sub ACTION_build_parser {
                       'inc/My/compile_parser.pl' )
       or die 'Error compiling inc/My/compile_parser.pl';
 
+    my $cfg = $self->_p_config;
     $self->log_info( "Compiling the parser\n" );
-    $self->do_system( 'mono', 'support/dotnet/bin/Debug/dotnet.exe',
+    $self->do_system( 'mono', "support/dotnet/bin/$cfg/dotnet.exe",
                       '-Znative-regex', 'inc/My/compile_parser.pl.pb' )
       or die 'Error compiling the parser';
 }
@@ -170,10 +193,11 @@ sub ACTION_code_dlr {
     my @files = map glob( "support/dotnet/$_" ), qw(*.cs */*.cs */*/*.cs);
 
     # only works with MonoDevelop and when mdtool is in path
+    my $cfg = $self->_p_config;
     if( !$self->up_to_date( [ @files ],
-                            [ 'support/dotnet/bin/Debug/dotnet.exe' ] ) ) {
+                            [ "support/dotnet/bin/$cfg/dotnet.exe" ] ) ) {
         $self->do_system( 'mdtool', 'build',
-                          '--project:dotnet', '--configuration:Debug',
+                          '--project:dotnet', "--configuration:$cfg",
                           'support/dotnet/dotnet.sln' )
           or die 'Error building runtime';
     }
@@ -226,8 +250,9 @@ sub ACTION_build_dlr {
                              {$1<TargetFrameworkVersion>v3.5</TargetFrameworkVersion>}g;
                         } );
 
+        my $cfg = $self->_dlr_config;
         $self->do_system( 'mdtool', 'build', "--project:$i",
-                          '--configuration:v2Debug', $solution );
+                          "--configuration:$cfg", $solution );
     }
 }
 
@@ -372,12 +397,13 @@ sub _expand_tags {
 
 sub _run_dotnet {
     my( $self, $suffix, $args, @tags ) = @_;
+    my $cfg = $self->_p_config;
 
     my @run;
     foreach my $tag ( @tags ) {
         my( $interpreter, @directories ) = @$tag;
 
-        push @run, [ [ 'mono', 'support/dotnet/bin/Debug/dotnet.exe', @$args ],
+        push @run, [ [ 'mono', "support/dotnet/bin/$cfg/dotnet.exe", @$args ],
                      @directories ];
     }
 

@@ -25,6 +25,9 @@ my $build = My::Build->new
           p              =>
               { type     => '=s',
                 },
+          configuration  =>
+              { type     => '=s',
+                },
           },
     );
 $build->create_build_script;
