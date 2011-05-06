@@ -37,6 +37,7 @@ namespace org.mbarbon.p.values
                                                 P5ScratchPad main)
         {
             var pad = new P5ScratchPad();
+            int from_outside = 0;
 
             foreach (var lex in lexicals)
             {
@@ -51,7 +52,14 @@ namespace org.mbarbon.p.values
                     pad[lex.Index] = main.GetOrCreateValue(runtime, lex.Slot,
                                                            lex.OuterIndex);
                 }
+
+                if (lex.OuterIndex != -1)
+                    from_outside += 1;
             }
+
+            if (pad.Lexicals.Count == 0)
+                return null;
+            pad.Complete = pad.Lexicals.Count == from_outside;
 
             return pad;
         }
@@ -66,6 +74,9 @@ namespace org.mbarbon.p.values
 
         public P5ScratchPad NewScope(Runtime runtime)
         {
+            if (Complete)
+                return this;
+
             P5ScratchPad scope = new P5ScratchPad(this, Lexicals);
 
             foreach (var lex in Lexicals)
@@ -138,5 +149,6 @@ namespace org.mbarbon.p.values
         }
 
         private List<LexicalInfo> Lexicals;
+        private bool Complete;
     }
 }

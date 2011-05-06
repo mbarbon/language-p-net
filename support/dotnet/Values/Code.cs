@@ -103,7 +103,8 @@ namespace org.mbarbon.p.values
         public virtual P5Scalar MakeClosure(Runtime runtime, P5ScratchPad outer)
         {
             P5Code closure = new P5Code(name, proto, subref, is_main);
-            closure.scratchpad = scratchpad.CloseOver(runtime, outer);
+            if (scratchpad != null)
+                closure.scratchpad = scratchpad.CloseOver(runtime, outer);
 
             if (const_flags == 0)
                 return new P5Scalar(runtime, closure);
