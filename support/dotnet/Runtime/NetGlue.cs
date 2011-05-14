@@ -270,7 +270,7 @@ namespace org.mbarbon.p.runtime
                     continue;
                 var net_args = ConvertArgs(runtime, ctor, args);
 
-                var res = ctor.Invoke(null, net_args);
+                var res = ((ConstructorInfo)ctor).Invoke(net_args);
 
                 return WrapValue(res);
             }
