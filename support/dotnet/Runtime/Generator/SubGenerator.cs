@@ -303,13 +303,16 @@ namespace org.mbarbon.p.runtime
                         var fault = new List<Expression>();
                         for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
                             Generate(sub, scope.Opcodes[j], fault);
+                        fault.Add(Expression.Rethrow(typeof(IP5Any)));
 
                         body = Expression.Block(
                             typeof(IP5Any),
                             Expression.Label(BlockLabels[block]),
-                            Expression.TryFault(
+                            Expression.TryCatch(
                                 Expression.Block(typeof(IP5Any), exps),
-                                Expression.Block(typeof(void), fault)));
+                                Expression.Catch(
+                                    typeof(System.Exception),
+                                    Expression.Block(typeof(IP5Any), fault))));
                     }
                     else
                     {
