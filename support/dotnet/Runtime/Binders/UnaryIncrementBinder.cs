@@ -5,7 +5,7 @@ using Microsoft.Scripting.Ast;
 
 namespace org.mbarbon.p.runtime
 {
-    class P5UnaryIncrementBinder : DynamicMetaObjectBinder
+    public class P5UnaryIncrementBinder : DynamicMetaObjectBinder
     {
         public P5UnaryIncrementBinder(ExpressionType _operation, Runtime _runtime)
         {

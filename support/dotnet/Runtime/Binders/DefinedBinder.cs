@@ -5,7 +5,7 @@ using Microsoft.Scripting.Ast;
 
 namespace org.mbarbon.p.runtime
 {
-    class P5DefinedBinder : DynamicMetaObjectBinder
+    public class P5DefinedBinder : DynamicMetaObjectBinder
     {
         public P5DefinedBinder(Runtime _runtime)
         {

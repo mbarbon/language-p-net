@@ -5,7 +5,7 @@ using Microsoft.Scripting.Ast;
 
 namespace org.mbarbon.p.runtime
 {
-    class P5UnaryOperationBinder : UnaryOperationBinder
+    public class P5UnaryOperationBinder : UnaryOperationBinder
     {
         public P5UnaryOperationBinder(ExpressionType op, Runtime runtime) :
             base(op)

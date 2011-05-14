@@ -5,7 +5,7 @@ using Microsoft.Scripting.Ast;
 
 namespace org.mbarbon.p.runtime
 {
-    class P5ArrayAssignmentBinder : DynamicMetaObjectBinder
+    public class P5ArrayAssignmentBinder : DynamicMetaObjectBinder
     {
         public P5ArrayAssignmentBinder(Runtime runtime, Opcode.ContextValues cxt)
         {

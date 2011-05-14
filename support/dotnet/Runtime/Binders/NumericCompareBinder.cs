@@ -5,7 +5,7 @@ using Microsoft.Scripting.Ast;
 
 namespace org.mbarbon.p.runtime
 {
-    class P5NumericCompareBinder : BinaryOperationBinder
+    public class P5NumericCompareBinder : BinaryOperationBinder
     {
         public P5NumericCompareBinder(ExpressionType _op, Runtime _runtime) :
             base(_op)
