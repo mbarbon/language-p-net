@@ -15,7 +15,7 @@ namespace org.mbarbon.p.runtime
 
             // create module builder
             var file_info = new System.IO.FileInfo(_assembly_name);
-            var asm_name = new AssemblyName(file_info.Name  + ".dll");
+            var asm_name = new AssemblyName(file_info.Name);
             var asm_builder =
                 System.AppDomain.CurrentDomain.DefineDynamicAssembly(
                     asm_name, AssemblyBuilderAccess.RunAndSave, file_info.Directory.FullName);
