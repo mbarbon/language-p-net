@@ -28,6 +28,16 @@ namespace org.mbarbon.p.values
             proto = _proto;
         }
 
+        public P5Code(string _name, int[] _proto,
+                      System.Type _class, string _method, bool main)
+        {
+            subref = (Sub)System.Delegate.CreateDelegate(typeof(Sub), _class, _method);
+            scratchpad = null;
+            is_main = main;
+            name = _name;
+            proto = _proto;
+        }
+
         public P5Code(string _name, System.Delegate code,
                       object _value, int _flags) :
             this(_name, EMPTY_PROTO, code, false)

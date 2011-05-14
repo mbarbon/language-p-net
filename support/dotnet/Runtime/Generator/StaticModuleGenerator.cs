@@ -195,15 +195,7 @@ namespace org.mbarbon.p.runtime
                                        bool anonymous, FieldInfo main)
         {
             var code_ctor = typeof(P5Code).GetConstructor(
-                new[] { typeof(string), typeof(int[]), typeof(P5Code.Sub), typeof(bool) });
-            var get_method =
-                typeof(Type).GetMethod(
-                    "GetMethod", new Type[] { typeof(string) });
-            var create_delegate =
-                typeof(System.Delegate).GetMethod(
-                    "CreateDelegate",
-                    new Type[] { typeof(Type),
-                                 typeof(MethodInfo) });
+                new[] { typeof(string), typeof(int[]), typeof(System.Type), typeof(string), typeof(bool) });
             var lexinfo_new_params = new Type[] {
                 typeof(string), typeof(Opcode.Sigil), typeof(int),
                 typeof(int), typeof(int), typeof(bool), typeof(bool),
@@ -245,14 +237,9 @@ namespace org.mbarbon.p.runtime
                             Expression.Constant(si.SubName ?? "ANONCODE"),
                             proto,
                             Expression.Call(
-                                create_delegate,
-                                Expression.Constant(typeof(P5Code.Sub)),
-                                Expression.Call(
-                                    Expression.Call(
-                                        get_type,
-                                        Expression.Constant(ClassBuilder.FullName)),
-                                    get_method,
-                                    Expression.Constant(si.MethodName))),
+                                get_type,
+                                Expression.Constant(ClassBuilder.FullName)),
+                            Expression.Constant(si.MethodName),
                             Expression.Constant(si.IsMain),
                         });
 
