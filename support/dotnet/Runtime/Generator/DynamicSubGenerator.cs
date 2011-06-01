@@ -123,9 +123,14 @@ namespace org.mbarbon.p.runtime
         {
             if (   typeof(IP5Array).IsAssignableFrom(lvalue.Type)
                 || typeof(P5Hash).IsAssignableFrom(lvalue.Type))
-                return BinaryOperator<object>(
-                    sub, lvalue, rvalue,
-                    new P5ArrayAssignmentBinder(runtime, cxt));
+                if (cxt == Opcode.ContextValues.VOID)
+                    return BinaryOperator<int>(
+                        sub, lvalue, rvalue,
+                        new P5ArrayAssignmentBinder(runtime, cxt));
+                else
+                    return BinaryOperator<object>(
+                        sub, lvalue, rvalue,
+                        new P5ArrayAssignmentBinder(runtime, cxt));
             else
                 return BinaryOperator<P5Scalar>(
                     sub, lvalue, rvalue,

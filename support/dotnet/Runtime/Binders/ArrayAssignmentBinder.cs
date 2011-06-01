@@ -72,6 +72,15 @@ namespace org.mbarbon.p.runtime
 
         private DynamicMetaObject BindFallback(DynamicMetaObject target, DynamicMetaObject arg)
         {
+            if (Context == Opcode.ContextValues.VOID)
+                return new DynamicMetaObject(
+                    Expression.Call(
+                        Utils.CastRuntime(target),
+                        target.RuntimeType.GetMethod("AssignArray"),
+                        Expression.Constant(Runtime),
+                        Utils.CastValue(arg)),
+                    Utils.RestrictToRuntimeType(arg, target));
+
             var assign_result = Expression.Parameter(typeof(int));
             var lvalue = Expression.Parameter(target.RuntimeType);
             var assignment = Expression.Call(
