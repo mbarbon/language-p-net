@@ -57,12 +57,12 @@ namespace org.mbarbon.p.values
 
             if (s != null)
             {
-                e = new List<IP5Any>(new IP5Any[] { s }).GetEnumerator();
+                e = s.GetEnumerator(runtime);
                 c = 1;
             }
             else if (a != null)
             {
-                e = ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime);
+                e = a.GetEnumerator(runtime);
                 c = a.GetCount(runtime);
             }
 

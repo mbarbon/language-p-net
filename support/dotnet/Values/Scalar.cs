@@ -54,6 +54,11 @@ namespace org.mbarbon.p.values
             return this;
         }
 
+        public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        {
+            yield return this;
+        }
+
         public P5Scalar ConcatAssign(Runtime runtime, IP5Any other)
         {
             P5StringNumber sn = body as P5StringNumber;

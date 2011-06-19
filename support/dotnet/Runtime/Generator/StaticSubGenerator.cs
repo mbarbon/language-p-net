@@ -139,14 +139,15 @@ namespace org.mbarbon.p.runtime
                     ModuleGenerator.InitRuntime));
         }
 
-        protected override Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
+        protected override Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue, bool common)
         {
             return BinaryOperator<object>(
                 sub, lvalue, rvalue,
                 Expression.New(
-                    typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
+                    typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues), typeof(bool) }),
                     ModuleGenerator.InitRuntime,
-                    Expression.Constant(cxt)));
+                    Expression.Constant(cxt),
+                    Expression.Constant(common)));
         }
 
         protected override Expression Defined(Subroutine sub, Opcode op)

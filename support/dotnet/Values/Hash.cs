@@ -158,7 +158,7 @@ namespace org.mbarbon.p.values
                 e.MoveNext();
                 IP5Any v = e.Current;
 
-                hash[k.KeyString(runtime)] = v;
+                hash[k.KeyString(runtime)] = v.Clone(runtime, 0);
             }
 
             iterator = null;

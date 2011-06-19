@@ -7,10 +7,11 @@ namespace org.mbarbon.p.runtime
 {
     public class P5ArrayAssignmentBinder : DynamicMetaObjectBinder
     {
-        public P5ArrayAssignmentBinder(Runtime runtime, Opcode.ContextValues cxt)
+        public P5ArrayAssignmentBinder(Runtime runtime, Opcode.ContextValues cxt, bool common)
         {
             Runtime = runtime;
             Context = cxt;
+            Common = common;
         }
 
         public override DynamicMetaObject Bind(DynamicMetaObject target, DynamicMetaObject[] args)
@@ -72,6 +73,13 @@ namespace org.mbarbon.p.runtime
 
         private DynamicMetaObject BindFallback(DynamicMetaObject target, DynamicMetaObject arg)
         {
+            var rvalue = !Common ? Utils.CastValue(arg) :
+                Expression.Call(
+                    Utils.CastAny(arg),
+                    typeof(IP5Any).GetMethod("Clone"),
+                    Expression.Constant(Runtime),
+                    Expression.Constant(1));
+
             if (Context == Opcode.ContextValues.VOID)
                 return new DynamicMetaObject(
                     Expression.Block(
@@ -79,7 +87,7 @@ namespace org.mbarbon.p.runtime
                             Utils.CastRuntime(target),
                             target.RuntimeType.GetMethod("AssignArray"),
                             Expression.Constant(Runtime),
-                            Utils.CastValue(arg)),
+                            rvalue),
                         Expression.Constant(null, typeof(IP5Any))),
                     Utils.RestrictToRuntimeType(arg, target));
 
@@ -89,7 +97,7 @@ namespace org.mbarbon.p.runtime
                 lvalue,
                 target.RuntimeType.GetMethod("AssignArray"),
                 Expression.Constant(Runtime),
-                Utils.CastValue(arg));
+                rvalue);
             var result = Expression.Condition(
                 Expression.Equal(
                     ContextExpression(),
@@ -115,5 +123,6 @@ namespace org.mbarbon.p.runtime
 
         private Runtime Runtime;
         private Opcode.ContextValues Context;
+        private bool Common;
     }
 }

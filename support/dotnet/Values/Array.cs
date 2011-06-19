@@ -249,13 +249,13 @@ namespace org.mbarbon.p.values
             }
             else if (h != null)
             {
-                AssignIterator(runtime, ((P5Hash)h.Clone(runtime, 1)).GetEnumerator(runtime));
+                AssignIterator(runtime, h.GetEnumerator(runtime));
 
                 return h.GetCount(runtime) * 2;
             }
             else if (a != null)
             {
-                AssignIterator(runtime, ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime));
+                AssignIterator(runtime, a.GetEnumerator(runtime));
 
                 return a.GetCount(runtime);
             }
@@ -273,7 +273,7 @@ namespace org.mbarbon.p.values
         {
             array = new List<IP5Any>();
             while (iter.MoveNext())
-                array.Add(iter.Current);
+                array.Add(iter.Current.Clone(runtime, 0));
 
             return this;
         }
