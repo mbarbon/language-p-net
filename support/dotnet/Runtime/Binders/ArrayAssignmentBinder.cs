@@ -74,11 +74,13 @@ namespace org.mbarbon.p.runtime
         {
             if (Context == Opcode.ContextValues.VOID)
                 return new DynamicMetaObject(
-                    Expression.Call(
-                        Utils.CastRuntime(target),
-                        target.RuntimeType.GetMethod("AssignArray"),
-                        Expression.Constant(Runtime),
-                        Utils.CastValue(arg)),
+                    Expression.Block(
+                        Expression.Call(
+                            Utils.CastRuntime(target),
+                            target.RuntimeType.GetMethod("AssignArray"),
+                            Expression.Constant(Runtime),
+                            Utils.CastValue(arg)),
+                        Expression.Constant(null, typeof(IP5Any))),
                     Utils.RestrictToRuntimeType(arg, target));
 
             var assign_result = Expression.Parameter(typeof(int));
