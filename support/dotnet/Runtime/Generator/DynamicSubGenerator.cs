@@ -119,22 +119,18 @@ namespace org.mbarbon.p.runtime
                 sub, op, new P5StringCompareBinder(operation, runtime));
         }
 
-        protected override Expression Assign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
+        protected override Expression ScalarAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
         {
-            if (   typeof(IP5Array).IsAssignableFrom(lvalue.Type)
-                || typeof(P5Hash).IsAssignableFrom(lvalue.Type))
-                if (cxt == Opcode.ContextValues.VOID)
-                    return BinaryOperator<int>(
-                        sub, lvalue, rvalue,
-                        new P5ArrayAssignmentBinder(runtime, cxt));
-                else
-                    return BinaryOperator<object>(
-                        sub, lvalue, rvalue,
-                        new P5ArrayAssignmentBinder(runtime, cxt));
-            else
-                return BinaryOperator<P5Scalar>(
-                    sub, lvalue, rvalue,
-                    new P5ScalarAssignmentBinder(runtime));
+            return BinaryOperator<P5Scalar>(
+                sub, lvalue, rvalue,
+                new P5ScalarAssignmentBinder(runtime));
+        }
+
+        protected override Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
+        {
+            return BinaryOperator<object>(
+                sub, lvalue, rvalue,
+                new P5ArrayAssignmentBinder(runtime, cxt));
         }
 
         protected override Expression Defined(Subroutine sub, Opcode op)

@@ -490,7 +490,8 @@ namespace org.mbarbon.p.runtime
         protected abstract Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation);
         protected abstract Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation);
         protected abstract Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation);
-        protected abstract Expression Assign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue);
+        protected abstract Expression ScalarAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue);
+        protected abstract Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue);
         protected abstract Expression Defined(Subroutine sub, Opcode op);
         protected abstract void DefinePackage(string pack);
 
@@ -815,21 +816,36 @@ namespace org.mbarbon.p.runtime
                 return Expression.Block(typeof(IP5Any), new[] { value }, exit_scope);
             }
             case Opcode.OpNumber.OP_ASSIGN_LIST:
+            {
+                var lvalue = Generate(sub, op.Childs[1]);
+                var rvalue = Generate(sub, op.Childs[0]);
+
+                return ArrayAssign(sub, (Opcode.ContextValues)op.Context,
+                                   lvalue, rvalue);
+            }
+            case Opcode.OpNumber.OP_SWAP_ASSIGN_LIST:
+            {
+                var lvalue = Generate(sub, op.Childs[0]);
+                var rvalue = Generate(sub, op.Childs[1]);
+
+                return ArrayAssign(sub, (Opcode.ContextValues)op.Context,
+                                   lvalue, rvalue);
+            }
             case Opcode.OpNumber.OP_ASSIGN:
             {
                 var lvalue = Generate(sub, op.Childs[1]);
                 var rvalue = Generate(sub, op.Childs[0]);
 
-                return Assign(sub, (Opcode.ContextValues)op.Context,
-                              lvalue, rvalue);
+                return ScalarAssign(sub, (Opcode.ContextValues)op.Context,
+                                    lvalue, rvalue);
             }
             case Opcode.OpNumber.OP_SWAP_ASSIGN:
             {
                 var lvalue = Generate(sub, op.Childs[0]);
                 var rvalue = Generate(sub, op.Childs[1]);
 
-                return Assign(sub, (Opcode.ContextValues)op.Context,
-                              lvalue, rvalue);
+                return ScalarAssign(sub, (Opcode.ContextValues)op.Context,
+                                    lvalue, rvalue);
             }
             case Opcode.OpNumber.OP_GET:
             {

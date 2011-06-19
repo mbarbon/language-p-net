@@ -130,22 +130,23 @@ namespace org.mbarbon.p.runtime
                     ModuleGenerator.InitRuntime));
         }
 
-        protected override Expression Assign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
+        protected override Expression ScalarAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
         {
-            if (   typeof(IP5Array).IsAssignableFrom(lvalue.Type)
-                || typeof(P5Hash).IsAssignableFrom(lvalue.Type))
-                return BinaryOperator<object>(
-                    sub, lvalue, rvalue,
-                    Expression.New(
-                        typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
-                        ModuleGenerator.InitRuntime,
-                        Expression.Constant(cxt)));
-            else
-                return BinaryOperator<P5Scalar>(
-                    sub, lvalue, rvalue,
-                    Expression.New(
-                        typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
-                        ModuleGenerator.InitRuntime));
+            return BinaryOperator<P5Scalar>(
+                sub, lvalue, rvalue,
+                Expression.New(
+                    typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
+                    ModuleGenerator.InitRuntime));
+        }
+
+        protected override Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
+        {
+            return BinaryOperator<object>(
+                sub, lvalue, rvalue,
+                Expression.New(
+                    typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues) }),
+                    ModuleGenerator.InitRuntime,
+                    Expression.Constant(cxt)));
         }
 
         protected override Expression Defined(Subroutine sub, Opcode op)
