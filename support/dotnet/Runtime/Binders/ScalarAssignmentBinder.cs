@@ -23,12 +23,12 @@ namespace org.mbarbon.p.runtime
         {
             return new DynamicMetaObject(
                 Expression.Convert(
-                Expression.Call(
-                    Utils.CastRuntime(target),
-                    target.RuntimeType.GetMethod("Assign"),
-                    Expression.Constant(runtime),
-                    Utils.CastRuntime(arg)),
-                target.RuntimeType),
+                    Expression.Call(
+                        Utils.CastRuntime(target),
+                        target.RuntimeType.GetMethod("Assign"),
+                        Expression.Constant(runtime),
+                        Utils.CastRuntime(arg)),
+                    target.RuntimeType),
                 Utils.RestrictToRuntimeType(arg, target));
         }
 
