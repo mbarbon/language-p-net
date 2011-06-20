@@ -1,7 +1,5 @@
 #!/usr/bin/perl -w
 
-#BEGIN { unshift @INC, 'support/bytecode', 'lib' }
-
 use Language::P::Object qw(:all);
 use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
