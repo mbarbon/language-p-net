@@ -464,6 +464,8 @@ namespace org.mbarbon.p.values
                 var pack = args.GetItem(runtime, i).AsString(runtime);
                 var file = pack.Replace("::", "/") + ".pm";
                 var path = Builtins.SearchFile(runtime, file);
+                if (path == null)
+                    throw new System.Exception(string.Format("File {0:S} not found", file));
 
                 var cu = Serializer.ReadCompilationUnit(runtime, path);
                 cu.FileName = file;
