@@ -24,8 +24,6 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(IP5Any) };
         private static Type[] ProtoStringString =
             new Type[] { typeof(string), typeof(string) };
-        private static Type[] ProtoRuntimeStringBool =
-            new Type[] { typeof(Runtime), typeof(string), typeof(bool) };
 
         public SubGenerator()
         {
@@ -90,6 +88,8 @@ namespace org.mbarbon.p.runtime
                 return "GetArray";
             case Opcode.Sigil.HASH:
                 return "GetHash";
+            case Opcode.Sigil.STASH:
+                return "GetStash";
             case Opcode.Sigil.SUB:
                 return "GetCode";
             case Opcode.Sigil.GLOB:
@@ -549,29 +549,19 @@ namespace org.mbarbon.p.runtime
             {
                 Global gop = (Global)op;
                 var st = typeof(Runtime).GetField("SymbolTable");
-                MethodInfo method;
-                string name;
                 bool create;
 
                 if (gop.Slot == Opcode.Sigil.STASH)
-                {
-                    method = typeof(P5SymbolTable).GetMethod("GetPackage", ProtoRuntimeStringBool);
-                    name = gop.Name.Substring(0, gop.Name.Length - 2);
                     create = (gop.Context & (int)Opcode.ContextValues.NOCREATE) == 0;
-                }
                 else
-                {
-                    method = typeof(P5SymbolTable).GetMethod(MethodForSlot(gop.Slot));
-                    name = gop.Name;
                     create = true;
-                }
 
                 var global =
                     Expression.Call(
                         Expression.Field(Runtime, st),
-                        method,
+                        typeof(P5SymbolTable).GetMethod(MethodForSlot(gop.Slot)),
                         Runtime,
-                        Expression.Constant(name),
+                        Expression.Constant(gop.Name),
                         Expression.Constant(create));
 
                 if (create)

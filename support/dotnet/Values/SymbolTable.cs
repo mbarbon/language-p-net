@@ -60,6 +60,14 @@ namespace org.mbarbon.p.values
             return hash;
         }
 
+        public P5Hash GetStash(Runtime runtime, string name, bool create)
+        {
+            string[] packs = name.Split(separator, StringSplitOptions.None);
+            P5SymbolTable st = GetPackage(runtime, packs, true, create);
+
+            return st;
+        }
+
         public P5Handle GetHandle(Runtime runtime, string name, bool create)
         {
             var glob = GetGlob(runtime, name, true);
