@@ -15,10 +15,22 @@ namespace org.mbarbon.p.values
             set { globBody.Scalar = value; }
         }
 
+        public P5Scalar GetScalar(Runtime runtime)
+        {
+            return globBody.Scalar ??
+                (globBody.Scalar = new P5Scalar(runtime));
+        }
+
         public P5Array Array
         {
             get { return globBody.Array; }
             set { globBody.Array = value; }
+        }
+
+        public P5Array GetArray(Runtime runtime)
+        {
+            return globBody.Array ??
+                (globBody.Array = new P5Array(runtime));
         }
 
         public P5Hash Hash
@@ -27,16 +39,34 @@ namespace org.mbarbon.p.values
             set { globBody.Hash = value; }
         }
 
+        public P5Hash GetHash(Runtime runtime)
+        {
+            return globBody.Hash ??
+                (globBody.Hash = new P5Hash(runtime));
+        }
+
         public P5Handle Handle
         {
             get { return globBody.Handle; }
             set { globBody.Handle = value; }
         }
 
+        public P5Handle GetHandle(Runtime runtime)
+        {
+            return globBody.Handle ??
+                (globBody.Handle = new P5Handle(runtime, null, null));
+        }
+
         public P5Code Code
         {
             get { return globBody.Code; }
             set { globBody.Code = value; }
+        }
+
+        public P5Code GetCode(Runtime runtime)
+        {
+            return globBody.Code ??
+                (globBody.Code = new P5Code(globBody.Name, null));
         }
 
         public override P5Scalar Assign(Runtime runtime, IP5Any other)
