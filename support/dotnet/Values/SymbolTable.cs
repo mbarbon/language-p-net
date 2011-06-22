@@ -91,7 +91,8 @@ namespace org.mbarbon.p.values
             IP5Any value;
             if (!hash.TryGetValue(name, out value) && create)
             {
-                P5Typeglob glob = new P5Typeglob(runtime);
+                P5Typeglob glob = new P5Typeglob(
+                    runtime, this.name + "::" + name);
                 ApplyMagic(runtime, name, glob);
                 hash.Add(name, glob);
                 value = glob;
@@ -189,7 +190,8 @@ namespace org.mbarbon.p.values
                         return null;
 
                     var name = string.Join("::", packs, 0, i - first + 1);
-                    P5Typeglob glob = new P5Typeglob(runtime);
+                    P5Typeglob glob = new P5Typeglob(
+                        runtime, string.Join("::", packs));
                     glob.Hash = new P5SymbolTable(runtime, name);
                     current.hash.Add(packs[i] + "::", glob);
                     value = glob;

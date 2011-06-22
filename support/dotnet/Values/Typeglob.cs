@@ -4,9 +4,9 @@ namespace org.mbarbon.p.values
 {
     public class P5Typeglob : P5Scalar
     {
-        public P5Typeglob(Runtime runtime)
+        public P5Typeglob(Runtime runtime, string name)
         {
-            body = globBody = new P5TypeglobBody(runtime);
+            body = globBody = new P5TypeglobBody(runtime, name);
         }
 
         public P5Scalar Scalar
@@ -77,9 +77,12 @@ namespace org.mbarbon.p.values
 
     public class P5TypeglobBody : IP5ScalarBody
     {
-        public P5TypeglobBody(Runtime runtime)
+        public P5TypeglobBody(Runtime runtime, string _name)
         {
+            name = _name;
         }
+
+        public string Name { get { return name; } }
 
         public P5Scalar Scalar
         {
@@ -114,7 +117,7 @@ namespace org.mbarbon.p.values
         // IP5ScalarBody implementation
         public virtual IP5ScalarBody CloneBody(Runtime runtime)
         {
-            var newBody = new P5TypeglobBody(runtime);
+            var newBody = new P5TypeglobBody(runtime, name);
 
             newBody.scalar = scalar;
             newBody.array = array;
@@ -208,5 +211,6 @@ namespace org.mbarbon.p.values
         private P5Hash hash;
         private P5Handle handle;
         private P5Code code;
+        private string name;
     }
 }
