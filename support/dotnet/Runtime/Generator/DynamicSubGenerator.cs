@@ -144,6 +144,20 @@ namespace org.mbarbon.p.runtime
             runtime.SymbolTable.GetPackage(runtime, pack, true);
         }
 
+        protected override Expression AccessGlobal(Expression runtime_exp, Opcode.Sigil slot, string name, bool create)
+        {
+            var st = typeof(Runtime).GetField("SymbolTable");
+            var global =
+                Expression.Call(
+                    Expression.Field(runtime_exp, st),
+                    typeof(P5SymbolTable).GetMethod(MethodForSlot(slot)),
+                    runtime_exp,
+                    Expression.Constant(name),
+                    Expression.Constant(create));
+
+            return global;
+        }
+
         Runtime runtime;
         DynamicModuleGenerator module_generator;
     }

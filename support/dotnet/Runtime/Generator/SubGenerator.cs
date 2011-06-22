@@ -78,7 +78,7 @@ namespace org.mbarbon.p.runtime
                                                    typeof(void);
         }
 
-        private string MethodForSlot(Opcode.Sigil slot)
+        protected string MethodForSlot(Opcode.Sigil slot)
         {
             switch (slot)
             {
@@ -494,6 +494,7 @@ namespace org.mbarbon.p.runtime
         protected abstract Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue, bool common);
         protected abstract Expression Defined(Subroutine sub, Opcode op);
         protected abstract void DefinePackage(string pack);
+        protected abstract Expression AccessGlobal(Expression runtime_exp, Opcode.Sigil slot, string name, bool create);
 
         private Expression ForceScalar(Expression e)
         {
@@ -548,7 +549,6 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_GLOBAL:
             {
                 Global gop = (Global)op;
-                var st = typeof(Runtime).GetField("SymbolTable");
                 bool create;
 
                 if (gop.Slot == Opcode.Sigil.STASH)
@@ -556,13 +556,7 @@ namespace org.mbarbon.p.runtime
                 else
                     create = true;
 
-                var global =
-                    Expression.Call(
-                        Expression.Field(Runtime, st),
-                        typeof(P5SymbolTable).GetMethod(MethodForSlot(gop.Slot)),
-                        Runtime,
-                        Expression.Constant(gop.Name),
-                        Expression.Constant(create));
+                var global = AccessGlobal(Runtime, gop.Slot, gop.Name, create);
 
                 if (create)
                     return global;
