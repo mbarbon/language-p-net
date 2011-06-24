@@ -157,6 +157,7 @@ namespace org.mbarbon.p.runtime
         public int Line, Hints;
         public RxResult LastMatch;
         // TODO add more generic runtime/generator options
+        public bool CompileOnly;
         public bool NativeRegex, IgnoreBytecode;
     }
 }

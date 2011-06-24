@@ -19,6 +19,11 @@ namespace org.mbarbon.p
 
                 switch (arg)
                 {
+                // standard Perl flags
+                case "-c":
+                    runtime.CompileOnly = true;
+                    break;
+                // code generation options
                 case "-Znative-regex":
                     runtime.NativeRegex = true;
                     break;
@@ -57,7 +62,8 @@ namespace org.mbarbon.p
                     var cu = Serializer.ReadCompilationUnit(runtime, argv[0]);
                     P5Code main = new DynamicGenerator(runtime).GenerateAndLoad(cu);
 
-                    main.CallMain(runtime);
+                    if (!runtime.CompileOnly)
+                        main.CallMain(runtime);
                 }
                 else
                 {

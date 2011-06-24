@@ -9,7 +9,8 @@ namespace org.mbarbon.p.runtime
         {
             var code = parser.ParseFile(this, program, is_main);
 
-            code.CallMain(this);
+            if (!CompileOnly)
+                code.CallMain(this);
         }
 
         public IP5Value get_symbol(string name, Opcode.Sigil sigil)
