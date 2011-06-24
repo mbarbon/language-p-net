@@ -9,6 +9,7 @@ namespace org.mbarbon.p
 {
     class MainClass
     {
+        // TODO handle stacked options
         public static void ParseCommandLine(Runtime runtime, string[] args,
                                             out string[] argv)
         {
