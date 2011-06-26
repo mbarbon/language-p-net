@@ -30,13 +30,54 @@ namespace org.mbarbon.p.runtime
             parser_template = arglist_parser.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "new") as P5Scalar;
         }
 
-        public P5Code ParseFile(Runtime runtime, string program, bool is_main)
+        private IP5Any SafeInstance(Runtime runtime)
         {
             P5Array arglist_safe_instance =
                 new P5Array(parser_runtime,
                             parser_template);
             var parser = arglist_safe_instance.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "safe_instance");
 
+            return parser;
+        }
+
+        public P5Code ParseString(Runtime runtime, string program, string file, int line)
+        {
+            var parser = SafeInstance(runtime);
+            var reader = new P5Handle(
+                parser_runtime, new System.IO.StringReader(program), null);
+            P5Array arglist_parse_stream =
+                new P5Array(parser_runtime,
+                            parser,
+                            new P5Scalar(parser_runtime, reader),
+                            new P5Scalar(parser_runtime, file),
+                            new P5Scalar(parser_runtime, 3),
+                            new P5Scalar(parser_runtime));
+
+            IP5Any res;
+            try
+            {
+                res = arglist_parse_stream.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "parse_stream");
+            }
+            catch (System.Reflection.TargetInvocationException te)
+            {
+                var e = te.InnerException as P5Exception;
+
+                if (e == null)
+                    throw te;
+                else
+                    throw FixupException(e);
+            }
+            catch (P5Exception e)
+            {
+                throw FixupException(e);
+            }
+
+            return NetGlue.UnwrapValue(res, typeof(P5Code)) as P5Code;
+        }
+
+        public P5Code ParseFile(Runtime runtime, string program, bool is_main)
+        {
+            var parser = SafeInstance(runtime);
             P5Array arglist_parse_file =
                 new P5Array(parser_runtime,
                             parser,

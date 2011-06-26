@@ -13,6 +13,14 @@ namespace org.mbarbon.p.runtime
                 code.CallMain(this);
         }
 
+        public void run_string(string program, string file, int line)
+        {
+            var code = parser.ParseString(this, program, file, line);
+
+            if (!CompileOnly)
+                code.CallMain(this);
+        }
+
         public IP5Value get_symbol(string name, Opcode.Sigil sigil)
         {
             switch (sigil)
