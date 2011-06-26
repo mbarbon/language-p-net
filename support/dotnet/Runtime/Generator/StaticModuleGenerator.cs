@@ -55,6 +55,7 @@ namespace org.mbarbon.p.runtime
             Subroutines = new Dictionary<Subroutine, SubInfo>();
             CreatedPackages = new HashSet<string>();
             InitRuntime = Expression.Parameter(typeof(Runtime), "runtime");
+            Globals = new Dictionary<string, FieldInfo>();
         }
 
         public FieldInfo AddField(Expression initializer, Type type)
@@ -348,6 +349,20 @@ namespace org.mbarbon.p.runtime
             return ClassBuilder.CreateType();
         }
 
+        public FieldInfo AccessGlob(string name, Expression initializer)
+        {
+            FieldInfo res;
+
+            if (Globals.TryGetValue(name, out res))
+                return res;
+
+            res = AddField(initializer, typeof(P5Typeglob));
+            Globals[name] = res;
+
+            return res;
+        }
+
+        private Dictionary<string, FieldInfo> Globals;
         private TypeBuilder ClassBuilder;
         private bool NativeRegex;
         private List<Expression> Initializers;

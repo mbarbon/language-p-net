@@ -203,13 +203,34 @@ namespace org.mbarbon.p.runtime
         protected override Expression AccessGlobal(Expression runtime_exp, Opcode.Sigil slot, string name, bool create)
         {
             var st = typeof(Runtime).GetField("SymbolTable");
-            var global =
-                Expression.Call(
+            Expression global;
+
+            if (!create || slot == Opcode.Sigil.STASH)
+                global = Expression.Call(
                     Expression.Field(runtime_exp, st),
                     typeof(P5SymbolTable).GetMethod(MethodForSlot(slot)),
                     runtime_exp,
                     Expression.Constant(name),
                     Expression.Constant(create));
+            else
+            {
+                var field = ModuleGenerator.AccessGlob(
+                    name,
+                    Expression.Call(
+                        Expression.Field(ModuleGenerator.InitRuntime, st),
+                        typeof(P5SymbolTable).GetMethod("GetGlob"),
+                        ModuleGenerator.InitRuntime,
+                        Expression.Constant(name),
+                        Expression.Constant(create)));
+
+                global = Expression.Field(null, field);
+
+                if (slot != Opcode.Sigil.GLOB)
+                    global = Expression.Call(
+                        global,
+                        typeof(P5Typeglob).GetMethod(MethodForSlot(slot)),
+                        runtime_exp);
+            }
 
             return global;
         }
