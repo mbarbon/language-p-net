@@ -46,7 +46,10 @@ namespace org.mbarbon.p.runtime
 
             if (sub.IsConstant)
             {
-                var const_op = sub.BasicBlocks[sub.BasicBlocks.Count - 2].Opcodes[1].Childs[0].Childs[0];
+                // TODO abstract away
+                var const_op = sub.BasicBlocks[sub.BasicBlocks.Count - 2].Opcodes[1].Childs[0];
+                if (const_op.Number == Opcode.OpNumber.OP_MAKE_LIST)
+                    const_op = const_op.Childs[0];
                 object value;
                 int flags;
 

@@ -423,39 +423,16 @@ namespace org.mbarbon.p.runtime
             return Expression.IfThen(cmp, jump);
         }
 
-        private Expression ReturnExpression(Expression list)
+        private Expression ReturnExpression(Expression value)
         {
-            ParameterExpression val = Expression.Variable(typeof(IP5Any), "ret");
-            Expression iflist =
-                Expression.Condition(
-                    Expression.Equal(
-                        Context,
-                        Expression.Constant(Opcode.ContextValues.LIST)),
-                    val,
-                    Expression.New(typeof(P5List).GetConstructor(ProtoRuntime),
-                                   Runtime),
-                    typeof(IP5Any));
-            Expression retscalar =
+            return Expression.Return(
+                SubLabel,
                 Expression.Call(
-                    val,
-                    typeof(IP5Any).GetMethod("AsScalar"),
-                    Runtime);
-            Expression ifscalar =
-                Expression.Condition(
-                    Expression.Equal(
-                        Context,
-                        Expression.Constant(Opcode.ContextValues.SCALAR)),
-                    retscalar, iflist, typeof(IP5Any));
-
-            return
-                Expression.Return(
-                    SubLabel,
-                    Expression.Block(
-                        typeof(IP5Any), new ParameterExpression[] { val },
-                        new Expression[] {
-                            Expression.Assign(val, list),
-                            ifscalar }),
-                    typeof(IP5Any));
+                    typeof(Builtins).GetMethod("Return"),
+                    Runtime,
+                    Context,
+                    value),
+                typeof(IP5Any));
         }
 
         private Expression UndefIfNull(Expression e)

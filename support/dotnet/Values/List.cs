@@ -5,6 +5,8 @@ namespace org.mbarbon.p.values
 {
     public class P5List : P5Array
     {
+        public static readonly P5List EmptyList = new P5List(null);
+
         public P5List(Runtime runtime) : base(runtime)
         {
         }

@@ -10,6 +10,17 @@ namespace org.mbarbon.p.runtime
             System.Console.WriteLine(string.Format("{0:S}:{1:D}", file, line));
         }
 
+        public static IP5Any Return(Runtime runtime, Opcode.ContextValues cxt,
+                                    IP5Any value)
+        {
+            if (cxt == Opcode.ContextValues.SCALAR)
+                return value.AsScalar(runtime);
+            if (cxt == Opcode.ContextValues.LIST)
+                return value as P5Array ?? new P5List(runtime, value);
+
+            return P5List.EmptyList;
+        }
+
         public static P5Scalar Bless(Runtime runtime, P5Scalar reference, IP5Any pack)
         {
             var pack_str = pack.AsString(runtime);
