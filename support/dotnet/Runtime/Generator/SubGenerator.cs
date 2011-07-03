@@ -749,21 +749,7 @@ namespace org.mbarbon.p.runtime
                     Runtime);
             }
             case Opcode.OpNumber.OP_RETURN:
-            {
-                if (op.Childs.Length == 0)
-                {
-                    return
-                        Expression.Return(
-                            SubLabel,
-                            Expression.New(typeof(P5List).GetConstructor(ProtoRuntime),
-                                           Runtime),
-                            typeof(IP5Any));
-                }
-                else
-                {
-                    return ReturnExpression(Generate(sub, op.Childs[0]));
-                }
-            }
+                return ReturnExpression(Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_DYNAMIC_GOTO:
             {
                 // TODO handle goto $LABEL
