@@ -68,6 +68,9 @@ support/dotnet/Values/Undef.cs
 support/dotnet/Values/Vec.cs
 support/dotnet/dotnet.csproj
 support/dotnet/dotnet.sln
+t/benchmark/misc.pl
+t/benchmark/tests/iter.pl
+t/benchmark/tests/rec.pl
 t/run/net/001_base.t
 t/run/net/002_bool.t
 t/run/net/002_enum.t
