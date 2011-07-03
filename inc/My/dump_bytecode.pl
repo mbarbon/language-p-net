@@ -1,5 +1,6 @@
 #!/usr/bin/perl -w
 
+use Carp::Heavy;
 use Language::P::Object qw(:all);
 use Language::P::Constants qw(:all);
 use Language::P::Keywords qw(:all);
