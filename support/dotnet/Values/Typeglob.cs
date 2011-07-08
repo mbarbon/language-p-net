@@ -158,6 +158,22 @@ namespace org.mbarbon.p.values
             return newBody;
         }
 
+        public virtual IP5ScalarBody Assign(Runtime runtime, IP5ScalarBody other)
+        {
+            var osb = other as P5TypeglobBody;
+
+            if (osb == null)
+                return other.CloneBody(runtime);
+
+            scalar = osb.scalar;
+            array = osb.array;
+            hash = osb.hash;
+            handle = osb.handle;
+            code = osb.code;
+
+            return this;
+        }
+
         public virtual string AsString(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual int AsInteger(Runtime runtime) { throw new System.NotImplementedException(); }
         public virtual double AsFloat(Runtime runtime) { throw new System.NotImplementedException(); }

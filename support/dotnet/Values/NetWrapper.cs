@@ -19,6 +19,11 @@ namespace org.mbarbon.p.values
             return this;
         }
 
+        public virtual IP5ScalarBody Assign(Runtime runtime, IP5ScalarBody other)
+        {
+            return other.CloneBody(runtime);
+        }
+
         public string AsString(Runtime runtime)
         {
             return obj.ToString();

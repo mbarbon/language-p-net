@@ -39,7 +39,7 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar Assign(Runtime runtime, IP5Any other)
         {
-            body = other.AsScalar(runtime).body.CloneBody(runtime);
+            body = body.Assign(runtime, other.AsScalar(runtime).body);
 
             return this;
         }
@@ -541,6 +541,8 @@ namespace org.mbarbon.p.values
     public interface IP5ScalarBody
     {
         IP5ScalarBody CloneBody(Runtime runtime);
+        IP5ScalarBody Assign(Runtime runtime, IP5ScalarBody other);
+
         string AsString(Runtime runtime);
         string KeyString(Runtime runtime);
         int AsInteger(Runtime runtime);

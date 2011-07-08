@@ -117,6 +117,23 @@ namespace org.mbarbon.p.values
             return new P5StringNumber(runtime, flags, integerValue, stringValue, floatValue);
         }
 
+        public virtual IP5ScalarBody Assign(Runtime runtime, IP5ScalarBody other)
+        {
+            var osb = other as P5StringNumber;
+
+            if (osb == null)
+                return other.CloneBody(runtime);
+
+            flags = osb.flags;
+            pos = -1;
+            pos_set = false;
+            stringValue = osb.stringValue;
+            integerValue = osb.integerValue;
+            floatValue = osb.floatValue;
+
+            return this;
+        }
+
         internal void Increment(Runtime runtime)
         {
             pos = -1;

@@ -15,6 +15,18 @@ namespace org.mbarbon.p.values
             return new P5Reference(runtime, referred);
         }
 
+        public virtual IP5ScalarBody Assign(Runtime runtime, IP5ScalarBody other)
+        {
+            var osn = other as P5Reference;
+
+            if (osn == null)
+                return other.CloneBody(runtime);
+
+            referred = osn.referred;
+
+            return this;
+        }
+
         public virtual string AsString(Runtime runtime)
         {
             var rx = referred as IP5Regex;
