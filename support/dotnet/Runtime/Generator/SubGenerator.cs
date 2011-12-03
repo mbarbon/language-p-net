@@ -35,7 +35,6 @@ namespace org.mbarbon.p.runtime
             Lexicals = new List<ParameterExpression>();
             Temporaries = new List<ParameterExpression>();
             BlockLabels = new Dictionary<BasicBlock, LabelTarget>();
-            Blocks = new List<Expression>();
             ValueBlocks = new Dictionary<BasicBlock, Expression>();
             LexStates = new List<ParameterExpression>();
             RxStates = new List<ParameterExpression>();
@@ -211,136 +210,175 @@ namespace org.mbarbon.p.runtime
                 new Expression[] { Expression.Constant(info.Index) });
         }
 
-        private Dictionary<int, bool> GeneratedScopes;
+        private struct ScopeInfo
+        {
+            public List<Expression> Body;
+            public bool Used;
+            public BasicBlock FirstBlock;
+            public int FirstBlockFor;
+            public LabelTarget Start;
+        }
+
+        private ScopeInfo[] Scopes;
         private Scope CurrentScope;
 
         public void GenerateScope(Subroutine sub, Scope scope)
         {
-            if (scope.Outer != -1 && (scope.Flags & Scope.SCOPE_VALUE) == 0)
-                GenerateScope(sub, sub.Scopes[scope.Outer]);
-            if (GeneratedScopes.ContainsKey(scope.Id))
-                return;
-            GeneratedScopes.Add(scope.Id, true);
-
+            // TODO should not rely on block order
             BasicBlock first_block = null;
+            var exps = new List<Expression>();
+
+            CurrentScope = scope;
+
             for (int i = 0; i < sub.BasicBlocks.Count; ++i)
             {
                 var block = sub.BasicBlocks[i];
                 if (block == null || block.Dead != 0) // TODO enumeration
                     continue;
-                if (block.Scope != scope.Id)
-                {
-                    if (GeneratedScopes.ContainsKey(block.Scope))
-                        continue;
-                    bool is_inside = false;
-                    for (int s = block.Scope; !is_inside && s != -1;
-                         s = sub.Scopes[s].Outer)
-                        is_inside = s == scope.Id;
-                    if (is_inside)
-                        GenerateScope(sub, sub.Scopes[block.Scope]);
-                }
-                else
-                {
-                    List<Expression> exps = new List<Expression>();
-                    CurrentScope = scope;
 
-                    if ((scope.Flags & Scope.SCOPE_EVAL) != 0)
+                if (block.Scope > scope.Id)
+                {
+                    int scopeId = block.Scope;
+
+                    // if scope has no blocks on its own, still needs to
+                    // insert inner scopes, so it can't just test whether this
+                    // block's scope is directly inside the current scope, but
+                    // it must handle the case when a scope is entirely
+                    // composed by blocks in inner scopes
+                    if (Scopes[scopeId].FirstBlockFor != -1)
+                        scopeId = Scopes[scopeId].FirstBlockFor;
+
+                    if (sub.Scopes[scopeId].Outer == scope.Id &&
+                        !Scopes[scopeId].Used)
                     {
-                        exps.Add(
-                            Expression.Call(
-                                Expression.Field(Runtime, "CallStack"),
-                                typeof(Stack<StackFrame>).GetMethod("Push"),
-                                Expression.New(
-                                    typeof(StackFrame).GetConstructor(new Type[] {
-                                            typeof(string), typeof(string),
-                                            typeof(int), typeof(P5Code),
-                                            typeof(Opcode.ContextValues),
-                                            typeof(bool)}),
-                                    Expression.Constant(sub.LexicalStates[scope.LexicalState].Package),
-                                    Expression.Constant(scope.Start.File),
-                                    Expression.Constant(scope.Start.Line),
-                                    Expression.Constant(null, typeof(P5Code)),
-                                    Expression.Constant((Opcode.ContextValues)scope.Context),
-                                    Expression.Constant(true)
-                                    )));
+                        Scopes[scopeId].Used = true;
+
+                        if (Scopes[scopeId].Body != null)
+                        {
+                            if (first_block != null)
+                                exps.Add(Expression.Label(Scopes[scopeId].Start));
+
+                            exps.AddRange(Scopes[scopeId].Body);
+                        }
+
+                        if (first_block == null)
+                        {
+                            first_block = Scopes[block.Scope].FirstBlock;
+                            Scopes[block.Scope].FirstBlockFor = scope.Id;
+                        }
                     }
-                    // TODO should not rely on block order
+                }
+                else if (block.Scope == scope.Id)
+                {
                     if (first_block == null)
                         first_block = block;
+                    else
+                        exps.Add(Expression.Label(BlockLabels[block]));
 
                     Generate(sub, block, exps);
-
-                    Expression body = null;
-
-                    if ((scope.Flags & Scope.SCOPE_EVAL) != 0)
-                    {
-                        var except = new List<Expression>();
-                        var ex = Expression.Variable(typeof(P5Exception));
-                        for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
-                            Generate(sub, scope.Opcodes[j], except);
-                        except.Add(
-                            Expression.Call(
-                                Runtime,
-                                typeof(Runtime).GetMethod("SetException"),
-                                ex));
-                        Generate(sub, scope.Exception, except);
-
-                        body = Expression.Block(
-                            typeof(IP5Any),
-                            Expression.Label(BlockLabels[block]),
-                            Expression.TryCatchFinally(
-                                Expression.Block(typeof(IP5Any), exps),
-                                Expression.Call(
-                                    Expression.Field(Runtime, "CallStack"),
-                                    typeof(Stack<StackFrame>).GetMethod("Pop")),
-                                Expression.Catch(
-                                    ex,
-                                    Expression.Block(typeof(IP5Any), except))
-                                ));
-                    }
-                    else if (scope.Opcodes.Count > 0)
-                    {
-                        var fault = new List<Expression>();
-                        for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
-                            Generate(sub, scope.Opcodes[j], fault);
-                        fault.Add(Expression.Rethrow(typeof(IP5Any)));
-
-                        body = Expression.Block(
-                            typeof(IP5Any),
-                            Expression.Label(BlockLabels[block]),
-                            Expression.TryCatch(
-                                Expression.Block(typeof(IP5Any), exps),
-                                Expression.Catch(
-                                    typeof(System.Exception),
-                                    Expression.Block(typeof(IP5Any), fault))));
-                    }
-                    else
-                    {
-                        exps.Insert(0, Expression.Label(BlockLabels[block]));
-                        body = Expression.Block(typeof(IP5Any), exps);
-                    }
-
-                    if ((scope.Flags & Scope.SCOPE_VALUE) != 0)
-                        ValueBlocks[first_block] = body;
-                    else
-                        Blocks.Add(body);
                 }
             }
+
+            List<Expression> body = null;
+
+            if ((scope.Flags & Scope.SCOPE_EVAL) != 0)
+            {
+                exps.Insert(0,
+                    Expression.Call(
+                        Expression.Field(Runtime, "CallStack"),
+                        typeof(Stack<StackFrame>).GetMethod("Push"),
+                        Expression.New(
+                            typeof(StackFrame).GetConstructor(new Type[] {
+                                    typeof(string), typeof(string),
+                                    typeof(int), typeof(P5Code),
+                                    typeof(Opcode.ContextValues),
+                                    typeof(bool)}),
+                            Expression.Constant(sub.LexicalStates[scope.LexicalState].Package),
+                            Expression.Constant(scope.Start.File),
+                            Expression.Constant(scope.Start.Line),
+                            Expression.Constant(null, typeof(P5Code)),
+                            Expression.Constant((Opcode.ContextValues)scope.Context),
+                            Expression.Constant(true)
+                            )));
+
+                var except = new List<Expression>();
+                var ex = Expression.Variable(typeof(P5Exception));
+                for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
+                    Generate(sub, scope.Opcodes[j], except);
+                except.Add(
+                    Expression.Call(
+                        Runtime,
+                        typeof(Runtime).GetMethod("SetException"),
+                        ex));
+                Generate(sub, scope.Exception, except);
+
+                var block = Expression.TryCatchFinally(
+                    Expression.Block(typeof(IP5Any), exps),
+                    Expression.Call(
+                        Expression.Field(Runtime, "CallStack"),
+                        typeof(Stack<StackFrame>).GetMethod("Pop")),
+                    Expression.Catch(
+                        ex,
+                        Expression.Block(typeof(IP5Any), except))
+                    );
+
+                body = new List<Expression>();
+                body.Add(block);
+            }
+            else if (scope.Opcodes.Count > 0)
+            {
+                var fault = new List<Expression>();
+                for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
+                    Generate(sub, scope.Opcodes[j], fault);
+                fault.Add(Expression.Rethrow(typeof(IP5Any)));
+
+                var block = Expression.TryCatch(
+                    Expression.Block(typeof(IP5Any), exps),
+                    Expression.Catch(
+                        typeof(System.Exception),
+                        Expression.Block(typeof(IP5Any), fault)));
+
+                body = new List<Expression>();
+                body.Add(block);
+            }
+            else if (first_block != null)
+                body = exps;
+
+            if (first_block != null)
+                Scopes[scope.Id].Start = BlockLabels[first_block];
+
+            Scopes[scope.Id].FirstBlock = first_block;
+
+            if ((scope.Flags & Scope.SCOPE_VALUE) != 0)
+                ValueBlocks[first_block] = Expression.Block(
+                    typeof(IP5Any), body);
+            else
+                Scopes[scope.Id].Body = body;
+        }
+
+        private Expression GenerateScopes(Subroutine sub)
+        {
+            Scopes = new ScopeInfo[sub.Scopes.Count];
+
+            for (int i = 0; i < Scopes.Length; ++i)
+                Scopes[i].FirstBlockFor = -1;
+
+            for (int i = sub.Scopes.Count - 1; i >= 0; --i)
+                GenerateScope(sub, sub.Scopes[i]);
+
+            return Expression.Block(typeof(IP5Any), Scopes[0].Body);
         }
 
         public LambdaExpression Generate(Subroutine sub, bool is_main)
         {
-            GeneratedScopes = new Dictionary<int, bool>();
             IsMain = is_main;
             SubLabel = Expression.Label(typeof(IP5Any));
 
             for (int i = 0; i < sub.BasicBlocks.Count; ++i)
                 if (sub.BasicBlocks[i] != null)
                     BlockLabels[sub.BasicBlocks[i]] = Expression.Label("L" + i.ToString());
-            for (int i = 0; i < sub.Scopes.Count; ++i)
-                if ((sub.Scopes[i].Flags & Scope.SCOPE_VALUE) != 0)
-                    GenerateScope(sub, sub.Scopes[i]);
-            GenerateScope(sub, sub.Scopes[0]);
+
+            var scopes = GenerateScopes(sub);
 
             var vars = new List<ParameterExpression>();
             AddVars(vars, Variables);
@@ -349,7 +387,7 @@ namespace org.mbarbon.p.runtime
             AddVars(vars, LexStates);
             AddVars(vars, RxStates);
 
-            var block = Expression.Block(typeof(IP5Any), vars, Blocks);
+            var block = Expression.Block(typeof(IP5Any), vars, scopes);
             var args = new ParameterExpression[] { Runtime, Context, Pad, Arguments };
             return Expression.Lambda<P5Code.Sub>(Expression.Label(SubLabel, block), args);
         }
@@ -812,9 +850,7 @@ namespace org.mbarbon.p.runtime
                     e);
             }
             case Opcode.OpNumber.OP_JUMP:
-            {
                 return Expression.Goto(BlockLabels[((Jump)op).To], typeof(IP5Any));
-            }
             case Opcode.OpNumber.OP_JUMP_IF_NULL:
             {
                 Expression cmp = Expression.Equal(
@@ -2080,7 +2116,6 @@ namespace org.mbarbon.p.runtime
         private ParameterExpression Runtime, Arguments, Context, Pad;
         private List<ParameterExpression> Variables, Lexicals, Temporaries, LexStates, RxStates;
         private Dictionary<BasicBlock, LabelTarget> BlockLabels;
-        private List<Expression> Blocks;
         private Dictionary<BasicBlock, Expression> ValueBlocks;
         private bool IsMain;
     }
