@@ -85,11 +85,14 @@ namespace org.mbarbon.p.values
             }
             finally
             {
-                StackFrame frame = null;
+                StackFrame frame = new StackFrame();
+
+                // the while() is required for tail calls,
+                // until proper tail calls are implemented
                 while (runtime.CallStack.Count > size)
                     frame = runtime.CallStack.Pop();
 
-                if (frame != null)
+                if (size > 0)
                 {
                     runtime.Package = frame.Package;
                     runtime.File = frame.File;
@@ -230,6 +233,8 @@ namespace org.mbarbon.p.values
             }
             finally
             {
+                // the while() is required for tail calls,
+                // until proper tail calls are implemented
                 while (runtime.CallStack.Count > size)
                     runtime.CallStack.Pop();
             }

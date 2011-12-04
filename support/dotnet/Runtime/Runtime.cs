@@ -17,7 +17,7 @@ namespace org.mbarbon.p.runtime
         public string str_key;
     }
 
-    public class StackFrame
+    public struct StackFrame
     {
         public StackFrame(string pack, string file, int l, P5Code code,
                           Opcode.ContextValues cxt, bool eval)
@@ -85,15 +85,21 @@ namespace org.mbarbon.p.runtime
 
         private IP5Any Caller(bool noarg, int level, Opcode.ContextValues cxt)
         {
+            if (level >= CallStack.Count)
+            {
+                if (cxt == Opcode.ContextValues.SCALAR)
+                    return new P5Scalar(this);
+                else
+                    return new P5List(this);
+            }
+
             StackFrame frame;
 
-            if (level >= CallStack.Count)
-                frame = null;
-            else if (level == 0)
+            if (level == 0)
                 frame = CallStack.Peek();
             else
             {
-                frame = null;
+                frame = new StackFrame();
 
                 foreach (var f in CallStack)
                 {
@@ -103,14 +109,6 @@ namespace org.mbarbon.p.runtime
                         break;
                     --level;
                 }
-            }
-
-            if (frame == null)
-            {
-                if (cxt == Opcode.ContextValues.SCALAR)
-                    return new P5Scalar(this);
-                else
-                    return new P5List(this);
             }
 
             if (cxt == Opcode.ContextValues.SCALAR)
