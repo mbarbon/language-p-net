@@ -27,7 +27,9 @@ foo
 # Language::P symlinks
 support/toy
 t/intermediate
-t/lib
+t/lib/TestIntermediate.pm
+t/lib/TestParser.pm
+t/lib/TestRegex.pm
 t/parser
 t/run/*.t
 t/run/files
