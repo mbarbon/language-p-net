@@ -471,11 +471,21 @@ namespace org.mbarbon.p.values
 
             for (int i = 1; i < args.GetCount(runtime); ++i)
             {
-                var pack = args.GetItem(runtime, i).AsString(runtime);
-                var file = pack.Replace("::", "/") + ".pm";
-                var path = Builtins.SearchFile(runtime, file);
+                var arg = args.GetItem(runtime, i).AsString(runtime);
+                string path, file;
+
+                path = Builtins.SearchFile(runtime, arg);
+
+                if (path != null)
+                    file = arg;
+                else
+                {
+                    file = arg.Replace("::", "/") + ".pm";
+                    path = Builtins.SearchFile(runtime, file);
+                }
+
                 if (path == null)
-                    throw new System.Exception(string.Format("File {0:S} not found", file));
+                    throw new System.Exception(string.Format("File not found for '{0:S}'", arg));
 
                 var cu = Serializer.ReadCompilationUnit(runtime, path);
                 cu.FileName = file;
