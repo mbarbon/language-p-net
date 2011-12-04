@@ -180,6 +180,10 @@ namespace org.mbarbon.p.runtime
             var lex = GetLexical(index, slot);
             var type = TypeForSlot(slot);
 
+            // the condition is necessary because a jump might bypass
+            // a declaration; if the subroutine does not contain any goto, or
+            // if the goto inizializes all jumped-over variables, then the
+            // condition can be removed
             return Expression.Condition(
                 Expression.NotEqual(
                     lex,
