@@ -68,7 +68,7 @@ namespace org.mbarbon.p.values
                 c = a.GetCount(runtime);
             }
 
-            foreach (var i in this)
+            foreach (var i in array)
                 i.AssignIterator(runtime, e);
 
             return c;
