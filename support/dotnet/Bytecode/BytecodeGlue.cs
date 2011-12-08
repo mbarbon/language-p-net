@@ -95,6 +95,7 @@ namespace org.mbarbon.p.runtime
         public int dead() { return Dead; }
         public string start_label() { return StartLabel; }
         public List<Opcode> bytecode() { return Opcodes; }
+        public int scope() { return Scope; }
         public void set_scope(int scope) { Scope = scope; }
         public List<BasicBlock> predecessors() { return Predecessors; }
         public List<BasicBlock> successors() { return Successors; }
