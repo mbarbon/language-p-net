@@ -93,6 +93,7 @@ namespace org.mbarbon.p.runtime
             if (sub.Name != null)
             {
                 if (sub.Name == "BEGIN" || sub.Name.EndsWith("::BEGIN"))
+                    // TODO need to set the line number for caller()
                     code.Call(runtime, Opcode.ContextValues.VOID,
                               new P5Array(runtime));
                 else

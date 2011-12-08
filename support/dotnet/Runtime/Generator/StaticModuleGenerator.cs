@@ -302,6 +302,7 @@ namespace org.mbarbon.p.runtime
                          && (   si.SubName == "BEGIN"
                              || si.SubName.EndsWith("::BEGIN")))
                 {
+                    // TODO need to set the line number for caller()
                     Expression empty_list =
                         Expression.New(
                             typeof(P5Array).GetConstructor(
