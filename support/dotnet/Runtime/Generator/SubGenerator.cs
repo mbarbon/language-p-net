@@ -279,7 +279,7 @@ namespace org.mbarbon.p.runtime
                     else
                         exps.Add(Expression.Label(BlockLabels[block]));
 
-                    Generate(sub, block, exps);
+                    GenerateBlock(sub, block, exps);
                 }
             }
 
@@ -308,13 +308,13 @@ namespace org.mbarbon.p.runtime
                 var except = new List<Expression>();
                 var ex = Expression.Variable(typeof(P5Exception));
                 for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
-                    Generate(sub, scope.Opcodes[j], except);
+                    GenerateOpcodes(sub, scope.Opcodes[j], except);
                 except.Add(
                     Expression.Call(
                         Runtime,
                         typeof(Runtime).GetMethod("SetException"),
                         ex));
-                Generate(sub, scope.Exception, except);
+                GenerateBlock(sub, scope.Exception, except);
 
                 var block = Expression.TryCatchFinally(
                     Expression.Block(typeof(IP5Any), exps),
@@ -333,7 +333,7 @@ namespace org.mbarbon.p.runtime
             {
                 var fault = new List<Expression>();
                 for (int j = scope.Opcodes.Count - 1; j >= 0; --j)
-                    Generate(sub, scope.Opcodes[j], fault);
+                    GenerateOpcodes(sub, scope.Opcodes[j], fault);
                 fault.Add(Expression.Rethrow(typeof(IP5Any)));
 
                 var block = Expression.TryCatch(
@@ -423,8 +423,8 @@ namespace org.mbarbon.p.runtime
 */
         }
 
-        public void Generate(Subroutine sub, BasicBlock bb,
-                             List<Expression> expressions)
+        public void GenerateBlock(Subroutine sub, BasicBlock bb,
+                                  List<Expression> expressions)
         {
             foreach (var o in bb.Opcodes)
             {
@@ -434,8 +434,8 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        public void Generate(Subroutine sub, IList<Opcode> ops,
-                             List<Expression> expressions)
+        public void GenerateOpcodes(Subroutine sub, IList<Opcode> ops,
+                                   List<Expression> expressions)
         {
             foreach (var o in ops)
             {
@@ -785,7 +785,7 @@ namespace org.mbarbon.p.runtime
 
                 for (var s = CurrentScope; s != null; s = s.Outer != -1 ? sub.Scopes[s.Outer] : null)
                     for (int j = s.Opcodes.Count - 1; j >= 0; --j)
-                        Generate(sub, s.Opcodes[j], exit_scope);
+                        GenerateOpcodes(sub, s.Opcodes[j], exit_scope);
 
                 exit_scope.Add(
                     Expression.Call(
