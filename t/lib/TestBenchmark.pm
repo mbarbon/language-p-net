@@ -5,7 +5,7 @@ use warnings;
 
 use Dumbbench;
 
-our @EXPORT_OK = qw(run_parser run_bytecode);
+our @EXPORT_OK = qw(run_parse run_bytecode);
 our %EXPORT_TAGS =
   ( all => \@EXPORT_OK,
     );
