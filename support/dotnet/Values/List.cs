@@ -72,16 +72,18 @@ namespace org.mbarbon.p.values
         public virtual P5List Slice(Runtime runtime, P5Array keys)
         {
             var res = new P5List(runtime);
-            var list = new List<IP5Any>();
+            var list = new List<IP5Any>(keys.GetCount(runtime));
             bool found = false;
 
             foreach (var key in keys)
             {
                 int i = key.AsInteger(runtime);
 
-                found = found || i < array.Count;
+                if (i < array.Count)
+                    found = true;
                 list.Add(GetItemOrUndef(runtime, key, false));
             }
+
             if (found)
                 res.SetArray(list);
 
@@ -105,11 +107,11 @@ namespace org.mbarbon.p.values
 
         public override IP5Any Clone(Runtime runtime, int depth)
         {
-            P5Array clone = new P5Array(runtime);
+            P5Array clone = new P5Array(runtime, array.Count);
 
             if (depth > 0)
             {
-                foreach (var i in this)
+                foreach (var i in array)
                 {
                     var enumerable = i as IP5Enumerable;
 
@@ -120,7 +122,7 @@ namespace org.mbarbon.p.values
                 }
             }
             else
-                foreach (var i in this)
+                foreach (var i in array)
                     clone.PushFlatten(runtime, i);
 
             return clone;

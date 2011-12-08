@@ -92,7 +92,7 @@ namespace org.mbarbon.p.values
 
         public P5List Slice(Runtime runtime, P5Array keys, bool create)
         {
-            var res = new P5List(runtime);
+            var res = new P5List(runtime, (List<IP5Any>) null);
             var list = new List<IP5Any>();
 
             foreach (var key in keys)

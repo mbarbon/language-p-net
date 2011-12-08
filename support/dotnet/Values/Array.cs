@@ -114,13 +114,12 @@ namespace org.mbarbon.p.values
 
         public P5List Slice(Runtime runtime, P5Array keys, bool create)
         {
-            var res = new P5List(runtime);
+            var res = new P5List(runtime, (List<IP5Any>) null);
             var list = new List<IP5Any>();
 
             foreach (var key in keys)
-            {
                 list.Add(GetItemOrUndef(runtime, key, create));
-            }
+
             res.SetArray(list);
 
             return res;
@@ -276,15 +275,20 @@ namespace org.mbarbon.p.values
 
         public virtual IP5Any Clone(Runtime runtime, int depth)
         {
-            P5Array clone = new P5Array(runtime);
-            clone.array.Capacity = array.Count;
+            P5Array clone = new P5Array(runtime, (List<IP5Any>) null);
 
-            for (int i = 0; i < array.Count; ++i)
+            if (depth == 0)
             {
-                if (depth == 0)
-                    clone.array.Add(array[i]);
-                else
-                    clone.array.Add(array[i].Clone(runtime, depth - 1));
+                clone.SetArray(new List<IP5Any>(array));
+            }
+            else
+            {
+                var list = new List<IP5Any>(array.Count);
+
+                foreach (var i in array)
+                    list.Add(i.Clone(runtime, depth - 1));
+
+                clone.SetArray(list);
             }
 
             return clone;
