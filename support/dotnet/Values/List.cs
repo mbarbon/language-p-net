@@ -34,15 +34,6 @@ namespace org.mbarbon.p.values
         {
         }
 
-        public static new P5List MakeFlat(Runtime runtime, params IP5Value[] data)
-        {
-            var res = new P5List(runtime);
-
-            res.PushFlatten(runtime, data);
-
-            return res;
-        }
-
         public override P5Scalar AsScalar(Runtime runtime)
         {
             return array.Count == 0 ? new P5Scalar(runtime) : array[array.Count - 1].AsScalar(runtime);
@@ -106,9 +97,10 @@ namespace org.mbarbon.p.values
             flattened = false;
         }
 
-        public static P5List MakeNonFlat(Runtime runtime, params IP5Any[] data)
+        public P5LvalueList(Runtime runtime, List<IP5Any> data) :
+            base(runtime, data)
         {
-            return new P5LvalueList(runtime, data);
+            flattened = false;
         }
 
         public override IP5Any Clone(Runtime runtime, int depth)

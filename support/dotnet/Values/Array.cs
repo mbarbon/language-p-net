@@ -61,15 +61,6 @@ namespace org.mbarbon.p.values
                 array = new List<IP5Any>();
         }
 
-        public static P5Array MakeFlat(Runtime runtime, params IP5Value[] data)
-        {
-            var res = new P5Array(runtime);
-
-            res.PushFlatten(runtime, data);
-
-            return res;
-        }
-
         public void PushFlatten(Runtime runtime, IP5Value value)
         {
             var v = value as IP5Enumerable;

@@ -24,6 +24,8 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(IP5Any) };
         private static Type[] ProtoStringString =
             new Type[] { typeof(string), typeof(string) };
+        private static Type[] ProtoInt =
+            new Type[] { typeof(int) };
 
         public SubGenerator()
         {
@@ -499,6 +501,58 @@ namespace org.mbarbon.p.runtime
                     exps);
         }
 
+        private Expression MakeFlatArray(Subroutine sub, Type type, Opcode op)
+        {
+            var data = new List<Expression>();
+            var temp = Expression.Variable(type);
+            var method = type.GetMethod("PushFlatten");
+
+            data.Add(
+                Expression.Assign(
+                    temp,
+                    Expression.New(
+                        type.GetConstructor(ProtoRuntimeInt),
+                        Runtime,
+                        Expression.Constant(op.Childs.Length))));
+
+            foreach (var i in op.Childs)
+                data.Add(
+                    Expression.Call(temp, method, Runtime, Generate(sub, i)));
+
+            data.Add(temp);
+
+            return Expression.Block(
+                type, new ParameterExpression[] { temp }, data);
+        }
+
+        private Expression MakeNonFlatArray(Subroutine sub, Type type, Opcode op)
+        {
+            var data = new List<Expression>();
+            var temp = Expression.Variable(typeof(List<IP5Any>));
+            var method = typeof(List<IP5Any>).GetMethod("Add");
+
+            data.Add(
+                Expression.Assign(
+                    temp,
+                    Expression.New(
+                        typeof(List<IP5Any>).GetConstructor(ProtoInt),
+                        Expression.Constant(op.Childs.Length))));
+
+            foreach (var i in op.Childs)
+                data.Add(
+                    Expression.Call(temp, method, Generate(sub, i)));
+
+            data.Add(
+                Expression.New(
+                    type.GetConstructor(
+                        new Type[] { typeof(Runtime), typeof(List<IP5Any>) }),
+                    Runtime,
+                    temp));
+
+            return Expression.Block(
+                type, new ParameterExpression[] { temp }, data);
+        }
+
         protected abstract Expression ConstantInteger(int value);
         protected abstract Expression ConstantFloat(double value);
         protected abstract Expression ConstantSub(Subroutine sub);
@@ -613,40 +667,13 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_MAKE_LIST:
             {
-                MethodInfo method;
-                Type array_type;
-
                 if ((op.Context & (int)Opcode.ContextValues.LVALUE) != 0)
-                {
-                    method = typeof(P5LvalueList).GetMethod("MakeNonFlat");
-                    array_type = typeof(IP5Any);
-                }
+                    return MakeNonFlatArray(sub, typeof(P5LvalueList), op);
                 else
-                {
-                    method = typeof(P5List).GetMethod("MakeFlat");
-                    array_type = typeof(IP5Value);
-                }
-
-                List<Expression> data = new List<Expression>();
-                foreach (var i in op.Childs)
-                    data.Add(Generate(sub, i));
-                return
-                    Expression.Call(
-                        method,
-                        Runtime,
-                        Expression.NewArrayInit(array_type, data));
+                    return MakeFlatArray(sub, typeof(P5List), op);
             }
             case Opcode.OpNumber.OP_MAKE_ARRAY:
-            {
-                List<Expression> data = new List<Expression>();
-                foreach (var i in op.Childs)
-                    data.Add(Generate(sub, i));
-                return
-                    Expression.Call(
-                        typeof(P5Array).GetMethod("MakeFlat"),
-                        Runtime,
-                        Expression.NewArrayInit(typeof(IP5Value), data));
-            }
+                return MakeFlatArray(sub, typeof(P5Array), op);
             case Opcode.OpNumber.OP_DOT_DOT:
             {
                 // TODO needs to handle the flip/flop mode in scalar context
