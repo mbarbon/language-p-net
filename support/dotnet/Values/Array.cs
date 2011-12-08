@@ -35,6 +35,11 @@ namespace org.mbarbon.p.values
             array = new List<IP5Any>();
         }
 
+        public P5Array(Runtime runtime, int size)
+        {
+            array = new List<IP5Any>(size);
+        }
+
         public P5Array(Runtime runtime, params IP5Any[] data)
         {
             array = new List<IP5Any>(data);

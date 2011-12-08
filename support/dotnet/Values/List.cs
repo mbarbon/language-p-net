@@ -11,6 +11,10 @@ namespace org.mbarbon.p.values
         {
         }
 
+        public P5List(Runtime runtime, int size) : base(runtime, size)
+        {
+        }
+
         public P5List(Runtime runtime, bool value) : base(runtime)
         {
             if (value)
