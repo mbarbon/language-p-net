@@ -54,7 +54,7 @@ namespace org.mbarbon.p.runtime
                     proto[i] = reader.ReadInt32();
             }
 
-            int type = reader.ReadByte();
+            int flags = reader.ReadByte();
             int outer_sub = reader.ReadInt32();
             int lex_count = reader.ReadInt32();
             int scope_count = reader.ReadInt32();
@@ -62,7 +62,7 @@ namespace org.mbarbon.p.runtime
             int bb_count = reader.ReadInt32();
             string regex = null;
 
-            if (type == (int)Subroutine.CodeType.REGEX)
+            if (flags == (int)Subroutine.CodeType.REGEX)
                 regex = ReadString(reader);
 
             var lexicals = new List<LexicalInfo>(lex_count);
@@ -80,7 +80,7 @@ namespace org.mbarbon.p.runtime
             sub.Lexicals = lexicals;
             sub.Name = name;
             sub.Prototype = proto;
-            sub.Type = type;
+            sub.Flags = flags;
             sub.OriginalRegex = regex;
 
             for (int i = 0; i < bb_count; ++i)
@@ -571,25 +571,25 @@ namespace org.mbarbon.p.runtime
 
         public bool IsMain
         {
-            get { return Type == (int)CodeType.MAIN; }
+            get { return Flags == (int)CodeType.MAIN; }
         }
 
         public bool IsRegex
         {
-            get { return Type == (int)CodeType.REGEX; }
+            get { return Flags == (int)CodeType.REGEX; }
         }
 
         public bool IsConstant
         {
-            get { return (Type & (int)CodeType.CONSTANT) != 0; }
+            get { return (Flags & (int)CodeType.CONSTANT) != 0; }
         }
 
         public bool IsConstantPrototype
         {
-            get { return (Type & (int)CodeType.CONSTANT_PROTOTYPE) != 0; }
+            get { return (Flags & (int)CodeType.CONSTANT_PROTOTYPE) != 0; }
         }
 
-        public int Type;
+        public int Flags;
         public int[] Prototype;
         public Subroutine Outer;
         public string Name;

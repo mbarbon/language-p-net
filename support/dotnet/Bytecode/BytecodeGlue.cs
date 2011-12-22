@@ -9,7 +9,7 @@ namespace org.mbarbon.p.runtime
         {
             var arg = args.DereferenceHash(runtime);
 
-            Type = arg.GetItem(runtime, "type").AsInteger(runtime);
+            Flags = arg.GetItem(runtime, "flags").AsInteger(runtime);
             Outer = (Subroutine)NetGlue.UnwrapValue(arg.GetItem(runtime, "outer"), typeof(Subroutine));
 
             var name = arg.GetItem(runtime, "name") as P5Scalar;
@@ -46,12 +46,12 @@ namespace org.mbarbon.p.runtime
         public List<LexicalState> lexical_states() { return LexicalStates; }
         public List<LexicalInfo> lexicals() { return Lexicals; }
 
-        public bool is_main()  { return    Type == (int)CodeType.MAIN
-                                        || Type == (int)CodeType.EVAL; }
-        public bool is_sub()   { return (Type & (int)CodeType.SUB) != 0; }
-        public bool is_regex() { return Type == (int)CodeType.REGEX; }
-        public bool is_eval()  { return Type == (int)CodeType.EVAL; }
-        public bool is_constant() { return (Type & (int)CodeType.CONSTANT) != 0; }
+        public bool is_main()  { return    Flags == (int)CodeType.MAIN
+                                        || Flags == (int)CodeType.EVAL; }
+        public bool is_sub()   { return (Flags & (int)CodeType.SUB) != 0; }
+        public bool is_regex() { return Flags == (int)CodeType.REGEX; }
+        public bool is_eval()  { return Flags == (int)CodeType.EVAL; }
+        public bool is_constant() { return (Flags & (int)CodeType.CONSTANT) != 0; }
 
         public void find_alive_blocks()
         {
