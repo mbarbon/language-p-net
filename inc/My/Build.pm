@@ -349,7 +349,7 @@ my %test_tags =
   ( 'parser'     => [ [ undef,   _all_subdirs( 't/parser' ) ] ],
     'intermediate' => [ [ undef, _all_subdirs( 't/intermediate' ) ] ],
     'perl5'      => [ [ 'p', _all_subdirs( 't/perl5' ) ] ],
-    'run_np'     => [ [ 'p', 't/run', 't/run/net' ] ],
+    'run_np'     => [ [ 'p', 't/run', 't/run/net', 't/run/aliasing' ] ],
     'run'        => [ [ 'p', _all_subdirs( 't/run' ) ] ],
     'all'        => [ 'parser', 'intermediate', 'run', 'perl5' ],
     );
