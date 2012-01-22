@@ -1142,10 +1142,10 @@ namespace org.mbarbon.p.runtime
                 var ea = (ElementAccess)op;
 
                 return Expression.Call(
-                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[0]),
                     typeof(IP5Array).GetMethod("GetItemOrUndef"),
                     Runtime,
-                    Generate(sub, op.Childs[0]),
+                    Generate(sub, op.Childs[1]),
                     Expression.Constant(ea.Create != 0));
             }
             case Opcode.OpNumber.OP_HASH_ELEMENT:
@@ -1153,35 +1153,35 @@ namespace org.mbarbon.p.runtime
                 var ea = (ElementAccess)op;
 
                 return Expression.Call(
-                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[0]),
                     typeof(P5Hash).GetMethod("GetItemOrUndef"),
                     Runtime,
-                    Generate(sub, op.Childs[0]),
+                    Generate(sub, op.Childs[1]),
                     Expression.Constant(ea.Create != 0));
             }
             case Opcode.OpNumber.OP_DELETE_HASH:
             {
                 return Expression.Call(
-                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[0]),
                     typeof(P5Hash).GetMethod("Delete"),
                     Runtime,
-                    Generate(sub, op.Childs[0]));
+                    Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_EXISTS_ARRAY:
             {
                 return Expression.Call(
-                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[0]),
                     typeof(P5Array).GetMethod("Exists"),
                     Runtime,
-                    Generate(sub, op.Childs[0]));
+                    Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_EXISTS_HASH:
             {
                 return Expression.Call(
-                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[0]),
                     typeof(P5Hash).GetMethod("Exists"),
                     Runtime,
-                    Generate(sub, op.Childs[0]));
+                    Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_PUSH_ELEMENT:
             {
@@ -1313,10 +1313,10 @@ namespace org.mbarbon.p.runtime
                 var ea = (ElementAccess)op;
 
                 return Expression.Call(
-                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[0]),
                     typeof(IP5Array).GetMethod("Slice"),
                     Runtime,
-                    Generate(sub, op.Childs[0]),
+                    Generate(sub, op.Childs[1]),
                     Expression.Constant(ea.Create != 0));
             }
             case Opcode.OpNumber.OP_HASH_SLICE:
@@ -1324,20 +1324,20 @@ namespace org.mbarbon.p.runtime
                 var ea = (ElementAccess)op;
 
                 return Expression.Call(
-                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[0]),
                     typeof(P5Hash).GetMethod("Slice"),
                     Runtime,
-                    Generate(sub, op.Childs[0]),
+                    Generate(sub, op.Childs[1]),
                     Expression.Constant(ea.Create != 0));
             }
             case Opcode.OpNumber.OP_LIST_SLICE:
             {
                 return Expression.Call(
-                    Generate(sub, op.Childs[1]),
+                    Generate(sub, op.Childs[0]),
                     typeof(P5List).GetMethod("Slice", new Type[] {
                             typeof(Runtime), typeof(P5Array) }),
                     Runtime,
-                    Generate(sub, op.Childs[0]));
+                    Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_KEYS:
                 return Expression.Call(
@@ -1744,8 +1744,8 @@ namespace org.mbarbon.p.runtime
                 return Expression.Call(
                     typeof(Builtins).GetMethod("LocalizeArrayElement"),
                     Runtime,
-                    Generate(sub, le.Childs[1]),
                     Generate(sub, le.Childs[0]),
+                    Generate(sub, le.Childs[1]),
                     GetTemporary(le.Index, typeof(SavedValue)));
             }
             case Opcode.OpNumber.OP_RESTORE_ARRAY_ELEMENT:
@@ -1764,8 +1764,8 @@ namespace org.mbarbon.p.runtime
                 return Expression.Call(
                     typeof(Builtins).GetMethod("LocalizeHashElement"),
                     Runtime,
-                    Generate(sub, le.Childs[1]),
                     Generate(sub, le.Childs[0]),
+                    Generate(sub, le.Childs[1]),
                     GetTemporary(le.Index, typeof(SavedValue)));
             }
             case Opcode.OpNumber.OP_RESTORE_HASH_ELEMENT:
