@@ -34,3 +34,4 @@ t/parser
 t/run/*.t
 t/run/files
 t/run/parser
+t/run/aliasing
