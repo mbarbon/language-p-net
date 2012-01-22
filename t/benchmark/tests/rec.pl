@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 
 sub fib {
-    my( $n ) = @_;
+    my $n = $_[0];
 
     if( $n >= 2 ) {
         return fib( $n - 2 ) + fib( $n - 1 );
