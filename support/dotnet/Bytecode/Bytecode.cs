@@ -253,6 +253,7 @@ namespace org.mbarbon.p.runtime
             LVALUE     = 16,
             VIVIFY     = 32,
             NOCREATE   = 64,
+            MAYBE_LVALUE = 128,
         }
 
         public const int RX_CASE_INSENSITIVE = 4;
