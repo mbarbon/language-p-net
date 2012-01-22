@@ -10,7 +10,9 @@
 ^support/dotnet/dotnet.pidb$
 ^support/dotnet/dotnet.userprefs$
 ^MYMETA.yml$
+^MYMETA\.json$
 ^foo$
+^dlr/
 
 # Language::P symlinks
 ^support/toy
@@ -20,6 +22,7 @@
 ^t/run/[^/]+.t
 ^t/run/files
 ^t/run/parser
+^t/run/aliasing
 
 # Avoid version control files.
 \bRCS\b
