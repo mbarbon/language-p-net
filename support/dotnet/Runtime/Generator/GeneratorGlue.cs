@@ -18,8 +18,8 @@ namespace org.mbarbon.p.runtime
 
             // set the opcode factory
             var assembly_i = parser_runtime.SymbolTable.GetGlob(parser_runtime, "Language::P::Assembly::i", true);
-            assembly_i.Code = new P5NativeCode("Language::P::Assembly::i",
-                                               new P5Code.Sub(Opcode.WrapCreate));
+//             assembly_i.Code = new P5NativeCode("Language::P::Assembly::i",
+//                                                new P5Code.Sub(Opcode.WrapCreate));
 
             // wrap Language::P::Intermediate support classes
             NetGlue.Extend(parser_runtime, "Language::P::Intermediate::Code",
@@ -155,13 +155,15 @@ namespace org.mbarbon.p.runtime
             {
                 P5Array arglist_changed =
                     new P5Array(parser_runtime, tree);
-                int changed = arglist_changed.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "changed").AsInteger(parser_runtime);
+                var changed_o = arglist_changed.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "changed");
+                int changed = Builtins.ConvertToInt(parser_runtime, changed_o);
 
                 if ((changed & Opcode.CHANGED_PACKAGE) != 0)
                 {
                     P5Array arglist_package =
                         new P5Array(parser_runtime, tree);
-                    string pack = arglist_package.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "package").AsString(parser_runtime);
+                    var pack_o = arglist_package.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "package");
+                    string pack = Builtins.ConvertToString(parser_runtime, pack_o);
 
                     runtime.SymbolTable.GetPackage(runtime, pack, true);
                 }

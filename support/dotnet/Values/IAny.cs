@@ -2,6 +2,7 @@ using Runtime = org.mbarbon.p.runtime.Runtime;
 using Opcode = org.mbarbon.p.runtime.Opcode;
 using RxResult = org.mbarbon.p.runtime.RxResult;
 using System.Collections.Generic;
+using IEnumerator = System.Collections.IEnumerator;
 
 namespace org.mbarbon.p.values
 {
@@ -29,7 +30,7 @@ namespace org.mbarbon.p.values
         int GetPos(Runtime runtime);
         int GetPos(Runtime runtime, out bool _pos_set);
 
-        IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e);
+        IP5Any AssignIterator(Runtime runtime, IEnumerator e);
         void Undef(Runtime runtime);
 
         IP5Any Clone(Runtime runtime, int depth);
@@ -51,7 +52,7 @@ namespace org.mbarbon.p.values
 
     public interface IP5Enumerable : IP5Value
     {
-        IEnumerator<IP5Any> GetEnumerator(Runtime runtime);
+        IEnumerator GetEnumerator(Runtime runtime);
     }
 
     public interface IP5Regex : IP5Referrable
@@ -84,7 +85,7 @@ namespace org.mbarbon.p.values
         public abstract int GetPos(Runtime runtime);
         public abstract int GetPos(Runtime runtime, out bool _pos_set);
 
-        public abstract IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e);
+        public abstract IP5Any AssignIterator(Runtime runtime, IEnumerator e);
         public abstract void Undef(Runtime runtime);
 
         public abstract IP5Any Clone(Runtime runtime, int depth);

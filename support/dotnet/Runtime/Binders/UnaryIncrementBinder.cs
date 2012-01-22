@@ -18,6 +18,7 @@ namespace org.mbarbon.p.runtime
             if (Utils.IsScalar(target))
             {
                 string method;
+
                 switch (operation)
                 {
                 case ExpressionType.PreIncrementAssign:
@@ -44,7 +45,61 @@ namespace org.mbarbon.p.runtime
                     Utils.RestrictToScalar(target));
             }
 
-            return null;
+            // TODO integer -> float promotion
+            Expression expr = null;
+
+            switch (operation)
+            {
+            case ExpressionType.PreIncrementAssign:
+                expr = MakePre(target, ExpressionType.Increment);
+                break;
+            case ExpressionType.PreDecrementAssign:
+                expr = MakePre(target, ExpressionType.Decrement);
+                break;
+            case ExpressionType.PostIncrementAssign:
+                expr = MakePre(target, ExpressionType.Increment);
+                break;
+            case ExpressionType.PostDecrementAssign:
+                expr = MakePost(target, ExpressionType.Decrement);
+                break;
+            default:
+                throw new System.Exception("Invalid operation");
+            }
+
+            return new DynamicMetaObject(
+                expr,
+                Utils.RestrictToRuntimeType(target));
+        }
+
+        private Expression MakePre(DynamicMetaObject target, ExpressionType op)
+        {
+            System.Console.WriteLine(target.Expression.GetType());
+            return Expression.Assign(
+                target.Expression,
+                Expression.Convert(Expression.Constant(1), typeof(object)));
+
+                // Expression.Convert(
+                //     Expression.MakeUnary(
+                //         op,
+                //         Utils.CastRuntime(target),
+                //         target.RuntimeType),
+                //     typeof(object)));
+        }
+
+        private Expression MakePost(DynamicMetaObject target, ExpressionType op)
+        {
+            var temp = Expression.Parameter(typeof(object));
+
+            return Expression.Block(
+                new ParameterExpression[] { temp },
+                Expression.Assign(temp, target.Expression),
+                Expression.Assign(
+                    target.Expression,
+                    Expression.MakeUnary(
+                        op,
+                        Utils.CastRuntime(target),
+                        typeof(object))),
+                temp);
         }
 
         private Runtime runtime;

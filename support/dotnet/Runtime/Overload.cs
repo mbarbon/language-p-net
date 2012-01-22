@@ -2,6 +2,7 @@ using IP5Any = org.mbarbon.p.values.IP5Any;
 using P5Code = org.mbarbon.p.values.P5Code;
 using P5Scalar = org.mbarbon.p.values.P5Scalar;
 using P5Array = org.mbarbon.p.values.P5Array;
+using System.Collections.Generic;
 
 namespace org.mbarbon.p.runtime
 {
@@ -97,13 +98,14 @@ namespace org.mbarbon.p.runtime
         }
 
         public P5Scalar CallOperation(Runtime runtime, OverloadOperation op,
-                                      P5Scalar left, IP5Any right,
+                                      object left, object right,
                                       bool inverted)
         {
-            var args = new P5Array(runtime,
-                                   inverted ? right : left,
-                                   inverted ? left : right,
-                                   new P5Scalar(runtime, inverted));
+            var args = new List<object>(3);
+
+            args.Add(inverted ? right : left);
+            args.Add(inverted ? left : right);
+            args.Add(inverted);
 
             if (subroutines[(int)op] != null)
             {
@@ -113,8 +115,9 @@ namespace org.mbarbon.p.runtime
             }
             else
             {
-                return args.CallMethod(runtime, Opcode.ContextValues.SCALAR,
-                                       methods[(int)op]) as P5Scalar;
+                throw new System.Exception("OOPS");
+                // return args.CallMethod(runtime, Opcode.ContextValues.SCALAR,
+                //                        methods[(int)op]) as P5Scalar;
             }
         }
 

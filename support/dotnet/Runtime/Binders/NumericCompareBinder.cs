@@ -29,28 +29,63 @@ namespace org.mbarbon.p.runtime
             }
         }
 
+        private Expression AsNumber(DynamicMetaObject arg)
+        {
+            Expression scalar = null;
+
+            if (Utils.IsInteger(arg))
+                return Utils.CastInteger(arg);
+            else if (Utils.IsAny(arg) && !Utils.IsScalar(arg))
+                scalar = Expression.Call(
+                    Utils.CastAny(arg),
+                    typeof(IP5Any).GetMethod("AsScalar"),
+                    Expression.Constant(runtime));
+            else if (Utils.IsScalar(arg))
+                scalar = Utils.CastScalar(arg);
+            else if (Utils.IsFloat(arg))
+                return Utils.CastFloat(arg);
+            else if (Utils.IsNull(arg))
+                // TODO warn
+                return Expression.Constant(0);
+            else
+                throw new System.Exception("Unhandled type " + arg.RuntimeType);
+
+            return Expression.Call(
+                scalar,
+                typeof(P5Scalar).GetMethod("AsFloat"),
+                Expression.Constant(runtime));
+        }
+
         private DynamicMetaObject BindRelOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
-            if (Utils.IsAny(target) && Utils.IsAny(arg))
+            var left = AsNumber(target);
+            var right = AsNumber(arg);
+
+            // TODO handle overload for scalar types
+
+            if (target.RuntimeType != arg.RuntimeType ||
+                (!Utils.IsInteger(target) && !Utils.IsFloat(target)))
             {
-                return new DynamicMetaObject(
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(new System.Type[] {typeof(Runtime), typeof(bool)}),
-                        Expression.Constant(runtime),
-                        Expression.MakeBinary(
-                            Operation,
-                            Expression.Call(
-                                Utils.CastAny(target),
-                                typeof(IP5Any).GetMethod("AsFloat"),
-                                Expression.Constant(runtime)),
-                            Expression.Call(
-                                Utils.CastAny(arg),
-                                typeof(IP5Any).GetMethod("AsFloat"),
-                                Expression.Constant(runtime)))),
-                    Utils.RestrictToRuntimeType(arg, target));
+                if (Utils.IsInteger(target))
+                    left = Expression.Convert(left, typeof(double));
+                else if (Utils.IsNull(target))
+                    // TODO warn
+                    left = Expression.Constant(0.0);
+                if (Utils.IsInteger(arg))
+                    right = Expression.Convert(right, typeof(double));
+                else if (Utils.IsNull(arg))
+                    // TODO warn
+                    right = Expression.Constant(0.0);
             }
 
-            return null;
+            return new DynamicMetaObject(
+                Expression.Convert(
+                    Expression.MakeBinary(
+                        Operation,
+                        left,
+                        right),
+                    typeof(object)),
+                Utils.RestrictToRuntimeType(arg, target));
         }
 
         private Runtime runtime;

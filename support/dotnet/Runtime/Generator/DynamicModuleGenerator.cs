@@ -41,6 +41,7 @@ namespace org.mbarbon.p.runtime
 
             var sg = new DynamicSubGenerator(runtime, this);
             var body = sg.Generate(sub, sub.IsMain);
+            var lvalue_parameters = sg.AssignParameters;
             var deleg = body.Compile();
             P5Code code;
 
@@ -79,7 +80,8 @@ namespace org.mbarbon.p.runtime
                 code = new P5Code(sub.Name, deleg, value, flags);
             }
             else
-                code = new P5Code(sub.Name, sub.Prototype, deleg, sub.IsMain);
+                code = new P5Code(sub.Name, sub.Prototype, deleg, sub.IsMain,
+                                  lvalue_parameters);
 
             if (sub.IsMain)
                 code.ScratchPad = P5ScratchPad.CreateMainPad(runtime,

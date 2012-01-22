@@ -241,13 +241,13 @@ namespace org.mbarbon.p.runtime
                 pad.Add(stash);
 
             var glob = stash.GetStashGlob(runtime, method, true);
-            var code = new P5NativeCode(pack + "::" + method,
-                                        bless ?
-                                            new P5Code.Sub(WrapNew) :
-                                            new P5Code.Sub(WrapNewNoBless));
+            // var code = new P5NativeCode(pack + "::" + method,
+            //                             bless ?
+            //                                 new P5Code.Sub(WrapNew) :
+            //                                 new P5Code.Sub(WrapNewNoBless));
 
-            code.ScratchPad = pad;
-            glob.Code = code;
+//            code.ScratchPad = pad;
+//            glob.Code = code;
 
             return new P5Scalar(runtime);
         }
@@ -352,21 +352,22 @@ namespace org.mbarbon.p.runtime
             prop.SetValue(obj, Convert(runtime, value, prop.PropertyType), null);
         }
 
-        public static object UnwrapValue(IP5Any value, System.Type type)
+        public static object UnwrapValue(object value, System.Type type)
         {
             return UnwrapValue(null, value, type);
         }
 
-        public static T UnwrapValue<T>(Runtime runtime, IP5Any value)
+        public static T UnwrapValue<T>(Runtime runtime, object value)
         {
             return (T)UnwrapValue(runtime, value, typeof(T));
         }
 
-        public static object UnwrapValue(Runtime runtime, IP5Any value,
+        public static object UnwrapValue(Runtime runtime, object obj,
                                          System.Type type)
         {
+            var value = obj as IP5Any;
             if (value == null)
-                return null;
+                return obj;
 
             var scalar = value as P5Scalar;
             if (scalar == null)

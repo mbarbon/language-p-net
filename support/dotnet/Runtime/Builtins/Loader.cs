@@ -6,12 +6,12 @@ namespace org.mbarbon.p.runtime
 {
     public interface IModuleLoader
     {
-        IP5Any TryLoad(Runtime runtime, Opcode.ContextValues context, string file);
+        object TryLoad(Runtime runtime, Opcode.ContextValues context, string file);
     }
 
     internal class IncModuleLoader : IModuleLoader
     {
-        public IP5Any TryLoad(Runtime runtime, Opcode.ContextValues context, string file)
+        public object TryLoad(Runtime runtime, Opcode.ContextValues context, string file)
         {
             var path = Builtins.SearchFile(runtime, file);
             if (path == null)
@@ -45,7 +45,7 @@ namespace org.mbarbon.p.runtime
             assembly = _assembly;
         }
 
-        public IP5Any TryLoad(Runtime runtime, Opcode.ContextValues context, string file)
+        public object TryLoad(Runtime runtime, Opcode.ContextValues context, string file)
         {
             System.Type module = assembly.GetType(file);
             if (module == null)
@@ -93,11 +93,11 @@ namespace org.mbarbon.p.runtime
             return null;
         }
 
-        public static IP5Any LoadFile(Runtime runtime,
+        public static object LoadFile(Runtime runtime,
                                       Opcode.ContextValues context,
                                       string file)
         {
-            IP5Any ret = null;
+            object ret = null;
 
             foreach (var loader in runtime.ModuleLoaders)
             {
@@ -110,7 +110,7 @@ namespace org.mbarbon.p.runtime
             return ret;
         }
 
-        public static IP5Any DoFile(Runtime runtime,
+        public static object DoFile(Runtime runtime,
                                     Opcode.ContextValues context,
                                     P5Scalar file)
         {
@@ -123,7 +123,7 @@ namespace org.mbarbon.p.runtime
             return ret;
         }
 
-        public static IP5Any RequireFile(Runtime runtime,
+        public static object RequireFile(Runtime runtime,
                                          Opcode.ContextValues context,
                                          P5Scalar file)
         {

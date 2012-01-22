@@ -131,7 +131,7 @@ namespace org.mbarbon.p.runtime
                     Utils.RestrictToRuntimeType(arg, target));
             }
 
-            return null;
+            throw new System.Exception("Unable to bind " + target.RuntimeType + " " + arg.RuntimeType);
         }
 
         private Expression CallOverload(DynamicMetaObject target, DynamicMetaObject arg, OverloadOperation op, Expression fallback)
@@ -141,8 +141,8 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("CallOverload"),
                     Expression.Constant(Runtime),
                     Expression.Constant(op),
-                    Utils.CastScalar(target),
-                    Utils.CastAny(arg)),
+                    AsScalarOrObject(target),
+                    arg.Expression),
                 fallback);
         }
 
@@ -153,148 +153,237 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("CallOverloadInverted"),
                     Expression.Constant(Runtime),
                     Expression.Constant(op),
-                    Utils.CastScalar(target),
-                    Utils.CastAny(arg)),
+                    target.Expression,
+                    AsScalarOrObject(arg)),
                 fallback);
+        }
+
+        private OverloadOperation OverloadOp()
+        {
+            switch (Operation)
+            {
+            case ExpressionType.Add:
+                return OverloadOperation.ADD;
+            case ExpressionType.AddAssign:
+                return OverloadOperation.ADD_ASSIGN;
+            case ExpressionType.Subtract:
+                return OverloadOperation.SUBTRACT;
+            case ExpressionType.SubtractAssign:
+                return OverloadOperation.SUBTRACT_ASSIGN;
+            case ExpressionType.Multiply:
+                return OverloadOperation.MULTIPLY;
+            case ExpressionType.MultiplyAssign:
+                return OverloadOperation.MULTIPLY_ASSIGN;
+            case ExpressionType.Divide:
+                return OverloadOperation.DIVIDE;
+            case ExpressionType.DivideAssign:
+                return OverloadOperation.DIVIDE_ASSIGN;
+            case ExpressionType.LeftShift:
+                return OverloadOperation.SHIFT_LEFT;
+            case ExpressionType.LeftShiftAssign:
+                return OverloadOperation.SHIFT_LEFT_ASSIGN;
+            case ExpressionType.RightShift:
+                return OverloadOperation.SHIFT_RIGHT;
+            case ExpressionType.RightShiftAssign:
+                return OverloadOperation.SHIFT_RIGHT_ASSIGN;
+            default:
+                throw new System.Exception("Unhandled overloaded operation");
+            }
+        }
+
+        private bool IsAssign()
+        {
+            switch (Operation)
+            {
+            case ExpressionType.AddAssign:
+            case ExpressionType.SubtractAssign:
+            case ExpressionType.MultiplyAssign:
+            case ExpressionType.DivideAssign:
+            case ExpressionType.LeftShiftAssign:
+            case ExpressionType.RightShiftAssign:
+                return true;
+            default:
+                return false;
+            }
+        }
+
+        private string OpName()
+        {
+            switch (Operation)
+            {
+            case ExpressionType.Add:
+            case ExpressionType.AddAssign:
+                return "Add";
+            case ExpressionType.Subtract:
+            case ExpressionType.SubtractAssign:
+                return "Subtract";
+            case ExpressionType.Multiply:
+            case ExpressionType.MultiplyAssign:
+                return "Multiply";
+            case ExpressionType.Divide:
+            case ExpressionType.DivideAssign:
+                return "Divide";
+            case ExpressionType.LeftShift:
+            case ExpressionType.LeftShiftAssign:
+                return "LeftShift";
+            case ExpressionType.RightShift:
+            case ExpressionType.RightShiftAssign:
+                return "RightShift";
+            default:
+                throw new System.Exception("Unhandled overloaded operation");
+            }
+        }
+
+        private string TypeName(DynamicMetaObject arg)
+        {
+            if (Utils.IsInteger(arg))
+                return "Integer";
+            if (Utils.IsFloat(arg))
+                return "Float";
+            if (Utils.IsAny(arg))
+                return "Scalar";
+
+            throw new System.Exception("Unhandled type in arithmetic operation " + arg.RuntimeType);
+        }
+
+        private Expression AsScalarOrRuntime(DynamicMetaObject arg)
+        {
+            if (Utils.IsAny(arg) && !Utils.IsScalar(arg))
+                return Expression.Call(
+                    Utils.CastAny(arg),
+                    typeof(IP5Any).GetMethod("AsScalar"),
+                    Expression.Constant(Runtime));
+            if (Utils.IsScalar(arg))
+                return Utils.CastScalar(arg);
+
+            return Utils.CastRuntime(arg);
+        }
+
+        private Expression AsScalarOrObject(DynamicMetaObject arg)
+        {
+            if (Utils.IsAny(arg) && !Utils.IsScalar(arg))
+                return Expression.Call(
+                    Utils.CastAny(arg),
+                    typeof(IP5Any).GetMethod("AsScalar"),
+                    Expression.Constant(Runtime));
+            if (Utils.IsScalar(arg))
+                return Utils.CastScalar(arg);
+
+            return Expression.Convert(arg.Expression, typeof(object));
+        }
+
+        private Expression AsFloat(DynamicMetaObject arg)
+        {
+            Expression scalar = null;
+
+            if (Utils.IsInteger(arg))
+                return Expression.Convert(
+                    Utils.CastInteger(arg), typeof(double));
+            else if (Utils.IsAny(arg) && !Utils.IsScalar(arg))
+                scalar = Expression.Call(
+                    Utils.CastAny(arg),
+                    typeof(IP5Any).GetMethod("AsScalar"),
+                    Expression.Constant(Runtime));
+            else if (Utils.IsScalar(arg))
+                scalar = Utils.CastRuntime(arg);
+            else if (Utils.IsFloat(arg))
+                return Utils.CastFloat(arg);
+            else
+                throw new System.Exception("Unhandled type " + arg.RuntimeType);
+
+            return Expression.Call(
+                scalar,
+                typeof(P5Scalar).GetMethod("AsFloat"),
+                Expression.Constant(Runtime));
+        }
+
+        private Expression BaseOperation(DynamicMetaObject target, DynamicMetaObject arg)
+        {
+            bool is_assign = IsAssign();
+            string op_method = OpName() + TypeName(target) + TypeName(arg) +
+                (is_assign ? "Assign" : "");
+            var method = typeof(Builtins).GetMethod(op_method);
+
+            if (method == null)
+            {
+                Expression left, right;
+
+                if (target.RuntimeType != arg.RuntimeType)
+                {
+                    left = AsFloat(target);
+                    right = AsFloat(arg);
+                }
+                else
+                {
+                    left = Utils.CastRuntime(target);
+                    right = Utils.CastRuntime(arg);
+                }
+
+                return Expression.Convert(
+                    Expression.MakeBinary(
+                        Operation,
+                        left,
+                        right),
+                    typeof(object));
+            }
+            else
+            {
+                if (method == null)
+                    throw new System.Exception("Method not found " + op_method);
+
+                return Expression.Call(
+                    method,
+                    Expression.Constant(Runtime),
+                    AsScalarOrRuntime(target),
+                    AsScalarOrRuntime(arg));
+            }
         }
 
         private DynamicMetaObject BindArithOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
-            OverloadOperation ovl_op;
-            string op_method;
-            bool is_assign = false;
+            OverloadOperation ovl_op = OverloadOp();
+            bool is_assign = IsAssign();
 
-            switch (Operation)
+            // if left/right is any, call AsScalar
+            // scalar <op> object -> overload left, then right,
+            //                       then call builtin
+            // object <op> scalar -> overload right, then call builtin
+            // object <op> object -> call builtin
+
+            if (Utils.IsAny(target))
             {
-            case ExpressionType.Add:
-                ovl_op = OverloadOperation.ADD;
-                op_method = "AddScalars";
-                break;
-            case ExpressionType.AddAssign:
-                ovl_op = OverloadOperation.ADD_ASSIGN;
-                op_method = "AddScalarsAssign";
-                is_assign = true;
-                break;
-            case ExpressionType.Subtract:
-                ovl_op = OverloadOperation.SUBTRACT;
-                op_method = "SubtractScalars";
-                break;
-            case ExpressionType.SubtractAssign:
-                ovl_op = OverloadOperation.SUBTRACT_ASSIGN;
-                op_method = "SubtractScalarsAssign";
-                is_assign = true;
-                break;
-            case ExpressionType.Multiply:
-                ovl_op = OverloadOperation.MULTIPLY;
-                op_method = "MultiplyScalars";
-                break;
-            case ExpressionType.MultiplyAssign:
-                ovl_op = OverloadOperation.MULTIPLY_ASSIGN;
-                op_method = "MultiplyScalarsAssign";
-                is_assign = true;
-                break;
-            case ExpressionType.Divide:
-                ovl_op = OverloadOperation.DIVIDE;
-                op_method = "DivideScalars";
-                break;
-            case ExpressionType.DivideAssign:
-                ovl_op = OverloadOperation.DIVIDE_ASSIGN;
-                op_method = "DivideScalarsAssign";
-                is_assign = true;
-                break;
-            case ExpressionType.LeftShift:
-                ovl_op = OverloadOperation.SHIFT_LEFT;
-                op_method = "LeftShiftScalars";
-                break;
-            case ExpressionType.LeftShiftAssign:
-                ovl_op = OverloadOperation.SHIFT_LEFT_ASSIGN;
-                op_method = "LeftShiftScalarsAssign";
-                is_assign = true;
-                break;
-            case ExpressionType.RightShift:
-                ovl_op = OverloadOperation.SHIFT_RIGHT;
-                op_method = "RightShiftScalars";
-                break;
-            case ExpressionType.RightShiftAssign:
-                ovl_op = OverloadOperation.SHIFT_RIGHT_ASSIGN;
-                op_method = "RightShiftScalarsAssign";
-                is_assign = true;
-                break;
-            default:
-                throw new System.Exception("Unhandled overloaded operation");
-            }
-
-            if (Utils.IsScalar(target) && Utils.IsAny(arg))
-            {
-                Expression op;
-
-                if (is_assign)
-                    op = Expression.Call(
-                        typeof(Builtins).GetMethod(op_method),
-                        Expression.Constant(Runtime),
-                        Utils.CastScalar(target),
-                        Utils.CastAny(arg));
-                else
-                    op = Expression.Call(
-                        typeof(Builtins).GetMethod(op_method),
-                        Expression.Constant(Runtime),
-                        Expression.New(
-                            typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
-                            Expression.Constant(null, typeof(IP5ScalarBody))),
-                        Utils.CastScalar(target),
-                        Utils.CastAny(arg));
-
                 return new DynamicMetaObject(
                     CallOverload(
                         target,
                         arg,
                         ovl_op,
-                        op),
-                    Utils.RestrictToScalar(target).Merge(Utils.RestrictToAny(arg)));
+                        BaseOperation(target, arg)),
+                    Utils.RestrictToRuntimeType(target)
+                        .Merge(Utils.RestrictToRuntimeType(arg)));
             }
-            else if (Utils.IsScalar(arg) && Utils.IsAny(target))
+            else if (Utils.IsAny(arg))
             {
                 if (is_assign)
-                    return null;
-
-                Expression op = Expression.Call(
-                    typeof(Builtins).GetMethod(op_method),
-                    Expression.Constant(Runtime),
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
-                        Expression.Constant(null, typeof(IP5ScalarBody))),
-                    Utils.CastAny(target),
-                    Utils.CastScalar(arg));
+                    throw new System.Exception("Implement me");
 
                 return new DynamicMetaObject(
                     CallOverloadInverted(
                         target,
                         arg,
                         ovl_op,
-                        op),
-                    Utils.RestrictToAny(target).Merge(Utils.RestrictToScalar(arg)));
+                        BaseOperation(target, arg)),
+                    Utils.RestrictToRuntimeType(target)
+                        .Merge(Utils.RestrictToRuntimeType(arg)));
             }
-            else if (Utils.IsAny(target) && Utils.IsAny(arg))
+            else
             {
                 if (is_assign)
-                    return null;
-
-                // TODO must handle double promotion (esp. for division)
-                Expression op = Expression.Call(
-                    typeof(Builtins).GetMethod(op_method),
-                    Expression.Constant(Runtime),
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
-                        Expression.Constant(null, typeof(IP5ScalarBody))),
-                    Utils.CastAny(target),
-                    Utils.CastAny(arg));
+                    throw new System.Exception("Implement me");
 
                 return new DynamicMetaObject(
-                    op,
+                    BaseOperation(target, arg),
                     Utils.RestrictToAny(target, arg));
             }
-
-            return null;
         }
 
         private Runtime Runtime;

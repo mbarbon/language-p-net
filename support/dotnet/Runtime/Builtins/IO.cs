@@ -6,15 +6,33 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Builtins
     {
-        public static P5Scalar Print(Runtime runtime, P5Handle handle, P5Array args)
+        public static object Print(Runtime runtime, object handle, List<object> args)
         {
-            // wrong but works well enough for now
-            for (int i = 0, m = args.GetCount(runtime); i < m; ++i)
+            var p5handle = handle as P5Handle;
+            var writer = handle as TextWriter;
+
+            if (p5handle != null)
+                writer = p5handle.Output;
+
+            return Print(runtime, writer, args);
+        }
+
+        private static int Print(Runtime runtime, TextWriter handle,
+                                 List<object> args)
+        {
+            foreach (var item in args)
             {
-                handle.Write(runtime, args.GetItem(runtime, i), 0, -1);
+                var p5any = item as IP5Any;
+
+                if (p5any != null)
+                    handle.Write(p5any.AsString(runtime));
+                else if (item is bool)
+                    handle.Write((bool) item ? "1" : "");
+                else
+                    handle.Write(item.ToString());
             }
 
-            return new P5Scalar(runtime, 1);
+            return 1;
         }
 
         public static IP5Any Readline(Runtime runtime, P5Handle handle,

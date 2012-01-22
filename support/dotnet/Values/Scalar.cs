@@ -1,6 +1,7 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
 using Opcode = org.mbarbon.p.runtime.Opcode;
-using System.Collections.Generic;
+using Builtins = org.mbarbon.p.runtime.Builtins;
+using IEnumerator = System.Collections.IEnumerator;
 
 namespace org.mbarbon.p.values
 {
@@ -44,22 +45,47 @@ namespace org.mbarbon.p.values
             return this;
         }
 
-        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> iter)
+        public P5Scalar AssignObject(Runtime runtime, object other)
+        {
+            if (other == null)
+                Undef(runtime);
+            else if (other is int)
+                SetInteger(runtime, (int)other);
+            else if (other is double)
+                SetFloat(runtime, (double)other);
+            else if (other is string)
+                SetString(runtime, (string)other);
+            else if (other is IP5Any)
+                Assign(runtime, other as IP5Any);
+            else if (other is bool)
+            {
+                if ((bool)other)
+                    SetInteger(runtime, 1);
+                else
+                    SetString(runtime, "");
+            }
+            else
+                body = new P5NetWrapper(other);
+
+            return this;
+        }
+
+        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator iter)
         {
             if (iter.MoveNext())
-                Assign(runtime, iter.Current);
+                AssignObject(runtime, iter.Current);
             else
                 body = P5Undef.Undef;
 
             return this;
         }
 
-        public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        public IEnumerator GetEnumerator(Runtime runtime)
         {
             yield return this;
         }
 
-        public P5Scalar ConcatAssign(Runtime runtime, IP5Any other)
+        public P5Scalar ConcatAssign(Runtime runtime, object other)
         {
             P5StringNumber sn = body as P5StringNumber;
             if (sn == null)
@@ -67,7 +93,8 @@ namespace org.mbarbon.p.values
             else
                 sn.flags = P5StringNumber.HasString;
 
-            sn.stringValue = sn.stringValue + other.AsScalar(runtime).AsString(runtime);
+            sn.stringValue = sn.stringValue +
+                Builtins.ConvertToString(runtime, other);
             sn.pos = -1;
 
             return this;
@@ -392,7 +419,7 @@ namespace org.mbarbon.p.values
             return body.DereferenceHash(runtime);
         }
 
-        public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
+        public object CallMethod(Runtime runtime, Opcode.ContextValues context,
                                  string method, P5Array args)
         {
             if (!IsDefined(runtime))

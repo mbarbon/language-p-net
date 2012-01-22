@@ -18,12 +18,34 @@ namespace org.mbarbon.p.runtime
             module_generator = _module_generator;
         }
 
-        // TODO duplicated in StaticSubGenerator
-        protected Expression UnaryOperator(Subroutine sub, Opcode op, CallSiteBinder binder)
+        protected override Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, params Expression[] extra)
         {
-            var delegateType = typeof(Func<CallSite, object, object>);
-            var siteType = typeof(CallSite<Func<CallSite, object, object>>);
-            var site = CallSite<Func<CallSite, object, object>>.Create(binder);
+            var binder = new P5BuiltinBinder(runtime, prefix, count);
+            var exps = new Expression[op.Childs.Length + 1 + extra.Length];
+            int index = 1;
+
+            foreach (var child in op.Childs)
+                exps[index++] = Generate(sub, child);
+            foreach (var exp in extra)
+                exps[index++] = Expression.Convert(exp, typeof(object));
+
+            var res = Utils.GenerateCall(exps, binder);
+
+            if (res.Type == typeof(int) ||
+                res.Type == typeof(bool) ||
+                res.Type == typeof(double) ||
+                res.Type == typeof(string))
+                return Expression.Convert(res, typeof(object));
+            else
+                return res;
+        }
+
+        // TODO duplicated in StaticSubGenerator
+        protected Expression UnaryOperator<Result>(Expression value, CallSiteBinder binder)
+        {
+            var delegateType = typeof(Func<CallSite, object, Result>);
+            var siteType = typeof(CallSite<Func<CallSite, object, Result>>);
+            var site = CallSite<Func<CallSite, object, Result>>.Create(binder);
 
             var res =
                 Expression.Call(
@@ -32,20 +54,28 @@ namespace org.mbarbon.p.runtime
                         siteType.GetField("Target")),
                     delegateType.GetMethod("Invoke"),
                     Expression.Constant(site),
-                    Generate(sub, op.Childs[0]));
+                    value);
 
-            return Expression.Convert(res, typeof(IP5Any));
+            if (res.Type == typeof(object) && typeof(Result) != typeof(object))
+                return Expression.Convert(res, typeof(Result));
+            else
+                return res;
+        }
+
+        protected Expression UnaryOperator<Result>(Subroutine sub, Opcode op, CallSiteBinder binder)
+        {
+            return UnaryOperator<Result>(Generate(sub, op.Childs[0]), binder);
         }
 
         protected override Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
-            return UnaryOperator(
+            return UnaryOperator<object>(
                 sub, op, new P5UnaryOperationBinder(runtime, operation));
         }
 
         protected override Expression UnaryIncrement(Subroutine sub, Opcode op, ExpressionType operation)
         {
-            return UnaryOperator(
+            return UnaryOperator<object>(
                 sub, op, new P5UnaryIncrementBinder(runtime, operation));
         }
 
@@ -67,8 +97,8 @@ namespace org.mbarbon.p.runtime
                     left,
                     right);
 
-            if (res.Type == typeof(object))
-                return Expression.Convert(res, typeof(IP5Any));
+            if (res.Type == typeof(object) && typeof(Result) != typeof(object))
+                return Expression.Convert(res, typeof(Result));
             else
                 return res;
         }
@@ -99,9 +129,15 @@ namespace org.mbarbon.p.runtime
                 sub, op, new P5StringCompareBinder(runtime, operation));
         }
 
+        protected override Expression ConvertBoolean(Subroutine sub, Opcode op)
+        {
+            return UnaryOperator<object>(
+                sub, op, new P5BooleanBinder(runtime));
+        }
+
         protected override Expression ScalarAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
         {
-            return BinaryOperator<P5Scalar>(
+            return BinaryOperator<object>(
                 sub, lvalue, rvalue,
                 new P5ScalarAssignmentBinder(runtime));
         }
@@ -113,9 +149,45 @@ namespace org.mbarbon.p.runtime
                 new P5ArrayAssignmentBinder(runtime, cxt, common));
         }
 
+        protected override Expression ArrayItem(Subroutine sub, Opcode.ContextValues cxt, Expression value, Expression index, bool create)
+        {
+            return BinaryOperator<object>(
+                sub, value, index,
+                new P5ArrayItemBinder(runtime, create));
+        }
+
+        protected override Expression ArrayItemAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression index, Expression rvalue)
+        {
+            var binder = new P5ArrayItemAssignmentBinder(runtime);
+            var exps = new Expression[] { null, lvalue, index, rvalue };
+
+            return Utils.GenerateCall(exps, binder);
+        }
+
+        protected override Expression HashItem(Subroutine sub, Opcode.ContextValues cxt, Expression value, Expression index, bool create)
+        {
+            return BinaryOperator<object>(
+                sub, value, index,
+                new P5HashItemBinder(runtime, create));
+        }
+
+        protected override Expression HashItemAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression index, Expression rvalue)
+        {
+            var binder = new P5HashItemAssignmentBinder(runtime);
+            var exps = new Expression[] { null, lvalue, index, rvalue };
+
+            return Utils.GenerateCall(exps, binder);
+        }
+
+        protected override Expression Iterator(Subroutine sub, Expression value)
+        {
+            return UnaryOperator<IEnumerator>(
+                value, new P5IteratorBinder(runtime));
+        }
+
         protected override Expression Defined(Subroutine sub, Opcode op)
         {
-            return UnaryOperator(
+            return UnaryOperator<object>(
                 sub, op, new P5DefinedBinder(runtime));
         }
 

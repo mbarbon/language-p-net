@@ -4,17 +4,21 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Builtins
     {
+        public static string BitNotString(Runtime runtime, string value)
+        {
+            var t = new System.Text.StringBuilder(value);;
+
+            for (int i = 0; i < value.Length; ++i)
+                t[i] = (char)(~t[i] & 0xff); // only ASCII for now
+
+            return t.ToString();
+        }
+
         public static P5Scalar BitNot(Runtime runtime, P5Scalar value)
         {
             if (value.IsString(runtime))
             {
-                string svalue = value.AsString(runtime);
-                var t = new System.Text.StringBuilder(svalue);;
-
-                for (int i = 0; i < svalue.Length; ++i)
-                    t[i] = (char)(~t[i] & 0xff); // only ASCII for now
-
-                return new P5Scalar(runtime, t.ToString());
+                return new P5Scalar(runtime, BitNotString(runtime, value.AsString(runtime)));
             }
             else
             {

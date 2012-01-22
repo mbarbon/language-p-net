@@ -30,6 +30,11 @@ namespace org.mbarbon.p.runtime
             Subroutines = subroutines;
         }
 
+        protected override Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, params Expression[] extra)
+        {
+            return null;
+        }
+
         protected Expression UnaryOperator(Subroutine sub, Opcode op, Expression binder)
         {
             var delegateType = typeof(Func<CallSite, object, object>);
@@ -126,6 +131,16 @@ namespace org.mbarbon.p.runtime
                     Expression.Constant(operation)));
         }
 
+        protected override Expression ConvertBoolean(Subroutine sub, Opcode op)
+        {
+            return null;
+        }
+
+        protected override Expression Iterator(Subroutine sub, Expression value)
+        {
+            return null;
+        }
+
         protected override Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return BinaryOperator<object>(
@@ -154,6 +169,26 @@ namespace org.mbarbon.p.runtime
                     ModuleGenerator.InitRuntime,
                     Expression.Constant(cxt),
                     Expression.Constant(common)));
+        }
+
+        protected override Expression ArrayItem(Subroutine sub, Opcode.ContextValues cxt, Expression value, Expression index, bool create)
+        {
+            return null;
+        }
+
+        protected override Expression ArrayItemAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression index, Expression rvalue)
+        {
+            return null;
+        }
+
+        protected override Expression HashItem(Subroutine sub, Opcode.ContextValues cxt, Expression value, Expression index, bool create)
+        {
+            return null;
+        }
+
+        protected override Expression HashItemAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression index, Expression rvalue)
+        {
+            return null;
         }
 
         protected override Expression Defined(Subroutine sub, Opcode op)

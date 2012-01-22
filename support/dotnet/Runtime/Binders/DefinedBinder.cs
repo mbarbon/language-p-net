@@ -14,14 +14,35 @@ namespace org.mbarbon.p.runtime
 
         public override DynamicMetaObject Bind(DynamicMetaObject target, DynamicMetaObject[] args)
         {
+            if (Utils.IsValue(target))
+                return BindValue(target);
+
+            if (Utils.IsInteger(target) ||
+                Utils.IsFloat(target) ||
+                Utils.IsBoolean(target))
+                return new DynamicMetaObject(
+                    Expression.Convert(
+                        Expression.Constant(true), typeof(object)),
+                    Utils.RestrictToRuntimeType(target));
+
             return new DynamicMetaObject(
-                Expression.New(
-                    typeof(P5Scalar).GetConstructor(new[] { typeof(Runtime), typeof(bool) }),
-                    Expression.Constant(runtime),
+                Expression.Convert(
+                    Expression.NotEqual(
+                        Expression.Constant(null, typeof(object)),
+                        target.Expression),
+                    typeof(object)),
+                BindingRestrictions.Empty);
+        }
+
+        private DynamicMetaObject BindValue(DynamicMetaObject target)
+        {
+            return new DynamicMetaObject(
+                Expression.Convert(
                     Expression.Call(
                         Utils.CastRuntime(target),
                         target.RuntimeType.GetMethod("IsDefined"),
-                        Expression.Constant(runtime))),
+                        Expression.Constant(runtime)),
+                    typeof(object)),
                 Utils.RestrictToRuntimeType(target));
         }
 

@@ -8,7 +8,7 @@ namespace org.mbarbon.p.values
         public static readonly int[] EMPTY_PROTO = new int[] { 0, 0, 0 };
 
         public P5Code(string _name, int[] _proto) :
-            this(_name, _proto, null, false)
+            this(_name, _proto, null, false, false)
         {
             subref = new Sub(UndefinedSub);
         }
@@ -19,13 +19,14 @@ namespace org.mbarbon.p.values
         }
 
         public P5Code(string _name, int[] _proto,
-                      System.Delegate code, bool main)
+                      System.Delegate code, bool main, bool _lvalue_parameters)
         {
             subref = (Sub)code;
             scratchpad = null;
             is_main = main;
             name = _name;
             proto = _proto;
+            lvalue_parameters = _lvalue_parameters;
         }
 
         public P5Code(string _name, int[] _proto,
@@ -40,7 +41,7 @@ namespace org.mbarbon.p.values
 
         public P5Code(string _name, System.Delegate code,
                       object _value, int _flags) :
-            this(_name, EMPTY_PROTO, code, false)
+            this(_name, EMPTY_PROTO, code, false, false)
         {
             const_value = _value;
             const_flags = _flags;
@@ -53,11 +54,12 @@ namespace org.mbarbon.p.values
             scratchpad = other.scratchpad;
             const_value = other.const_value;
             const_flags = other.const_flags;
+            lvalue_parameters = other.lvalue_parameters;
         }
 
-        private IP5Any UndefinedSub(Runtime runtime,
+        private object UndefinedSub(Runtime runtime,
                                     Opcode.ContextValues context,
-                                    P5ScratchPad pad, P5Array args)
+                                    P5ScratchPad pad, object args)
         {
             var msg = string.Format("Undefined subroutine &{0:S} called",
                                     Name);
@@ -65,8 +67,8 @@ namespace org.mbarbon.p.values
             throw new P5Exception(runtime, msg);
         }
 
-        public virtual IP5Any Call(Runtime runtime, Opcode.ContextValues context,
-                                   P5Array args)
+        public virtual object Call(Runtime runtime, Opcode.ContextValues context,
+                                   object args)
         {
             // TODO emit this in the subroutine prologue/epilogue code,
             //      as is done for eval BLOCK
@@ -102,7 +104,7 @@ namespace org.mbarbon.p.values
         }
 
         // P5MainCode and P5BeginCode subclasses?
-        public virtual IP5Any CallMain(Runtime runtime)
+        public virtual object CallMain(Runtime runtime)
         {
             return subref(runtime, Opcode.ContextValues.VOID, scratchpad, null);
         }
@@ -115,7 +117,8 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar MakeClosure(Runtime runtime, P5ScratchPad outer)
         {
-            P5Code closure = new P5Code(name, proto, subref, is_main);
+            P5Code closure = new P5Code(name, proto, subref, is_main,
+                                        lvalue_parameters);
             if (scratchpad != null)
                 closure.scratchpad = scratchpad.CloseOver(runtime, outer);
 
@@ -194,17 +197,18 @@ namespace org.mbarbon.p.values
         }
 
         public int[] Prototype { get { return proto; } }
+        public bool LValueParameters { get { return lvalue_parameters; } }
 
         protected Sub Subref { get { return subref; } }
 
-        public delegate IP5Any Sub(Runtime runtime,
+        public delegate object Sub(Runtime runtime,
                                    Opcode.ContextValues context,
-                                   P5ScratchPad pad, P5Array args);
+                                   P5ScratchPad pad, object args);
 
         private P5SymbolTable blessed;
         private Sub subref;
         private P5ScratchPad scratchpad;
-        private bool is_main;
+        private bool is_main, lvalue_parameters;
         private string name;
         private int[] proto;
         private object const_value;
@@ -214,12 +218,12 @@ namespace org.mbarbon.p.values
     public class P5NativeCode : P5Code
     {
         public P5NativeCode(string name, System.Delegate code) :
-            base(name, null, code, false)
+            base(name, null, code, false, false)
         {
         }
 
-        public override IP5Any Call(Runtime runtime, Opcode.ContextValues context,
-                                    P5Array args)
+        public override object Call(Runtime runtime, Opcode.ContextValues context,
+                                    object args)
         {
             int size = runtime.CallStack.Count;
 

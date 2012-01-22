@@ -34,7 +34,7 @@ namespace org.mbarbon.p.values
             return -1;
         }
 
-        public override IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e)
+        public override IP5Any AssignIterator(Runtime runtime, IEnumerator e)
         {
             for (int i = 0; i < array.Count; ++i)
             {
@@ -65,6 +65,16 @@ namespace org.mbarbon.p.values
         // IP5Array
         public int GetCount(Runtime runtime) { return array.Count; }
 
+        public object GetItemOrUndefInt(Runtime runtime, int index, bool create)
+        {
+            int idx = GetItemIndex(runtime, index, false);
+
+            if (create)
+                return new P5NetArrayItem(array, type, idx);
+            else
+                return NetGlue.WrapValue(array[idx]);
+        }
+
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create)
         {
             int idx = GetItemIndex(runtime, index.AsInteger(runtime), false);
@@ -82,7 +92,7 @@ namespace org.mbarbon.p.values
 
         public int GetItemIndex(Runtime runtime, int i, bool create)
         {
-            int idx = Builtins.GetItemIndex(runtime, array.Count, i, create);
+            int idx = Builtins.GetItemIndex(array.Count, i, create);
 
             if (idx > array.Count)
                 throw new System.NotImplementedException();
@@ -173,7 +183,7 @@ namespace org.mbarbon.p.values
             {
                 var a = i as P5Array;
                 var h = i as P5Hash;
-                IEnumerator<IP5Any> enumerator = null;
+                IEnumerator enumerator = null;
 
                 if (h != null)
                     enumerator = ((P5Hash)h.Clone(runtime, 1)).GetEnumerator(runtime);
@@ -182,7 +192,7 @@ namespace org.mbarbon.p.values
 
                 if (enumerator != null)
                     while (enumerator.MoveNext())
-                        spliced.Add(enumerator.Current);
+                        spliced.Add(Builtins.UpgradeScalar(runtime, enumerator.Current));
                 else
                     spliced.Add(i.Clone(runtime, 0));
             }
@@ -215,9 +225,9 @@ namespace org.mbarbon.p.values
         }
 
         // IP5Enumerable
-        public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        public IEnumerator GetEnumerator(Runtime runtime)
         {
-            return GetEnumerator();
+            return array.GetEnumerator();
         }
 
         // IEnumerable<IP5Any>

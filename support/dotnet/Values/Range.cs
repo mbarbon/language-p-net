@@ -1,5 +1,5 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
-using System.Collections.Generic;
+using IEnumerator = System.Collections.IEnumerator;
 
 namespace org.mbarbon.p.values
 {
@@ -11,11 +11,11 @@ namespace org.mbarbon.p.values
             End = end;
         }
 
-        public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        public IEnumerator GetEnumerator(Runtime runtime)
         {
             // TODO handle the other range cases
             for (int i = Start; i <= End; ++i)
-                yield return new P5Scalar(runtime, i);
+                yield return i;
         }
 
         public int GetCount()

@@ -30,7 +30,7 @@ namespace org.mbarbon.p.runtime
             parser_template = arglist_parser.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "new") as P5Scalar;
         }
 
-        private IP5Any SafeInstance(Runtime runtime)
+        private object SafeInstance(Runtime runtime)
         {
             P5Array arglist_safe_instance =
                 new P5Array(parser_runtime,
@@ -47,13 +47,13 @@ namespace org.mbarbon.p.runtime
                 parser_runtime, new System.IO.StringReader(program), null);
             P5Array arglist_parse_stream =
                 new P5Array(parser_runtime,
-                            parser,
+                            Builtins.UpgradeScalar(runtime, parser),
                             new P5Scalar(parser_runtime, reader),
                             new P5Scalar(parser_runtime, file),
                             new P5Scalar(parser_runtime, 3),
                             new P5Scalar(parser_runtime));
 
-            IP5Any res;
+            object res;
             try
             {
                 res = arglist_parse_stream.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "parse_stream");
@@ -80,11 +80,11 @@ namespace org.mbarbon.p.runtime
             var parser = SafeInstance(runtime);
             P5Array arglist_parse_file =
                 new P5Array(parser_runtime,
-                            parser,
+                            Builtins.UpgradeScalar(runtime, parser),
                             new P5Scalar(parser_runtime, program),
                             new P5Scalar(parser_runtime, 3));
 
-            IP5Any res;
+            object res;
             try
             {
                 res = arglist_parse_file.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "parse_file");
@@ -134,8 +134,8 @@ namespace org.mbarbon.p.runtime
             try
             {
                 var p = arglist_new.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "new_from_argv");
+                var arglist_run = new P5Array(runtime, Builtins.UpgradeScalar(runtime, p));
 
-                P5Array arglist_run = new P5Array(parser_runtime, p);
                 arglist_run.CallMethod(parser_runtime, Opcode.ContextValues.VOID, "run");
             }
             catch (System.Reflection.TargetInvocationException te)
@@ -169,7 +169,7 @@ namespace org.mbarbon.p.runtime
                                     e.Reference);
                     var msg = arglist_format_message.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "format_message");
 
-                    return new P5Exception(parser_runtime, msg.AsString(parser_runtime));
+                    return new P5Exception(parser_runtime, Builtins.ConvertToString(parser_runtime, msg));
                 }
             }
 

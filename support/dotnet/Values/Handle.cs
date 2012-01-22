@@ -133,6 +133,8 @@ namespace org.mbarbon.p.values
             return null;
         }
 
+        public TextWriter Output { get { return output; } }
+
         private int BUFFER_SIZE = 1024;
         private TextReader input;
         private TextWriter output;

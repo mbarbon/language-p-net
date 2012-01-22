@@ -1,5 +1,8 @@
 using Runtime = org.mbarbon.p.runtime.Runtime;
+using Builtins = org.mbarbon.p.runtime.Builtins;
 using System.Collections.Generic;
+using IEnumerator = System.Collections.IEnumerator;
+using IList = System.Collections.IList;
 
 namespace org.mbarbon.p.values
 {
@@ -44,12 +47,13 @@ namespace org.mbarbon.p.values
             return AsScalar(runtime).IsDefined(runtime);
         }
 
-        public override int AssignArray(Runtime runtime, IP5Value other)
+        public override object AssignArray(Runtime runtime, object other)
         {
             // FIXME multiple dispatch
             P5Scalar s = other as P5Scalar;
             P5Array a = other as P5Array;
-            IEnumerator<IP5Any> e = null;
+            IList l = other as IList;
+            IEnumerator e = null;
             int c = 0;
 
             if (s != null)
@@ -62,6 +66,11 @@ namespace org.mbarbon.p.values
                 e = a.GetEnumerator(runtime);
                 c = a.GetCount(runtime);
             }
+            else if (l != null)
+            {
+                e = l.GetEnumerator();
+                c = l.Count;
+            }
 
             foreach (var i in array)
                 i.AssignIterator(runtime, e);
@@ -69,25 +78,24 @@ namespace org.mbarbon.p.values
             return c;
         }
 
-        public virtual P5List Slice(Runtime runtime, P5Array keys)
+        public virtual object SliceList(Runtime runtime, IEnumerator keys)
         {
-            var res = new P5List(runtime);
-            var list = new List<IP5Any>(keys.GetCount(runtime));
+            var list = new List<object>();
             bool found = false;
 
-            foreach (var key in keys)
+            while (keys.MoveNext())
             {
-                int i = key.AsInteger(runtime);
+                int idx = Builtins.ConvertToInt(runtime, keys.Current);
 
-                if (i < array.Count)
+                if (idx < array.Count)
                     found = true;
-                list.Add(GetItemOrUndef(runtime, key, false));
+                list.Add(GetItemOrUndefInt(runtime, idx, false));
             }
 
             if (found)
-                res.SetArray(list);
+                return list;
 
-            return res;
+            return new List<object>();
         }
     }
 
@@ -128,12 +136,12 @@ namespace org.mbarbon.p.values
             return clone;
         }
 
-        public override P5List Slice(Runtime runtime, P5Array keys)
+        public override object SliceList(Runtime runtime, IEnumerator keys)
         {
             if (!flattened)
                 Flatten(runtime);
 
-            return base.Slice(runtime, keys);
+            return base.SliceList(runtime, keys);
         }
 
         public new IEnumerator<IP5Any> GetEnumerator(Runtime runtime)

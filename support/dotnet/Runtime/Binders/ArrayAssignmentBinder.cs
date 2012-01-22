@@ -1,6 +1,7 @@
 using org.mbarbon.p.values;
 
 using System.Dynamic;
+using System.Collections.Generic;
 using Microsoft.Scripting.Ast;
 
 namespace org.mbarbon.p.runtime
@@ -73,44 +74,68 @@ namespace org.mbarbon.p.runtime
 
         private DynamicMetaObject BindFallback(DynamicMetaObject target, DynamicMetaObject arg)
         {
-            var rvalue = !Common ? Utils.CastValue(arg) :
-                Expression.Call(
-                    Utils.CastAny(arg),
-                    typeof(IP5Any).GetMethod("Clone"),
+            Expression rvalue;
+
+            if (Common)
+            {
+                if (Utils.IsAny(arg))
+                    rvalue = Expression.Call(
+                        Utils.CastAny(arg),
+                        typeof(IP5Any).GetMethod("Clone"),
+                        Expression.Constant(Runtime),
+                        Expression.Constant(1));
+                else
+                    // FIXME only handles List<object>
+                    rvalue = Expression.Call(
+                        typeof(Builtins).GetMethod("CloneList"),
+                        Expression.Constant(Runtime),
+                        Expression.Convert(arg.Expression, typeof(List<object>)),
+                        Expression.Constant(1));
+            }
+            else
+                rvalue = arg.Expression;
+
+            Expression lvalue, assignment;
+            ParameterExpression collection = null;
+
+            if (Context == Opcode.ContextValues.VOID)
+                lvalue = Utils.CastRuntime(target);
+            else
+                lvalue = collection = Expression.Parameter(target.RuntimeType);
+
+            if (Utils.IsAny(target))
+                assignment = Expression.Call(
+                    lvalue,
+                    target.RuntimeType.GetMethod("AssignArray"),
                     Expression.Constant(Runtime),
-                    Expression.Constant(1));
+                    // FIXME does not handle assigning a List to an array
+                    rvalue);
+            else
+                // FIXME only handles List<object>
+                assignment = Expression.Call(
+                    typeof(Builtins).GetMethod("AssignArrayList"),
+                    Expression.Constant(Runtime),
+                    lvalue,
+                    rvalue);
 
             if (Context == Opcode.ContextValues.VOID)
                 return new DynamicMetaObject(
                     Expression.Block(
-                        Expression.Call(
-                            Utils.CastRuntime(target),
-                            target.RuntimeType.GetMethod("AssignArray"),
-                            Expression.Constant(Runtime),
-                            rvalue),
+                        assignment,
                         Expression.Constant(null, typeof(IP5Any))),
                     Utils.RestrictToRuntimeType(arg, target));
 
-            var assign_result = Expression.Parameter(typeof(int));
-            var lvalue = Expression.Parameter(target.RuntimeType);
-            var assignment = Expression.Call(
-                lvalue,
-                target.RuntimeType.GetMethod("AssignArray"),
-                Expression.Constant(Runtime),
-                rvalue);
+            var assign_result = Expression.Parameter(typeof(object));
             var result = Expression.Condition(
                 Expression.Equal(
                     ContextExpression(),
                     Expression.Constant(Opcode.ContextValues.SCALAR)),
-                Expression.New(
-                    typeof(P5Scalar).GetConstructor(new System.Type[] { typeof(Runtime), typeof(int) }),
-                    Expression.Constant(Runtime),
-                    assign_result),
+                assign_result,
                 lvalue,
-                typeof(IP5Any));
+                typeof(object));
             var expression = Expression.Block(
-                typeof(IP5Any),
-                new ParameterExpression[] { assign_result, lvalue },
+                typeof(object),
+                new ParameterExpression[] { assign_result, collection },
                 new Expression[] {
                     Expression.Assign(lvalue, Utils.CastRuntime(target)),
                     Expression.Assign(assign_result, assignment),

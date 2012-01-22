@@ -11,9 +11,9 @@ namespace org.mbarbon.p.values
         int GetCount(Runtime runtime);
 
         IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create);
+        object GetItemOrUndefInt(Runtime runtime, int index, bool create);
         IP5Any GetItem(Runtime runtime, int i);
         int GetItemIndex(Runtime runtime, int i, bool create);
-        P5List Slice(Runtime runtime, P5Array keys, bool create);
 
         void PushFlatten(Runtime runtime, IP5Value value);
         P5Scalar PushList(Runtime runtime, P5Array items);
@@ -69,10 +69,10 @@ namespace org.mbarbon.p.values
             {
                 var iter = v.GetEnumerator(runtime);
                 while (iter.MoveNext())
-                    array.Add(iter.Current);
+                    array.Add(Builtins.UpgradeScalar(runtime, iter.Current));
             }
             else
-                array.Add(value as IP5Any);
+                array.Add(Builtins.UpgradeScalar(runtime, value));
         }
 
         protected void PushFlatten(Runtime runtime, IP5Value[] data)
@@ -86,13 +86,30 @@ namespace org.mbarbon.p.values
 
         public int GetItemIndex(Runtime runtime, int i, bool create)
         {
-            int idx = Builtins.GetItemIndex(runtime, array.Count, i, create);
+            int idx = Builtins.GetItemIndex(array.Count, i, create);
 
             if (create && idx >= array.Count)
                 while (array.Count <= idx)
                     array.Add(new P5Scalar(runtime));
 
             return idx;
+        }
+
+        public object GetItemOrUndefInt(Runtime runtime, int index, bool create)
+        {
+            int i = GetItemIndex(runtime, index, create);
+
+            if (i == -1)
+            {
+                if (create)
+                    throw new System.Exception("Modification of non-creatable array value attempted, subscript " + index);
+                else
+                    return null;
+            }
+            else if (i == -2)
+                return null;
+
+            return array[i];
         }
 
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any index, bool create)
@@ -112,17 +129,18 @@ namespace org.mbarbon.p.values
             return array[i];
         }
 
-        public P5List Slice(Runtime runtime, P5Array keys, bool create)
+        public object SliceArray(Runtime runtime, IEnumerator keys, bool create)
         {
-            var res = new P5List(runtime, (List<IP5Any>) null);
-            var list = new List<IP5Any>();
+            var list = new List<object>();
 
-            foreach (var key in keys)
-                list.Add(GetItemOrUndef(runtime, key, create));
+            while (keys.MoveNext())
+            {
+                int idx = Builtins.ConvertToInt(runtime, keys.Current);
 
-            res.SetArray(list);
+                list.Add(GetItemOrUndefInt(runtime, idx, create));
+            }
 
-            return res;
+            return list;
         }
 
         public IP5Any Exists(Runtime runtime, IP5Any index)
@@ -132,7 +150,7 @@ namespace org.mbarbon.p.values
             return new P5Scalar(runtime, (i >= 0 && i < array.Count) || (i < 0 && -i < array.Count));
         }
 
-        public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        public IEnumerator GetEnumerator(Runtime runtime)
         {
             return array.GetEnumerator();
         }
@@ -227,13 +245,13 @@ namespace org.mbarbon.p.values
             return -1;
         }
 
-        public virtual int AssignArray(Runtime runtime, IP5Value other)
+        public virtual object AssignArray(Runtime runtime, object other)
         {
             // FIXME multiple dispatch
             P5Scalar s = other as P5Scalar;
-            P5Array a = other as P5Array;
+            IP5Array a = other as IP5Array;
             P5Hash h = other as P5Hash;
-            P5NetArray na = other as P5NetArray;
+            List<object> l = other as List<object>;
 
             if (s != null)
             {
@@ -254,21 +272,34 @@ namespace org.mbarbon.p.values
 
                 return a.GetCount(runtime);
             }
-            else if (na != null)
+            else if (l != null)
             {
-                AssignIterator(runtime, na.GetEnumerator(runtime));
+                AssignIterator(runtime, l.GetEnumerator());
 
-                return na.GetCount(runtime);
+                return l.Count;
             }
+            else
+            {
+                array = new List<IP5Any>(1);
+                array.Add(Builtins.UpgradeScalar(runtime, other));
 
-            return 0;
+                return 1;
+            }
         }
 
-        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> iter)
+        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator iter)
         {
             array = new List<IP5Any>();
+
             while (iter.MoveNext())
-                array.Add(iter.Current.Clone(runtime, 0));
+            {
+                var iany = iter.Current as IP5Any;
+
+                if (iany != null)
+                    array.Add(iany.Clone(runtime, 0));
+                else
+                    array.Add(Builtins.UpgradeScalar(runtime, iter.Current));
+            }
 
             return this;
         }
@@ -387,7 +418,7 @@ namespace org.mbarbon.p.values
             return blessed;
         }
 
-        public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
+        public object CallMethod(Runtime runtime, Opcode.ContextValues context,
                                  string method)
         {
             var invocant = array[0] as P5Scalar;
@@ -395,7 +426,7 @@ namespace org.mbarbon.p.values
             return invocant.CallMethod(runtime, context, method, this);
         }
 
-        public IP5Any CallMethodIndirect(Runtime runtime, Opcode.ContextValues context,
+        public object CallMethodIndirect(Runtime runtime, Opcode.ContextValues context,
                                          P5Scalar method)
         {
             var pmethod = method.IsReference(runtime) ? method.Dereference(runtime) as P5Code : null;
@@ -443,7 +474,7 @@ namespace org.mbarbon.p.values
             {
                 var a = i as P5Array;
                 var h = i as P5Hash;
-                IEnumerator<IP5Any> enumerator = null;
+                IEnumerator enumerator = null;
 
                 if (h != null)
                     enumerator = ((P5Hash)h.Clone(runtime, 1)).GetEnumerator(runtime);
@@ -452,7 +483,7 @@ namespace org.mbarbon.p.values
 
                 if (enumerator != null)
                     while (enumerator.MoveNext())
-                        spliced.Add(enumerator.Current);
+                        spliced.Add(Builtins.UpgradeScalar(runtime, enumerator.Current));
                 else
                     spliced.Add(i.Clone(runtime, 0));
             }

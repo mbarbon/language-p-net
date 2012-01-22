@@ -1,9 +1,15 @@
 using org.mbarbon.p.runtime;
 using System.Collections.Generic;
+using IEnumerator = System.Collections.IEnumerator;
 
 namespace org.mbarbon.p.values
 {
-    public class P5Hash : IP5Any, IP5Referrable, IP5Enumerable
+    public interface IP5Hash : IP5Any, IP5Referrable, IP5Enumerable
+    {
+        object GetItemOrUndefString(Runtime runtime, string key, bool create);
+    }
+
+    public class P5Hash : IP5Hash
     {
         public P5Hash(Runtime runtime)
         {
@@ -36,10 +42,28 @@ namespace org.mbarbon.p.values
 
         public IP5Any GetItem(Runtime runtime, string key) { return hash[key]; }
 
+        public object GetItemOrUndefString(Runtime runtime, string key, bool create)
+        {
+            IP5Any v = null;
+
+            if (hash.TryGetValue(key, out v))
+                return v;
+            if (create)
+            {
+                v = new P5Scalar(runtime);
+                hash[key] = v;
+
+                return v;
+            }
+
+            return null;
+        }
+
         public IP5Any GetItemOrUndef(Runtime runtime, IP5Any key, bool create)
         {
             string k = key.AsScalar(runtime).KeyString(runtime);
             IP5Any v = null;
+
             if (hash.TryGetValue(k, out v))
                 return v;
             if (create)
@@ -49,20 +73,22 @@ namespace org.mbarbon.p.values
 
                 return v;
             }
+
             return new P5Scalar(runtime);
         }
 
-        public P5List Slice(Runtime runtime, P5Array keys, bool create)
+        public object SliceArray(Runtime runtime, IEnumerator keys, bool create)
         {
-            var res = new P5List(runtime, (List<IP5Any>) null);
-            var list = new List<IP5Any>(keys.GetCount(runtime));
+            var list = new List<object>();
 
-            foreach (var key in keys)
-                list.Add(GetItemOrUndef(runtime, key, create));
+            while (keys.MoveNext())
+            {
+                string key = Builtins.ConvertToKeyString(runtime, keys.Current);
 
-            res.SetArray(list);
+                list.Add(GetItemOrUndefString(runtime, key, create));
+            }
 
-            return res;
+            return list;
         }
 
         internal bool ExistsKey(Runtime runtime, string key)
@@ -122,11 +148,12 @@ namespace org.mbarbon.p.values
             return -1;
         }
 
-        public virtual int AssignArray(Runtime runtime, IP5Value other)
+        public virtual object AssignArray(Runtime runtime, object other)
         {
             // FIXME multiple dispatch
             P5Array a = other as P5Array;
             P5Hash h = other as P5Hash;
+            List<object> l = other as List<object>;
 
             iterator = null;
 
@@ -144,20 +171,26 @@ namespace org.mbarbon.p.values
 
                 return h.GetCount(runtime) * 2;
             }
+            else if (l != null)
+            {
+                AssignIterator(runtime, l.GetEnumerator());
+
+                return l.Count;
+            }
 
             return 0;
         }
 
-        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator<IP5Any> e)
+        public virtual IP5Any AssignIterator(Runtime runtime, IEnumerator e)
         {
             hash.Clear();
             while (e.MoveNext())
             {
-                P5Scalar k = e.Current.AsScalar(runtime);
+                string k = Builtins.ConvertToKeyString(runtime, e.Current);
                 e.MoveNext();
-                IP5Any v = e.Current;
+                IP5Any v = Builtins.UpgradeScalar(runtime, e.Current);
 
-                hash[k.KeyString(runtime)] = v.Clone(runtime, 0);
+                hash[k] = v.Clone(runtime, 0);
             }
 
             iterator = null;
@@ -165,7 +198,7 @@ namespace org.mbarbon.p.values
             return this;
         }
 
-        public IEnumerator<IP5Any> GetEnumerator(Runtime runtime)
+        public IEnumerator GetEnumerator(Runtime runtime)
         {
             foreach (var i in hash)
             {

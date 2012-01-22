@@ -306,47 +306,48 @@ namespace org.mbarbon.p.values
             var version = GetStashGlob(runtime, "]", true);
             version.Scalar = new P5Scalar(runtime, 5.008);
 
-            // UNIVERSAL
-            universal = GetPackage(runtime, "UNIVERSAL", true);
+            // // UNIVERSAL
+            // universal = GetPackage(runtime, "UNIVERSAL", true);
 
-            var isa = universal.GetStashGlob(runtime, "isa", true);
-            isa.Code = new P5NativeCode("UNIVERSAL::isa", new P5Code.Sub(WrapIsa));
+            // var isa = universal.GetStashGlob(runtime, "isa", true);
+            // isa.Code = new P5NativeCode("UNIVERSAL::isa", new P5Code.Sub(WrapIsa));
 
-            // Internals
-            var internals = GetPackage(runtime, "Internals", true);
+            // // Internals
+            // var internals = GetPackage(runtime, "Internals", true);
 
-            var add_overload = internals.GetStashGlob(runtime, "add_overload", true);
-            add_overload.Code = new P5NativeCode("Internals::add_overload", new P5Code.Sub(WrapAddOverload));
+            // var add_overload = internals.GetStashGlob(runtime, "add_overload", true);
+            // add_overload.Code = new P5NativeCode("Internals::add_overload", new P5Code.Sub(WrapAddOverload));
 
-            // Internals::Net (TODO move to external assembly)
-            var internals_net = GetPackage(runtime, "Internals::Net", true);
+            // // Internals::Net (TODO move to external assembly)
+            // var internals_net = GetPackage(runtime, "Internals::Net", true);
 
-            var get_class = internals_net.GetStashGlob(runtime, "get_class", true);
-            get_class.Code = new P5NativeCode("Internals::Net::get_class", new P5Code.Sub(WrapGetClass));
+            // var get_class = internals_net.GetStashGlob(runtime, "get_class", true);
+            // get_class.Code = new P5NativeCode("Internals::Net::get_class", new P5Code.Sub(WrapGetClass));
 
-            var specialize_type = internals_net.GetStashGlob(runtime, "specialize_type", true);
-            specialize_type.Code = new P5NativeCode("Internals::Net::specialize_type", new P5Code.Sub(WrapSpecializeType));
+            // var specialize_type = internals_net.GetStashGlob(runtime, "specialize_type", true);
+            // specialize_type.Code = new P5NativeCode("Internals::Net::specialize_type", new P5Code.Sub(WrapSpecializeType));
 
-            var create = internals_net.GetStashGlob(runtime, "create", true);
-            create.Code = new P5NativeCode("Internals::Net::create", new P5Code.Sub(WrapCreate));
+            // var create = internals_net.GetStashGlob(runtime, "create", true);
+            // create.Code = new P5NativeCode("Internals::Net::create", new P5Code.Sub(WrapCreate));
 
-            var call_method = internals_net.GetStashGlob(runtime, "call_method", true);
-            call_method.Code = new P5NativeCode("Internals::Net::call_mehtod", new P5Code.Sub(WrapCallMethod));
+            // var call_method = internals_net.GetStashGlob(runtime, "call_method", true);
+            // call_method.Code = new P5NativeCode("Internals::Net::call_mehtod", new P5Code.Sub(WrapCallMethod));
 
-            var call_static = internals_net.GetStashGlob(runtime, "call_static", true);
-            call_static.Code = new P5NativeCode("Internals::Net::call_static", new P5Code.Sub(WrapCallStatic));
+            // var call_static = internals_net.GetStashGlob(runtime, "call_static", true);
+            // call_static.Code = new P5NativeCode("Internals::Net::call_static", new P5Code.Sub(WrapCallStatic));
 
-            var get_property = internals_net.GetStashGlob(runtime, "get_property", true);
-            get_property.Code = new P5NativeCode("Internals::Net::get_property", new P5Code.Sub(WrapGetProperty));
+            // var get_property = internals_net.GetStashGlob(runtime, "get_property", true);
+            // get_property.Code = new P5NativeCode("Internals::Net::get_property", new P5Code.Sub(WrapGetProperty));
 
-            var set_property = internals_net.GetStashGlob(runtime, "set_property", true);
-            set_property.Code = new P5NativeCode("Internals::Net::set_property", new P5Code.Sub(WrapSetProperty));
+            // var set_property = internals_net.GetStashGlob(runtime, "set_property", true);
+            // set_property.Code = new P5NativeCode("Internals::Net::set_property", new P5Code.Sub(WrapSetProperty));
 
-            var extend = internals_net.GetStashGlob(runtime, "extend", true);
-            extend.Code = new P5NativeCode("Internals::Net::extend", new P5Code.Sub(WrapExtend));
+            // var extend = internals_net.GetStashGlob(runtime, "extend", true);
+            // extend.Code = new P5NativeCode("Internals::Net::extend", new P5Code.Sub(WrapExtend));
 
-            var compile = internals_net.GetStashGlob(runtime, "compile_assembly", true);
-            compile.Code = new P5NativeCode("Internals::Net::compile_assembly", new P5Code.Sub(WrapCompileAssembly));
+            // var compile = internals_net.GetStashGlob(runtime, "compile_assembly", true);
+            // compile.Code = new P5NativeCode("Internals::Net::compile_assembly",
+//                                             new P5Code.Sub(WrapCompileAssembly));
         }
 
         private static IP5Any WrapIsa(Runtime runtime, Opcode.ContextValues context,

@@ -10,9 +10,33 @@ namespace org.mbarbon.p.runtime
             System.Console.WriteLine(string.Format("{0:S}:{1:D}", file, line));
         }
 
-        public static IP5Any Return(Runtime runtime, Opcode.ContextValues cxt,
-                                    IP5Any value)
+        public static P5Scalar UpgradeScalar(Runtime runtime, object val)
         {
+            P5Scalar value = val as P5Scalar;
+
+            if (value != null)
+                return value;
+            if (val == null)
+                return new P5Scalar(runtime);
+            if (val is int)
+                return new P5Scalar(runtime, (int)val);
+            if (val is string)
+                return new P5Scalar(runtime, (string)val);
+            if (val is double)
+                return new P5Scalar(runtime, (double)val);
+
+            return new P5Scalar(new P5NetWrapper(val));
+        }
+
+        public static object Return(Runtime runtime, Opcode.ContextValues cxt,
+                                    object val)
+        {
+            IP5Any value = val as IP5Any;
+
+            // TODO handle scalar/list context for List/IList...
+            if (value == null)
+                return val;
+
             if (cxt == Opcode.ContextValues.SCALAR)
                 return value.AsScalar(runtime);
             if (cxt == Opcode.ContextValues.LIST)
@@ -142,6 +166,7 @@ namespace org.mbarbon.p.runtime
 
                 foreach (var c in str)
                 {
+                    // FIXME WTF? why the check
                     if (!(c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')))
                     {
                         word = false;
@@ -157,26 +182,6 @@ namespace org.mbarbon.p.runtime
                 return new P5Scalar(runtime, -value.AsFloat(runtime));
 
             return new P5Scalar(runtime, -value.AsInteger(runtime));
-        }
-
-        public static P5Scalar JoinList(Runtime runtime, P5Array array)
-        {
-            var iter = array.GetEnumerator();
-            var res = new System.Text.StringBuilder();
-            bool first = true;
-
-            iter.MoveNext();
-            var sep = iter.Current.AsString(runtime);
-
-            while (iter.MoveNext())
-            {
-                if (!first)
-                    res.Append(sep);
-                first = false;
-                res.Append(iter.Current.AsString(runtime));
-            }
-
-            return new P5Scalar(runtime, res.ToString());
         }
 
         public static P5List SplitSpaces(Runtime runtime, IP5Any value)
@@ -208,7 +213,7 @@ namespace org.mbarbon.p.runtime
             var message = new System.Text.StringBuilder();
 
             for (var it = args.GetEnumerator(runtime); it.MoveNext(); )
-                message.Append(it.Current.AsString(runtime));
+                message.Append(Builtins.ConvertToString(runtime, it.Current));
 
             if (message.Length > 0 && message[message.Length - 1] != '\n')
                 message.Append(string.Format(" at {0:S} line {1:D}.\n",
@@ -526,22 +531,6 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        public static int GetItemIndex(Runtime runtime, int count,
-                                       int i, bool create)
-        {
-            if (i < 0 && -i > count)
-                return -1;
-            if (i < 0)
-                return count + i;
-
-            if (i < count)
-                return i;
-            if (create)
-                return i;
-            else
-                return -2;
-        }
-
         public static IP5Any Reverse(Runtime runtime, Opcode.ContextValues context,
                                      P5Array args)
         {
@@ -703,7 +692,7 @@ namespace org.mbarbon.p.runtime
             pack.SetOverloads(overloads);
         }
 
-        public static bool IsOverloaded(Runtime runtime, IP5Any value,
+        public static bool IsOverloaded(Runtime runtime, object value,
                                         out Overloads overloads)
         {
             overloads = null;
@@ -731,7 +720,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public static P5Scalar CallOverload(Runtime runtime, OverloadOperation op,
-                                            P5Scalar left, IP5Any right)
+                                            P5Scalar left, object right)
         {
             Overloads oleft, oright;
 
@@ -746,7 +735,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public static P5Scalar CallOverloadInverted(Runtime runtime, OverloadOperation op,
-                                                    P5Scalar left, IP5Any right)
+                                                    object left, P5Scalar right)
         {
             Overloads oright;
 
@@ -754,57 +743,6 @@ namespace org.mbarbon.p.runtime
                 return null;
 
             return oright.CallOperation(runtime, op, left, right, true);
-        }
-
-        public static P5Scalar AddScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
-        {
-            return AddScalars(runtime, left, left, right);
-        }
-
-        public static P5Scalar AddScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
-        {
-            // TODO handle integer addition and integer -> float promotion
-            res.SetFloat(runtime, left.AsFloat(runtime) + right.AsFloat(runtime));
-            return res;
-        }
-
-        public static P5Scalar SubtractScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
-        {
-            return SubtractScalars(runtime, left, left, right);
-        }
-
-        public static P5Scalar SubtractScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
-        {
-            // TODO handle integer addition and integer -> float promotion
-            res.SetFloat(runtime, left.AsFloat(runtime) - right.AsFloat(runtime));
-
-            return res;
-        }
-
-        public static P5Scalar MultiplyScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
-        {
-            return MultiplyScalars(runtime, left, left, right);
-        }
-
-        public static P5Scalar MultiplyScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
-        {
-            // TODO handle integer addition and integer -> float promotion
-            res.SetFloat(runtime, left.AsFloat(runtime) * right.AsFloat(runtime));
-
-            return res;
-        }
-
-        public static P5Scalar DivideScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
-        {
-            return DivideScalars(runtime, left, left, right);
-        }
-
-        public static P5Scalar DivideScalars(Runtime runtime, P5Scalar res, IP5Any left, IP5Any right)
-        {
-            // TODO handle integer addition and integer -> float promotion
-            res.SetFloat(runtime, left.AsFloat(runtime) / right.AsFloat(runtime));
-
-            return res;
         }
 
         public static P5Scalar LeftShiftScalarsAssign(Runtime runtime, P5Scalar left, IP5Any right)
