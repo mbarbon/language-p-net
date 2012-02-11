@@ -111,6 +111,16 @@ namespace org.mbarbon.p.runtime
             return BinaryOperator<Result>(sub, left, right, binder);
         }
 
+        protected override Expression StringOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            return BinaryOperator<object>(
+                sub, op,
+                Expression.New(
+                    typeof(P5StringOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
+                    Expression.Constant(operation),
+                    ModuleGenerator.InitRuntime));
+        }
+
         protected override Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return BinaryOperator<object>(

@@ -31,5 +31,29 @@ namespace org.mbarbon.p.runtime
 
             return str.ToString();
         }
+
+        // String concatenation
+
+        public static object ConcatenateScalarObjectAssign(Runtime runtime, P5Scalar left, object right)
+        {
+            return left.ConcatAssign(runtime, right);
+        }
+
+        public static object ConcatenateScalarObject(Runtime runtime, P5Scalar left, object right)
+        {
+            return left.AsString(runtime) + right;
+        }
+
+        // String length
+
+        public static object StringLengthIP5Any(Runtime runtime, IP5Any scalar)
+        {
+            return scalar.AsString(runtime).Length;
+        }
+
+        public static object StringLengthObject(Runtime runtime, object obj)
+        {
+            return obj.ToString().Length;
+        }
     }
 }

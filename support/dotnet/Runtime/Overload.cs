@@ -20,6 +20,8 @@ namespace org.mbarbon.p.runtime
         SHIFT_LEFT_ASSIGN,
         SHIFT_RIGHT,
         SHIFT_RIGHT_ASSIGN,
+        CONCATENATE,
+        CONCATENATE_ASSIGN,
         MAX,
     }
 
@@ -71,6 +73,12 @@ namespace org.mbarbon.p.runtime
                 break;
             case ">>=":
                 AddOperation(runtime, OverloadOperation.SHIFT_RIGHT_ASSIGN, value);
+                break;
+            case ".":
+                AddOperation(runtime, OverloadOperation.CONCATENATE, value);
+                break;
+            case ".=":
+                AddOperation(runtime, OverloadOperation.CONCATENATE_ASSIGN, value);
                 break;
             }
         }

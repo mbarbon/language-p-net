@@ -248,7 +248,7 @@ namespace org.mbarbon.p.values
             return body.Length(runtime);
         }
 
-        public virtual int StringLength(Runtime runtime)
+        public virtual object StringLength(Runtime runtime)
         {
             return body.Length(runtime);
         }

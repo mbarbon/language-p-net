@@ -21,11 +21,6 @@ namespace org.mbarbon.p.values
         public override double AsFloat(Runtime runtime) { return array.Count; }
         public override bool AsBoolean(Runtime runtime) { return array.Count != 0; }
 
-        public override int StringLength(Runtime runtime)
-        {
-            return AsString(runtime).Length;
-        }
-
         public override int GetPos(Runtime runtime) { return -1; }
         public override int GetPos(Runtime runtime, out bool pos_set)
         {

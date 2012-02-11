@@ -36,7 +36,7 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.LeftShiftAssign:
             case ExpressionType.RightShift:
             case ExpressionType.RightShiftAssign:
-                return BindArithOp(target, arg, errorSuggestion);
+                return BindOp(target, arg, errorSuggestion);
             default:
                 throw new System.Exception("Unhandled operation value");
             }
@@ -158,7 +158,7 @@ namespace org.mbarbon.p.runtime
                 fallback);
         }
 
-        private OverloadOperation OverloadOp()
+        protected virtual OverloadOperation OverloadOp()
         {
             switch (Operation)
             {
@@ -191,7 +191,7 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        private bool IsAssign()
+        protected bool IsAssign()
         {
             switch (Operation)
             {
@@ -240,13 +240,15 @@ namespace org.mbarbon.p.runtime
                 return "Integer";
             if (Utils.IsFloat(arg))
                 return "Float";
+            if (Utils.IsString(arg))
+                return "String";
             if (Utils.IsAny(arg))
                 return "Scalar";
 
             throw new System.Exception("Unhandled type in arithmetic operation " + arg.RuntimeType);
         }
 
-        private Expression AsScalarOrRuntime(DynamicMetaObject arg)
+        protected Expression AsScalarOrRuntime(DynamicMetaObject arg)
         {
             if (Utils.IsAny(arg) && !Utils.IsScalar(arg))
                 return Expression.Call(
@@ -259,7 +261,7 @@ namespace org.mbarbon.p.runtime
             return Utils.CastRuntime(arg);
         }
 
-        private Expression AsScalarOrObject(DynamicMetaObject arg)
+        protected Expression AsScalarOrObject(DynamicMetaObject arg)
         {
             if (Utils.IsAny(arg) && !Utils.IsScalar(arg))
                 return Expression.Call(
@@ -297,7 +299,7 @@ namespace org.mbarbon.p.runtime
                 Expression.Constant(Runtime));
         }
 
-        private Expression BaseOperation(DynamicMetaObject target, DynamicMetaObject arg)
+        protected virtual Expression BaseOperation(DynamicMetaObject target, DynamicMetaObject arg)
         {
             bool is_assign = IsAssign();
             string op_method = OpName() + TypeName(target) + TypeName(arg) +
@@ -328,9 +330,6 @@ namespace org.mbarbon.p.runtime
             }
             else
             {
-                if (method == null)
-                    throw new System.Exception("Method not found " + op_method);
-
                 return Expression.Call(
                     method,
                     Expression.Constant(Runtime),
@@ -339,7 +338,7 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        private DynamicMetaObject BindArithOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
+        protected DynamicMetaObject BindOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
         {
             OverloadOperation ovl_op = OverloadOp();
             bool is_assign = IsAssign();

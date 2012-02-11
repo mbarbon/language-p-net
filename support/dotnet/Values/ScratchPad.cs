@@ -4,14 +4,14 @@ using org.mbarbon.p.runtime;
 
 namespace org.mbarbon.p.values
 {
-    public class P5ScratchPad : List<IP5Any>
+    public class P5ScratchPad : List<object>
     {
         public P5ScratchPad()
         {
             Lexicals = new List<LexicalInfo>();
         }
 
-        public P5ScratchPad(IEnumerable<IP5Any> values, List<LexicalInfo> lexicals)
+        public P5ScratchPad(IEnumerable<object> values, List<LexicalInfo> lexicals)
             : base(values)
         {
             Lexicals = lexicals;
@@ -115,7 +115,7 @@ namespace org.mbarbon.p.values
             return closure;
         }
 
-        public IP5Any GetOrCreateValue(Runtime runtime, Opcode.Sigil slot,
+        public object GetOrCreateValue(Runtime runtime, Opcode.Sigil slot,
                                        int index)
         {
             if (Count > index && this[index] != null)
@@ -133,17 +133,17 @@ namespace org.mbarbon.p.values
             return this[index];
         }
 
-        public IP5Any GetScalar(Runtime runtime, int index)
+        public object GetScalar(Runtime runtime, int index)
         {
             return this[index] != null ? this[index] : this[index] = new P5Scalar(runtime);
         }
 
-        public IP5Any GetArray(Runtime runtime, int index)
+        public object GetArray(Runtime runtime, int index)
         {
             return this[index] != null ? this[index] : this[index] = new P5Array(runtime);
         }
 
-        public IP5Any GetHash(Runtime runtime, int index)
+        public object GetHash(Runtime runtime, int index)
         {
             return this[index] != null ? this[index] : this[index] = new P5Hash(runtime);
         }

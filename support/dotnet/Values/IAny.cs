@@ -25,7 +25,6 @@ namespace org.mbarbon.p.values
         int AsInteger(Runtime runtime);
         double AsFloat(Runtime runtime);
         bool AsBoolean(Runtime runtime);
-        int StringLength(Runtime runtime);
 
         int GetPos(Runtime runtime);
         int GetPos(Runtime runtime, out bool _pos_set);
@@ -80,7 +79,6 @@ namespace org.mbarbon.p.values
         public abstract int AsInteger(Runtime runtime);
         public abstract double AsFloat(Runtime runtime);
         public abstract bool AsBoolean(Runtime runtime);
-        public abstract int StringLength(Runtime runtime);
 
         public abstract int GetPos(Runtime runtime);
         public abstract int GetPos(Runtime runtime, out bool _pos_set);

@@ -400,10 +400,10 @@ namespace org.mbarbon.p.runtime
             state.value = null;
         }
 
-        public static P5Range MakeRange(Runtime runtime, IP5Any start, IP5Any end)
+        public static P5Range MakeRange(Runtime runtime, int start, int end)
         {
             // TODO handle string range
-            return new P5Range(runtime, start.AsInteger(runtime), end.AsInteger(runtime));
+            return new P5Range(runtime, start, end);
         }
 
         public static IP5Regex CompileRegex(Runtime runtime, P5Scalar value, int flags)
@@ -596,20 +596,6 @@ namespace org.mbarbon.p.runtime
                 length = max + length - start;
 
             return array.Replace(runtime, start, length, values);
-        }
-
-        public static P5Scalar AnonymousArray(Runtime runtime, P5List list)
-        {
-            var clone = list.Clone(runtime, 1) as IP5Enumerable;
-
-            return new P5Scalar(runtime, new P5Array(runtime, clone));
-        }
-
-        public static P5Scalar AnonymousHash(Runtime runtime, P5List list)
-        {
-            var clone = list.Clone(runtime, 1) as IP5Enumerable;
-
-            return new P5Scalar(runtime, new P5Hash(runtime, clone));
         }
 
         public static P5Scalar Oct(Runtime runtime, P5Scalar value)

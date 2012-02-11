@@ -29,6 +29,8 @@ namespace org.mbarbon.p.runtime
             else
                 yield return type.Name;
 
+            if (typeof(IP5Any).IsAssignableFrom(type))
+                yield return "IP5Any";
             if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
                 yield return "Enumerator";
 

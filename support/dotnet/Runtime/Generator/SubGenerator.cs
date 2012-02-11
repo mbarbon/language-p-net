@@ -22,8 +22,6 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(bool) };
         private static Type[] ProtoRuntimeAny =
             new Type[] { typeof(Runtime), typeof(IP5Any) };
-        private static Type[] ProtoStringString =
-            new Type[] { typeof(string), typeof(string) };
         private static Type[] ProtoInt =
             new Type[] { typeof(int) };
 
@@ -184,13 +182,11 @@ namespace org.mbarbon.p.runtime
 
         private Expression GetLexicalPadValue(LexicalInfo info)
         {
-            return Expression.Convert(
-                Expression.Call(
-                    Pad,
-                    typeof(P5ScratchPad).GetMethod(MethodForSlot(info.Slot)),
-                    Runtime,
-                    Expression.Constant(info.Index)),
-                TypeForSlot(info.Slot));
+            return Expression.Call(
+                Pad,
+                typeof(P5ScratchPad).GetMethod(MethodForSlot(info.Slot)),
+                Runtime,
+                Expression.Constant(info.Index));
         }
 
         private Expression GetLexicalPad(LexicalInfo info)
@@ -526,7 +522,7 @@ namespace org.mbarbon.p.runtime
                 new ParameterExpression[] { temp }, data);
         }
 
-        private Expression AssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue)
+        private Expression ScalarAssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue)
         {
             switch (lvalue.Number)
             {
@@ -552,6 +548,24 @@ namespace org.mbarbon.p.runtime
             }
         }
 
+        private Expression ArrayAssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue, bool common)
+        {
+            switch (lvalue.Number)
+            {
+            case Opcode.OpNumber.OP_LEXICAL:
+            {
+                var lvalue_exp = Generate(sub, lvalue);
+
+                return Expression.Assign(
+                    lvalue_exp, ArrayAssign(sub, cxt, lvalue_exp,
+                                            Generate(sub, rvalue), common));
+            }
+            default:
+                return ArrayAssign(sub, cxt, Generate(sub, lvalue),
+                                   Generate(sub, rvalue), common);
+            }
+        }
+
         protected abstract Expression ConstantInteger(int value);
         protected abstract Expression ConstantFloat(double value);
         protected abstract Expression ConstantSub(Subroutine sub);
@@ -561,6 +575,7 @@ namespace org.mbarbon.p.runtime
         protected abstract Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation);
         protected abstract Expression UnaryIncrement(Subroutine sub, Opcode op, ExpressionType operation);
         protected abstract Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation);
+        protected abstract Expression StringOperator(Subroutine sub, Opcode op, ExpressionType operation);
         protected abstract Expression ConvertBoolean(Subroutine sub, Opcode op);
         protected abstract Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation);
         protected abstract Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation);
@@ -641,30 +656,30 @@ namespace org.mbarbon.p.runtime
             {
                 GlobSlot gop = (GlobSlot)op;
                 string name = PropertyForSlot(gop.Slot);
-                return
-                    Expression.Property(
-                        Expression.Convert(
-                            Generate(sub, op.Childs[0]),
-                            typeof(P5Typeglob)),
-                        name);
+
+                return Expression.Property(
+                    Expression.Convert(
+                        Generate(sub, op.Childs[0]),
+                        typeof(P5Typeglob)),
+                    name);
             }
             case Opcode.OpNumber.OP_SWAP_GLOB_SLOT_SET:
             {
                 GlobSlot gop = (GlobSlot)op;
                 string name = PropertyForSlot(gop.Slot);
-                var property =
-                    Expression.Property(
-                        Expression.Convert(
-                            Generate(sub, op.Childs[1]),
-                            typeof(P5Typeglob)),
-                        name);
+                var property = Expression.Property(
+                    Expression.Convert(
+                        Generate(sub, op.Childs[1]),
+                        typeof(P5Typeglob)),
+                    name);
 
-                return
-                    Expression.Assign(
-                        property,
-                        Expression.Convert(
-                            Generate(sub, op.Childs[0]),
-                            property.Type));
+                // TODO change properties to be just objects
+                return Expression.Assign(
+                    property,
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("UpgradeScalar"),
+                        Runtime,
+                        Generate(sub, op.Childs[0])));
             }
             case Opcode.OpNumber.OP_MAKE_LIST:
             {
@@ -676,15 +691,8 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_MAKE_ARRAY:
                 return MakeFlatArray(sub, op);
             case Opcode.OpNumber.OP_DOT_DOT:
-            {
                 // TODO needs to handle the flip/flop mode in scalar context
-                return
-                    Expression.Call(
-                        typeof(Builtins).GetMethod("MakeRange"),
-                        Runtime,
-                        Generate(sub, op.Childs[0]),
-                        Generate(sub, op.Childs[1]));
-            }
+                return Builtin(sub, op, "MakeRange", 0);
             case Opcode.OpNumber.OP_ANONYMOUS_ARRAY:
                 return Expression.Call(
                     typeof(Builtins).GetMethod("AnonymousArray"),
@@ -824,28 +832,26 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_ASSIGN_LIST:
             {
-                var lvalue = Generate(sub, op.Childs[1]);
-                var rvalue = Generate(sub, op.Childs[0]);
                 bool common = ((ListAssign)op).Common != 0;
 
-                return ArrayAssign(sub, (Opcode.ContextValues)op.Context,
-                                   lvalue, rvalue, common);
+                return ArrayAssignmentExpression(
+                    sub, (Opcode.ContextValues)op.Context,
+                    op.Childs[1], op.Childs[0], common);
             }
             case Opcode.OpNumber.OP_SWAP_ASSIGN_LIST:
             {
-                var lvalue = Generate(sub, op.Childs[0]);
-                var rvalue = Generate(sub, op.Childs[1]);
                 bool common = ((ListAssign)op).Common != 0;
 
-                return ArrayAssign(sub, (Opcode.ContextValues)op.Context,
-                                   lvalue, rvalue, common);
+                return ArrayAssignmentExpression(
+                    sub, (Opcode.ContextValues)op.Context,
+                    op.Childs[0], op.Childs[1], common);
             }
             case Opcode.OpNumber.OP_ASSIGN:
-                return AssignmentExpression(
+                return ScalarAssignmentExpression(
                     sub, (Opcode.ContextValues)op.Context, op.Childs[1],
                     op.Childs[0]);
             case Opcode.OpNumber.OP_SWAP_ASSIGN:
-                return AssignmentExpression(
+                return ScalarAssignmentExpression(
                     sub, (Opcode.ContextValues)op.Context, op.Childs[0],
                     op.Childs[1]);
             case Opcode.OpNumber.OP_GET:
@@ -950,32 +956,9 @@ namespace org.mbarbon.p.runtime
                     start);
             }
             case Opcode.OpNumber.OP_CONCATENATE:
-            {
-                Expression s1 =
-                    Expression.Call(Generate(sub, op.Childs[0]),
-                                    typeof(IP5Any).GetMethod("AsString"),
-                                    Runtime);
-                Expression s2 =
-                    Expression.Call(Generate(sub, op.Childs[1]),
-                                    typeof(IP5Any).GetMethod("AsString"),
-                                    Runtime);
-                return
-                    Expression.New(
-                        typeof(P5Scalar).GetConstructor(ProtoRuntimeString),
-                        Runtime,
-                        Expression.Call(
-                            typeof(string).GetMethod("Concat", ProtoStringString), s1, s2));
-            }
+                return StringOperator(sub, op, ExpressionType.Add);
             case Opcode.OpNumber.OP_CONCATENATE_ASSIGN:
-            {
-                return Expression.Call(
-                    Expression.Convert(
-                        Generate(sub, op.Childs[0]),
-                        typeof(P5Scalar)),
-                    typeof(P5Scalar).GetMethod("ConcatAssign"),
-                    Runtime,
-                    Generate(sub, op.Childs[1]));
-            }
+                return StringOperator(sub, op, ExpressionType.AddAssign);
             case Opcode.OpNumber.OP_ARRAY_LENGTH:
             {
                 Expression len =
@@ -1067,8 +1050,10 @@ namespace org.mbarbon.p.runtime
                     OpContext(op),
                     Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_REPEAT_ARRAY:
+                // TODO overload
                 return Builtin(sub, op, "RepeatArray", 0);
             case Opcode.OpNumber.OP_REPEAT_SCALAR:
+                // TODO overload
                 return Builtin(sub, op, "RepeatScalar", 0);
             case Opcode.OpNumber.OP_SORT:
                 return Expression.Call(
@@ -1169,15 +1154,7 @@ namespace org.mbarbon.p.runtime
                     Runtime,
                     Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_LENGTH:
-            {
-                return Expression.New(
-                    typeof(P5Scalar).GetConstructor(ProtoRuntimeInt),
-                    Runtime,
-                    Expression.Call(
-                        Generate(sub, op.Childs[0]),
-                        typeof(IP5Any).GetMethod("StringLength"),
-                        Runtime));
-            }
+                return Builtin(sub, op, "StringLength", 1);
             case Opcode.OpNumber.OP_JOIN:
                 return Builtin(sub, op, "Join", 1);
             case Opcode.OpNumber.OP_ITERATOR:
@@ -1331,13 +1308,13 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Assign(
                     lexvar,
-                    Expression.Convert(Generate(sub, op.Childs[0]), lexvar.Type));
+                    Generate(sub, op.Childs[0]));
             }
             case Opcode.OpNumber.OP_LOCALIZE_LEXICAL_PAD:
             {
                 LocalLexical lx = (LocalLexical)op;
                 Expression lexvar = GetLexicalPad(lx.LexicalInfo);
-                var saved = GetTemporary(lx.Index, typeof(IP5Any));
+                var saved = GetTemporary(lx.Index, typeof(object));
 
                 return Expression.Assign(saved, lexvar);
             }
@@ -1346,7 +1323,7 @@ namespace org.mbarbon.p.runtime
                 var exps = new List<Expression>();
                 LocalLexical lx = (LocalLexical)op;
                 Expression lexvar = GetLexicalPad(lx.LexicalInfo);
-                var saved = GetTemporary(lx.Index, typeof(IP5Any));
+                var saved = GetTemporary(lx.Index, typeof(object));
 
                 exps.Add(
                     Expression.IfThen(
@@ -1364,7 +1341,7 @@ namespace org.mbarbon.p.runtime
             {
                 LocalLexical lx = (LocalLexical)op;
                 Expression lexvar = GetLexical(lx.LexicalIndex, TypeForSlot(lx.Slot));
-                var saved = GetTemporary(lx.Index, TypeForSlot(lx.Slot));
+                var saved = GetTemporary(lx.Index, typeof(object));
 
                 return Expression.Assign(saved, lexvar);
             }
@@ -1373,7 +1350,7 @@ namespace org.mbarbon.p.runtime
                 var exps = new List<Expression>();
                 LocalLexical lx = (LocalLexical)op;
                 Expression lexvar = GetLexical(lx.LexicalIndex, TypeForSlot(lx.Slot));
-                var saved = GetTemporary(lx.Index, TypeForSlot(lx.Slot));
+                var saved = GetTemporary(lx.Index, typeof(object));
 
                 exps.Add(
                     Expression.IfThen(

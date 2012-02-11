@@ -126,11 +126,6 @@ namespace org.mbarbon.p.values
         public virtual bool AsBoolean(Runtime runtime) { return hash.Count != 0; }
         public virtual bool IsDefined(Runtime runtime) { return hash.Count != 0; }
 
-        public virtual int StringLength(Runtime runtime)
-        {
-            return AsString(runtime).Length;
-        }
-
         public virtual P5Handle DereferenceHandle(Runtime runtime)
         {
             throw new System.NotImplementedException("No DereferenceHandle for P5Hash");

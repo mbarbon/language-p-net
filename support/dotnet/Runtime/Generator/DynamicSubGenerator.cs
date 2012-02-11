@@ -117,6 +117,12 @@ namespace org.mbarbon.p.runtime
                 sub, op, new P5BinaryOperationBinder(runtime, operation));
         }
 
+        protected override Expression StringOperator(Subroutine sub, Opcode op, ExpressionType operation)
+        {
+            return BinaryOperator<object>(
+                sub, op, new P5StringOperationBinder(operation, runtime));
+        }
+
         protected override Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return BinaryOperator<object>(
