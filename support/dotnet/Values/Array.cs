@@ -16,8 +16,8 @@ namespace org.mbarbon.p.values
         int GetItemIndex(Runtime runtime, int i, bool create);
 
         void PushFlatten(Runtime runtime, IP5Value value);
-        P5Scalar PushList(Runtime runtime, P5Array items);
-        P5Scalar UnshiftList(Runtime runtime, P5Array items);
+        P5Scalar PushList(Runtime runtime, IEnumerable items);
+        P5Scalar UnshiftList(Runtime runtime, IEnumerable items);
         IP5Any PopElement(Runtime runtime);
         IP5Any ShiftElement(Runtime runtime);
 
@@ -172,10 +172,17 @@ namespace org.mbarbon.p.values
             array.Add(item);
         }
 
-        public virtual P5Scalar PushList(Runtime runtime, P5Array items)
+        public virtual P5Scalar PushList(Runtime runtime, IEnumerable items)
         {
             foreach (var item in items)
-                array.Add(item.Clone(runtime, 0));
+            {
+                var iany = item as IP5Any;
+
+                if (iany != null)
+                    array.Add(iany.Clone(runtime, 0));
+                else
+                    array.Add(Builtins.UpgradeScalar(runtime, item));
+            }
 
             return new P5Scalar(runtime, array.Count);
         }
@@ -192,12 +199,20 @@ namespace org.mbarbon.p.values
             return e;
         }
 
-        public virtual P5Scalar UnshiftList(Runtime runtime, P5Array items)
+        public virtual P5Scalar UnshiftList(Runtime runtime, IEnumerable items)
         {
-            var new_array = new List<IP5Any>(items.GetCount(runtime) + array.Count);
+            // TODO pre-alloc using items.GetCount(runtime) if available
+            var new_array = new List<IP5Any>(array.Count);
 
             foreach (var item in items)
-                new_array.Add(item.Clone(runtime, 0));
+            {
+                var iany = item as IP5Any;
+
+                if (iany != null)
+                    new_array.Add(iany.Clone(runtime, 0));
+                else
+                    new_array.Add(Builtins.UpgradeScalar(runtime, item));
+            }
             new_array.AddRange(array);
 
             array = new_array;

@@ -1,5 +1,6 @@
 using org.mbarbon.p.values;
 using IdDispenser = Microsoft.Scripting.Runtime.IdDispenser;
+using IList = System.Collections.IList;
 
 namespace org.mbarbon.p.runtime
 {
@@ -58,6 +59,19 @@ namespace org.mbarbon.p.runtime
                 return (bool)value ? 1 : 0;
 
             throw new System.Exception("Unhandled type in string coercion");
+        }
+
+        public static object ConvertToScalarValue(Runtime runtime, object value)
+        {
+            var iany = value as IP5Any;
+            var ilist = value as IList;
+
+            if (iany != null)
+                return iany.AsScalar(runtime);
+            if (ilist != null)
+                return ilist.Count;
+
+            return value;
         }
     }
 }

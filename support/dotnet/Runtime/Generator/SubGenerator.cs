@@ -64,6 +64,19 @@ namespace org.mbarbon.p.runtime
             return Variables[index];
         }
 
+        private Type TypeForTemporary(Opcode.Sigil slot)
+        {
+            return slot == Opcode.Sigil.SCALAR   ? typeof(P5Scalar) :
+                   slot == Opcode.Sigil.INDEXABLE? typeof(IP5Array) :
+                   slot == Opcode.Sigil.HASH     ? typeof(P5Hash) :
+                   slot == Opcode.Sigil.ITERATOR ? typeof(IEnumerator) :
+                   slot == Opcode.Sigil.GLOB     ? typeof(P5Typeglob) :
+                   slot == Opcode.Sigil.SUB      ? typeof(P5Code) :
+                   slot == Opcode.Sigil.HANDLE   ? typeof(P5Handle) :
+                   slot == Opcode.Sigil.ARRAY    ? typeof(List<object>) :
+                                                   typeof(void);
+        }
+
         private Type TypeForSlot(Opcode.Sigil slot)
         {
             return slot == Opcode.Sigil.SCALAR   ? typeof(P5Scalar) :
@@ -590,17 +603,6 @@ namespace org.mbarbon.p.runtime
         protected abstract void DefinePackage(string pack);
         protected abstract Expression AccessGlobal(Expression runtime_exp, Opcode.Sigil slot, string name, bool create);
 
-        private Expression ForceScalar(Expression e)
-        {
-            if (typeof(P5Scalar).IsAssignableFrom(e.Type))
-                return e;
-
-            return Expression.Call(
-                e,
-                typeof(IP5Any).GetMethod("AsScalar"),
-                Runtime);
-        }
-
         public Expression Generate(Subroutine sub, Opcode op)
         {
             switch(op.Number)
@@ -787,12 +789,10 @@ namespace org.mbarbon.p.runtime
                         Context);
             }
             case Opcode.OpNumber.OP_SCALAR:
-            {
                 return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Any).GetMethod("AsScalar"),
-                    Runtime);
-            }
+                    typeof(Builtins).GetMethod("ConvertToScalarValue"),
+                    Runtime,
+                    Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_RETURN:
                 return ReturnExpression(Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_DYNAMIC_GOTO:
@@ -1103,13 +1103,13 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_PUSH_ELEMENT:
-            {
                 return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Array).GetMethod("PushFlatten"),
+                    typeof(Builtins).GetMethod("PushListListObject"),
                     Runtime,
+                    Expression.Convert(
+                        Generate(sub, op.Childs[0]),
+                        typeof(List<object>)),
                     Generate(sub, op.Childs[1]));
-            }
             case Opcode.OpNumber.OP_ARRAY_PUSH:
                 return Builtin(sub, op, "PushList", 2);
             case Opcode.OpNumber.OP_ARRAY_UNSHIFT:
@@ -1235,19 +1235,19 @@ namespace org.mbarbon.p.runtime
             {
                 Temporary tm = (Temporary)op;
 
-                return GetTemporary(tm.Index, TypeForSlot(tm.Slot));
+                return GetTemporary(tm.Index, TypeForTemporary(tm.Slot));
             }
             case Opcode.OpNumber.OP_TEMPORARY_SET:
             {
                 Temporary tm = (Temporary)op;
                 Expression exp = Generate(sub, op.Childs[0]);
 
-                return Expression.Assign(GetTemporary(tm.Index, TypeForSlot(tm.Slot)), exp);
+                return Expression.Assign(GetTemporary(tm.Index, TypeForTemporary(tm.Slot)), exp);
             }
             case Opcode.OpNumber.OP_TEMPORARY_CLEAR:
             {
                 Temporary tm = (Temporary)op;
-                var type = TypeForSlot(tm.Slot);
+                var type = TypeForTemporary(tm.Slot);
 
                 return Expression.Assign(GetTemporary(tm.Index, type),
                                          Expression.Constant(null, type));
@@ -1496,40 +1496,41 @@ namespace org.mbarbon.p.runtime
                         Generate(sub, op.Childs[0]));
             }
             case Opcode.OpNumber.OP_REFTYPE:
-            {
-                return Expression.Call(
-                    ForceScalar(Generate(sub, op.Childs[0])),
-                    typeof(P5Scalar).GetMethod("ReferenceType"),
-                    Runtime);
-            }
+                return Builtin(sub, op, "ReferenceType", 0);
             case Opcode.OpNumber.OP_REFERENCE:
             {
                 return Expression.New(
                     typeof(P5Scalar).GetConstructor(
                         new Type[] { typeof(Runtime), typeof(IP5Referrable) }),
-                    new Expression[] { Runtime, Generate(sub, op.Childs[0]) });
+                    new Expression[] {
+                        Runtime,
+                        Expression.Call(
+                            typeof(Builtins).GetMethod("UpgradeReferrable"),
+                            Runtime,
+                            Generate(sub, op.Childs[0])),
+                    });
             }
             case Opcode.OpNumber.OP_VIVIFY_SCALAR:
-            {
                 return Expression.Call(
-                    Generate(sub, op.Childs[0]),
+                    Expression.Convert(
+                        Generate(sub, op.Childs[0]),
+                        typeof(IP5Any)),
                     typeof(IP5Any).GetMethod("VivifyScalar"),
                     Runtime);
-            }
             case Opcode.OpNumber.OP_VIVIFY_ARRAY:
-            {
                 return Expression.Call(
-                    Generate(sub, op.Childs[0]),
+                    Expression.Convert(
+                        Generate(sub, op.Childs[0]),
+                        typeof(IP5Any)),
                     typeof(IP5Any).GetMethod("VivifyArray"),
                     Runtime);
-            }
             case Opcode.OpNumber.OP_VIVIFY_HASH:
-            {
                 return Expression.Call(
-                    Generate(sub, op.Childs[0]),
+                    Expression.Convert(
+                        Generate(sub, op.Childs[0]),
+                        typeof(IP5Any)),
                     typeof(IP5Any).GetMethod("VivifyHash"),
                     Runtime);
-            }
             case Opcode.OpNumber.OP_DEREFERENCE_SCALAR:
             {
                 return Expression.Call(
@@ -1918,12 +1919,13 @@ namespace org.mbarbon.p.runtime
             if_match.Add(Expression.Assign(pos, rx_end));
 
             // at this point all nested scopes have been generated
-            if_match.Add(Expression.Assign(
-                             replace,
-                             Expression.Call(
-                                 ValueBlocks[rm.To],
-                                 typeof(IP5Any).GetMethod("AsString"),
-                                 Runtime)));
+            if_match.Add(
+                Expression.Assign(
+                    replace,
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("ConvertToString"),
+                        Runtime,
+                        ValueBlocks[rm.To])));
 
             if_match.Add(
                 Expression.Call(
@@ -2017,7 +2019,13 @@ namespace org.mbarbon.p.runtime
 
             // at this point all nested scopes have been generated
             replace_list.Add(
-                Expression.Assign(replace, ValueBlocks[rm.To]));
+                Expression.Assign(
+                    replace,
+                    // TODO use ConvertToString after fixing SpliceSubstring
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("UpgradeScalar"),
+                        Runtime,
+                        ValueBlocks[rm.To])));
 
             // replace in string
             var rxstate = Expression.Field(

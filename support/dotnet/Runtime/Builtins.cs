@@ -28,6 +28,25 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(new P5NetWrapper(val));
         }
 
+        public static IP5Referrable UpgradeReferrable(Runtime runtime, object val)
+        {
+            IP5Referrable value = val as IP5Referrable;
+
+            if (value != null)
+                return value;
+            // TODO should probably use a constant scalar
+            if (val == null)
+                return new P5Scalar(runtime);
+            if (val is int)
+                return new P5Scalar(runtime, (int)val);
+            if (val is string)
+                return new P5Scalar(runtime, (string)val);
+            if (val is double)
+                return new P5Scalar(runtime, (double)val);
+
+            return new P5Scalar(new P5NetWrapper(val));
+        }
+
         public static object Return(Runtime runtime, Opcode.ContextValues cxt,
                                     object val)
         {

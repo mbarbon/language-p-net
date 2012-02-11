@@ -114,7 +114,7 @@ namespace org.mbarbon.p.values
             throw new System.NotImplementedException();
         }
 
-        public P5Scalar PushList(Runtime runtime, P5Array items)
+        public P5Scalar PushList(Runtime runtime, IEnumerable items)
         {
             foreach (var item in items)
                 array.Add(NetGlue.UnwrapValue(runtime, item, type));
@@ -122,7 +122,7 @@ namespace org.mbarbon.p.values
             return new P5Scalar(runtime, array.Count);
         }
 
-        public P5Scalar UnshiftList(Runtime runtime, P5Array items)
+        public P5Scalar UnshiftList(Runtime runtime, IEnumerable items)
         {
             int i = 0;
             foreach (var item in items)

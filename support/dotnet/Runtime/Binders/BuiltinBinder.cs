@@ -96,19 +96,27 @@ namespace org.mbarbon.p.runtime
             //
             // call the builtin casting parameters as appropriate
 
-            bool is_any = Utils.IsAny(target);
+            if (Utils.IsAny(target))
+            {
+                foreach (var suffix in EnumerateSuffixes(target, args))
+                {
+                    // System.Console.WriteLine(prefix + " '" + suffix + "'");
+
+                    var method = target.RuntimeType.GetMethod(prefix + suffix);
+
+                    if (method != null)
+                        return BindMethod(method, target, args);
+                }
+            }
 
             foreach (var suffix in EnumerateSuffixes(target, args))
             {
                 // System.Console.WriteLine(prefix + " '" + suffix + "'");
 
-                var bmethod = typeof(Builtins).GetMethod(prefix + suffix);
-                var omethod = is_any ? target.RuntimeType.GetMethod(prefix + suffix) : null;
+                var method = typeof(Builtins).GetMethod(prefix + suffix);
 
-                if (omethod != null)
-                    return BindMethod(omethod, target, args);
-                if (bmethod != null)
-                    return BindFunction(bmethod, target, args);
+                if (method != null)
+                    return BindFunction(method, target, args);
             }
 
             throw new System.Exception("Implement me " + prefix);
@@ -129,7 +137,8 @@ namespace org.mbarbon.p.runtime
                 pindex += 1;
             }
 
-            exps[aindex++] = ConvertArgument(target, parms[pindex++].ParameterType, ref restrictions);
+            if (parms.Length > pindex)
+                exps[aindex++] = ConvertArgument(target, parms[pindex++].ParameterType, ref restrictions);
 
             for (int i = pindex; i < parms.Length; ++i)
                 exps[aindex++] = ConvertArgument(args[i - pindex], parms[i].ParameterType, ref restrictions);
@@ -190,7 +199,7 @@ namespace org.mbarbon.p.runtime
                 return dmo.Expression;
             }
             else
-                throw new System.Exception("Implement me " + arg.RuntimeType + " " + type.Name);
+                throw new System.Exception("Implement conversion for " + prefix + " " + arg.RuntimeType + " " + type.Name);
         }
 
         private Runtime runtime;

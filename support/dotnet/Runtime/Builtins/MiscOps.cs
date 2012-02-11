@@ -34,12 +34,12 @@ namespace org.mbarbon.p.runtime
 
         // String concatenation
 
-        public static object ConcatenateScalarObjectAssign(Runtime runtime, P5Scalar left, object right)
+        public static object ConcatenateScalarStringAssign(Runtime runtime, P5Scalar left, string right)
         {
             return left.ConcatAssign(runtime, right);
         }
 
-        public static object ConcatenateScalarObject(Runtime runtime, P5Scalar left, object right)
+        public static object ConcatenateScalarString(Runtime runtime, P5Scalar left, string right)
         {
             return left.AsString(runtime) + right;
         }

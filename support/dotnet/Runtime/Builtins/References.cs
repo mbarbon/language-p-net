@@ -5,6 +5,8 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Builtins
     {
+        // Reference constructors
+
         public static P5Scalar AnonymousArray(Runtime runtime, List<object> list)
         {
             var result = new P5Array(runtime, list.Count);
@@ -21,6 +23,16 @@ namespace org.mbarbon.p.runtime
             result.AssignIterator(runtime, list.GetEnumerator());
 
             return new P5Scalar(runtime, result);
+        }
+
+        // Reference type
+
+        public static string ReferenceType(object value)
+        {
+            if (value != null)
+                return "";
+
+            return null;
         }
     }
 }

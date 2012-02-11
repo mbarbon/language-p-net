@@ -46,7 +46,7 @@ namespace org.mbarbon.p.runtime
             }
             else
             {
-                string op_method = "ConcatenateScalarObject";
+                string op_method = "ConcatenateScalarString";
 
                 if (is_assign)
                     op_method += "Assign";
@@ -57,7 +57,7 @@ namespace org.mbarbon.p.runtime
                     method,
                     Expression.Constant(runtime),
                     AsScalarOrRuntime(target),
-                    AsScalarOrObject(arg));
+                    BinderUtils.ConvertString(runtime, arg).Expression);
             }
         }
 
