@@ -28,6 +28,13 @@ namespace org.mbarbon.p.runtime
                 list.Add(values.Current);
         }
 
+        public static object PushListListObject(Runtime runtime, IList list, object value)
+        {
+            PushFlattenListObject(runtime, list, value);
+
+            return list.Count;
+        }
+
         public static object ShiftElementIList(IList array)
         {
             if (array.Count == 0)

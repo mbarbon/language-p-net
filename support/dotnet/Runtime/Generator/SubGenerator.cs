@@ -1111,13 +1111,7 @@ namespace org.mbarbon.p.runtime
                     Generate(sub, op.Childs[1]));
             }
             case Opcode.OpNumber.OP_ARRAY_PUSH:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Array).GetMethod("PushList"),
-                    Runtime,
-                    Generate(sub, op.Childs[1]));
-            }
+                return Builtin(sub, op, "PushList", 2);
             case Opcode.OpNumber.OP_ARRAY_UNSHIFT:
             {
                 return Expression.Call(
@@ -1814,15 +1808,14 @@ namespace org.mbarbon.p.runtime
                 bool global = (rm.Flags & Opcode.RX_GLOBAL) != 0;
                 var meth = typeof(IP5Regex).GetMethod(global ? "MatchGlobal" : "Match");
 
-                return
-                    Expression.Call(
-                        Generate(sub, op.Childs[1]),
-                        meth,
-                        Runtime,
-                        Generate(sub, op.Childs[0]),
-                        Expression.Constant(rm.Flags & Opcode.RX_KEEP),
-                        OpContext(rm),
-                        GetSavedRxState(rm.Index));
+                return Expression.Call(
+                    Generate(sub, op.Childs[1]),
+                    meth,
+                    Runtime,
+                    Generate(sub, op.Childs[0]),
+                    Expression.Constant(rm.Flags & Opcode.RX_KEEP),
+                    OpContext(rm),
+                    GetSavedRxState(rm.Index));
             }
             case Opcode.OpNumber.OP_REPLACE:
             {
