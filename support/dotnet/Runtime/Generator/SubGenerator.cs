@@ -928,25 +928,13 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_DEFINED:
                 return Defined(sub, op);
             case Opcode.OpNumber.OP_ORD:
-                return Expression.Call(
-                    typeof(Builtins).GetMethod("Ord"),
-                    Runtime,
-                    Generate(sub, op.Childs[0]));
+                return Builtin(sub, op, "Ord", 1);
             case Opcode.OpNumber.OP_CHR:
-                return Expression.Call(
-                    typeof(Builtins).GetMethod("Chr"),
-                    Runtime,
-                    Generate(sub, op.Childs[0]));
+                return Builtin(sub, op, "Chr", 1);
             case Opcode.OpNumber.OP_UC:
-                return Expression.Call(
-                    typeof(Builtins).GetMethod("Uppercase"),
-                    Runtime,
-                    Generate(sub, op.Childs[0]));
+                return Builtin(sub, op, "Uppercase", 1);
             case Opcode.OpNumber.OP_LC:
-                return Expression.Call(
-                    typeof(Builtins).GetMethod("Lowercase"),
-                    Runtime,
-                    Generate(sub, op.Childs[0]));
+                return Builtin(sub, op, "Lowercase", 1);
             case Opcode.OpNumber.OP_OCT:
                 return Expression.Call(
                     typeof(Builtins).GetMethod("Oct"),
@@ -963,9 +951,9 @@ namespace org.mbarbon.p.runtime
 
                 if (op.Childs.Length == 3)
                     start = Expression.Call(
-                        Generate(sub, op.Childs[2]),
-                        typeof(IP5Any).GetMethod("AsInteger"),
-                        Runtime);
+                        typeof(Builtins).GetMethod("ConvertToInteger"),
+                        Runtime,
+                        Generate(sub, op.Childs[2]));
                 else
                     start = Expression.Constant(0);
 
@@ -1077,10 +1065,7 @@ namespace org.mbarbon.p.runtime
                 // TODO overload
                 return Builtin(sub, op, "RepeatScalar", 0);
             case Opcode.OpNumber.OP_SORT:
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(P5Array).GetMethod("Sort"),
-                    Runtime);
+                return Builtin(sub, op, "Sort", 0);
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
             {
                 var ea = (ElementAccess)op;

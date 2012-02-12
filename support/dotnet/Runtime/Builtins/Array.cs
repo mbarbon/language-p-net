@@ -238,7 +238,7 @@ namespace org.mbarbon.p.runtime
 
             while (keys.MoveNext())
             {
-                int idx = Builtins.ConvertToInt(runtime, keys.Current);
+                int idx = Builtins.ConvertToInteger(runtime, keys.Current);
 
                 list.Add(GetListItemOrUndefInt(array, idx, create));
             }
@@ -253,7 +253,7 @@ namespace org.mbarbon.p.runtime
 
             while (keys.MoveNext())
             {
-                int idx = Builtins.ConvertToInt(runtime, keys.Current);
+                int idx = Builtins.ConvertToInteger(runtime, keys.Current);
 
                 if (idx < array.Count)
                     found = true;
@@ -264,6 +264,20 @@ namespace org.mbarbon.p.runtime
                 return list;
 
             return new List<object>();
+        }
+
+        public static object Sort(Runtime runtime, List<object> array)
+        {
+            var list = new List<object>(array);
+
+            list.Sort(delegate(object a, object b)
+                      {
+                          return string.Compare(
+                              Builtins.ConvertToString(runtime, a),
+                              Builtins.ConvertToString(runtime, b));
+                      });
+
+            return list;
         }
     }
 }

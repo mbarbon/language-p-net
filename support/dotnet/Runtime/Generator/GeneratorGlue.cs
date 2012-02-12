@@ -156,7 +156,7 @@ namespace org.mbarbon.p.runtime
                 P5Array arglist_changed =
                     new P5Array(parser_runtime, tree);
                 var changed_o = arglist_changed.CallMethod(parser_runtime, Opcode.ContextValues.SCALAR, "changed");
-                int changed = Builtins.ConvertToInt(parser_runtime, changed_o);
+                int changed = Builtins.ConvertToInteger(parser_runtime, changed_o);
 
                 if ((changed & Opcode.CHANGED_PACKAGE) != 0)
                 {

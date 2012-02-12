@@ -135,7 +135,7 @@ namespace org.mbarbon.p.values
 
             while (keys.MoveNext())
             {
-                int idx = Builtins.ConvertToInt(runtime, keys.Current);
+                int idx = Builtins.ConvertToInteger(runtime, keys.Current);
 
                 list.Add(GetItemOrUndefInt(runtime, idx, create));
             }
@@ -507,14 +507,15 @@ namespace org.mbarbon.p.values
             return new P5List(runtime, res);
         }
 
-        public P5List Sort(Runtime runtime)
+        public object Sort(Runtime runtime)
         {
             var list = new List<IP5Any>(array);
 
             list.Sort(delegate(IP5Any a, IP5Any b)
                       {
-                          return string.Compare(a.AsString(runtime),
-                                                b.AsString(runtime));
+                          return string.Compare(
+                              a.AsString(runtime),
+                              b.AsString(runtime));
                       });
 
             return new P5List(runtime, list);

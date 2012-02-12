@@ -45,7 +45,7 @@ namespace org.mbarbon.p.runtime
             return IdDispenser.GetId(value).ToString();
         }
 
-        public static int ConvertToInt(Runtime runtime, object value)
+        public static int ConvertToInteger(Runtime runtime, object value)
         {
             var iany = value as IP5Any;
 

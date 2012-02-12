@@ -85,7 +85,7 @@ namespace org.mbarbon.p.values
 
             while (keys.MoveNext())
             {
-                int idx = Builtins.ConvertToInt(runtime, keys.Current);
+                int idx = Builtins.ConvertToInteger(runtime, keys.Current);
 
                 if (idx < array.Count)
                     found = true;
