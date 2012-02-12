@@ -789,10 +789,31 @@ namespace org.mbarbon.p.runtime
                         Context);
             }
             case Opcode.OpNumber.OP_SCALAR:
+            {
+                var child = op.Childs[0];
+
+                if (child.Number == Opcode.OpNumber.OP_MAKE_LIST)
+                {
+                    var count = child.Childs.Length;
+                    var exps = new List<Expression>(count);
+
+                    for (int i = 0; i < count - 1; ++i)
+                        exps.Add(Generate(sub, child.Childs[i]));
+
+                    exps.Add(
+                        Expression.Call(
+                            typeof(Builtins).GetMethod("ConvertToScalarValue"),
+                            Runtime,
+                            Generate(sub, child.Childs[count - 1])));
+
+                    return Expression.Block(exps);
+                }
+
                 return Expression.Call(
                     typeof(Builtins).GetMethod("ConvertToScalarValue"),
                     Runtime,
-                    Generate(sub, op.Childs[0]));
+                    Generate(sub, child));
+            }
             case Opcode.OpNumber.OP_RETURN:
                 return ReturnExpression(Generate(sub, op.Childs[0]));
             case Opcode.OpNumber.OP_DYNAMIC_GOTO:
