@@ -23,7 +23,6 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.ExclusiveOrAssign:
             case ExpressionType.And:
             case ExpressionType.AndAssign:
-                return BindBitOp(target, arg, errorSuggestion);
             case ExpressionType.Add:
             case ExpressionType.AddAssign:
             case ExpressionType.Subtract:
@@ -40,98 +39,6 @@ namespace org.mbarbon.p.runtime
             default:
                 throw new System.Exception("Unhandled operation value");
             }
-        }
-
-        private DynamicMetaObject BindBitOp(DynamicMetaObject target, DynamicMetaObject arg, DynamicMetaObject errorSuggestion)
-        {
-            string method_name;
-            bool is_assign;
-
-            switch (Operation)
-            {
-            case ExpressionType.Or:
-                method_name = "BitOr";
-                is_assign = false;
-                break;
-            case ExpressionType.OrAssign:
-                method_name = "BitOrAssign";
-                is_assign = true;
-                break;
-            case ExpressionType.ExclusiveOr:
-                method_name = "BitXor";
-                is_assign = false;
-                break;
-            case ExpressionType.ExclusiveOrAssign:
-                method_name = "BitXorAssign";
-                is_assign = true;
-                break;
-            case ExpressionType.And:
-                method_name = "BitAnd";
-                is_assign = false;
-                break;
-            case ExpressionType.AndAssign:
-                method_name = "BitAndAssign";
-                is_assign = true;
-                break;
-            default:
-                throw new System.Exception("Unhandled operation value");
-            }
-
-            if (Utils.IsScalar(target) && Utils.IsScalar(arg))
-            {
-                Expression expression;
-
-                if (is_assign)
-                    expression = Expression.Call(
-                        typeof(Builtins).GetMethod(method_name),
-                        Expression.Constant(Runtime),
-                        Utils.CastScalar(target),
-                        Utils.CastScalar(arg));
-                else
-                    expression = Expression.Call(
-                        typeof(Builtins).GetMethod(method_name),
-                        Expression.Constant(Runtime),
-                        Expression.New(
-                            typeof(P5Scalar).GetConstructor(new[] { typeof(IP5ScalarBody) }),
-                            Expression.Constant(null, typeof(IP5ScalarBody))),
-                        Utils.CastScalar(target),
-                        Utils.CastScalar(arg));
-
-                return new DynamicMetaObject(
-                    expression,
-                    Utils.RestrictToScalar(arg, target));
-            }
-            else if (Utils.IsAny(target) && Utils.IsAny(arg))
-            {
-                var value = Expression.MakeBinary(
-                    Operation,
-                    Expression.Call(
-                        Utils.CastAny(target),
-                        typeof(IP5Any).GetMethod("AsInteger"),
-                        Expression.Constant(Runtime)),
-                    Expression.Call(
-                        Utils.CastAny(arg),
-                        typeof(IP5Any).GetMethod("AsInteger"),
-                        Expression.Constant(Runtime)));
-                Expression expression;
-
-                if (is_assign)
-                    expression = Expression.Call(
-                        Utils.CastScalar(target),
-                        typeof(IP5Any).GetMethod("Assign"),
-                        value);
-                else
-                    expression = Expression.New(
-                        typeof(P5Scalar).GetConstructor(new[] {typeof(Runtime), typeof(int)}),
-                        Expression.Constant(Runtime),
-                        value);
-
-                return new DynamicMetaObject(
-                    expression,
-                    Utils.RestrictToRuntimeType(arg, target));
-            }
-
-            throw new System.Exception("Unable to bind " + target.RuntimeType + " " + arg.RuntimeType);
         }
 
         private Expression CallOverload(DynamicMetaObject target, DynamicMetaObject arg, OverloadOperation op, Expression fallback)
@@ -156,6 +63,26 @@ namespace org.mbarbon.p.runtime
                     target.Expression,
                     AsScalarOrObject(arg)),
                 fallback);
+        }
+
+        private bool IsBitOperation()
+        {
+            switch (Operation)
+            {
+            case ExpressionType.LeftShift:
+            case ExpressionType.LeftShiftAssign:
+            case ExpressionType.RightShift:
+            case ExpressionType.RightShiftAssign:
+            case ExpressionType.And:
+            case ExpressionType.AndAssign:
+            case ExpressionType.Or:
+            case ExpressionType.OrAssign:
+            case ExpressionType.ExclusiveOr:
+            case ExpressionType.ExclusiveOrAssign:
+                return true;
+            default:
+                return false;
+            }
         }
 
         protected virtual OverloadOperation OverloadOp()
@@ -186,6 +113,18 @@ namespace org.mbarbon.p.runtime
                 return OverloadOperation.SHIFT_RIGHT;
             case ExpressionType.RightShiftAssign:
                 return OverloadOperation.SHIFT_RIGHT_ASSIGN;
+            case ExpressionType.And:
+                return OverloadOperation.AND;
+            case ExpressionType.AndAssign:
+                return OverloadOperation.AND_ASSIGN;
+            case ExpressionType.Or:
+                return OverloadOperation.OR;
+            case ExpressionType.OrAssign:
+                return OverloadOperation.OR_ASSIGN;
+            case ExpressionType.ExclusiveOr:
+                return OverloadOperation.XOR;
+            case ExpressionType.ExclusiveOrAssign:
+                return OverloadOperation.XOR_ASSIGN;
             default:
                 throw new System.Exception("Unhandled overloaded operation");
             }
@@ -201,6 +140,9 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.DivideAssign:
             case ExpressionType.LeftShiftAssign:
             case ExpressionType.RightShiftAssign:
+            case ExpressionType.AndAssign:
+            case ExpressionType.OrAssign:
+            case ExpressionType.ExclusiveOrAssign:
                 return true;
             default:
                 return false;
@@ -229,6 +171,15 @@ namespace org.mbarbon.p.runtime
             case ExpressionType.RightShift:
             case ExpressionType.RightShiftAssign:
                 return "RightShift";
+            case ExpressionType.And:
+            case ExpressionType.AndAssign:
+                return "BitAnd";
+            case ExpressionType.Or:
+            case ExpressionType.OrAssign:
+                return "BitOr";
+            case ExpressionType.ExclusiveOr:
+            case ExpressionType.ExclusiveOrAssign:
+                return "BitXor";
             default:
                 throw new System.Exception("Unhandled overloaded operation");
             }
@@ -310,7 +261,12 @@ namespace org.mbarbon.p.runtime
             {
                 Expression left, right;
 
-                if (target.RuntimeType != arg.RuntimeType)
+                if (IsBitOperation())
+                {
+                    left = BinderUtils.ConvertInteger(Runtime, target).Expression;
+                    right = BinderUtils.ConvertInteger(Runtime, arg).Expression;
+                }
+                else if (target.RuntimeType != arg.RuntimeType)
                 {
                     left = AsFloat(target);
                     right = AsFloat(arg);

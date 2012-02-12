@@ -14,27 +14,29 @@ namespace org.mbarbon.p.runtime
             return t.ToString();
         }
 
-        public static P5Scalar BitNot(Runtime runtime, P5Scalar value)
+        public static object BitNot(Runtime runtime, P5Scalar value)
         {
             if (value.IsString(runtime))
             {
-                return new P5Scalar(runtime, BitNotString(runtime, value.AsString(runtime)));
+                return BitNotString(runtime, value.AsString(runtime));
             }
             else
             {
                 // TODO take into account signed/unsigned?
-                return new P5Scalar(runtime, ~value.AsInteger(runtime));
+                return ~value.AsInteger(runtime);
             }
         }
 
-        public static P5Scalar BitOrAssign(Runtime runtime,
-                                           P5Scalar a, P5Scalar b)
+        public static object BitOrScalarScalarAssign(Runtime runtime,
+                                                     P5Scalar a, P5Scalar b)
         {
-            return BitOr(runtime, a, a, b);
+            a.AssignObject(runtime, BitOrScalarScalar(runtime, a, b));
+
+            return a;
         }
 
-        public static P5Scalar BitOr(Runtime runtime, P5Scalar res,
-                                     P5Scalar a, P5Scalar b)
+        public static object BitOrScalarScalar(Runtime runtime,
+                                               P5Scalar a, P5Scalar b)
         {
             if (a.IsString(runtime) && b.IsString(runtime))
             {
@@ -56,25 +58,25 @@ namespace org.mbarbon.p.runtime
                         t[i] |= sa[i];
                 }
 
-                res.SetString(runtime, t.ToString());
+                return t.ToString();
             }
             else
             {
                 // TODO take into account signed/unsigned?
-                res.SetInteger(runtime, a.AsInteger(runtime) | b.AsInteger(runtime));
+                return a.AsInteger(runtime) | b.AsInteger(runtime);
             }
-
-            return res;
         }
 
-        public static P5Scalar BitXorAssign(Runtime runtime,
-                                            P5Scalar a, P5Scalar b)
+        public static object BitXorScalarScalarAssign(Runtime runtime,
+                                                      P5Scalar a, P5Scalar b)
         {
-            return BitXor(runtime, a, a, b);
+            a.AssignObject(runtime, BitXorScalarScalar(runtime, a, b));
+
+            return a;
         }
 
-        public static P5Scalar BitXor(Runtime runtime, P5Scalar res,
-                                      P5Scalar a, P5Scalar b)
+        public static object BitXorScalarScalar(Runtime runtime,
+                                                P5Scalar a, P5Scalar b)
         {
             if (a.IsString(runtime) && b.IsString(runtime))
             {
@@ -96,25 +98,25 @@ namespace org.mbarbon.p.runtime
                         t[i] ^= sa[i];
                 }
 
-                res.SetString(runtime, t.ToString());
+                return t.ToString();
             }
             else
             {
                 // TODO take into account signed/unsigned?
-                res.SetInteger(runtime, a.AsInteger(runtime) ^ b.AsInteger(runtime));
+                return a.AsInteger(runtime) ^ b.AsInteger(runtime);
             }
-
-            return res;
         }
 
-        public static P5Scalar BitAndAssign(Runtime runtime,
-                                            P5Scalar a, P5Scalar b)
+        public static object BitAndScalarScalarAssign(Runtime runtime,
+                                                      P5Scalar a, P5Scalar b)
         {
-            return BitAnd(runtime, a, a, b);
+            a.AssignObject(runtime, BitAndScalarScalar(runtime, a, b));
+
+            return a;
         }
 
-        public static P5Scalar BitAnd(Runtime runtime, P5Scalar res,
-                                      P5Scalar a, P5Scalar b)
+        public static object BitAndScalarScalar(Runtime runtime,
+                                                P5Scalar a, P5Scalar b)
         {
             if (a.IsString(runtime) && b.IsString(runtime))
             {
@@ -136,15 +138,13 @@ namespace org.mbarbon.p.runtime
                         t[i] &= sa[i];
                 }
 
-                res.SetString(runtime, t.ToString());
+                return t.ToString();
             }
             else
             {
                 // TODO take into account signed/unsigned?
-                res.SetInteger(runtime, a.AsInteger(runtime) & b.AsInteger(runtime));
+                return a.AsInteger(runtime) & b.AsInteger(runtime);
             }
-
-            return res;
         }
     }
 }

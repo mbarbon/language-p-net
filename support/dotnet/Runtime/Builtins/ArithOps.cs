@@ -223,5 +223,51 @@ namespace org.mbarbon.p.runtime
             // TODO handle integer addition and integer -> float promotion
             return left.AsFloat(runtime) / right.AsFloat(runtime);
         }
+
+        // LeftShift
+
+        public static object LeftShiftScalarScalarAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            left.AssignObject(runtime, left.AsInteger(runtime) << right.AsInteger(runtime));
+
+            return left;
+        }
+
+        public static object LeftShiftScalarFloatAssign(Runtime runtime, P5Scalar left, double right)
+        {
+            left.AssignObject(runtime, left.AsInteger(runtime) << (int)right);
+
+            return left;
+        }
+
+        public static object LeftShiftScalarIntegerAssign(Runtime runtime, P5Scalar left, int right)
+        {
+            left.AssignObject(runtime, left.AsInteger(runtime) << right);
+
+            return left;
+        }
+
+        // RightShift
+
+        public static object RightShiftScalarScalarAssign(Runtime runtime, P5Scalar left, P5Scalar right)
+        {
+            left.AssignObject(runtime, left.AsInteger(runtime) >> right.AsInteger(runtime));
+
+            return left;
+        }
+
+        public static object RightShiftScalarFloatAssign(Runtime runtime, P5Scalar left, double right)
+        {
+            left.AssignObject(runtime, left.AsInteger(runtime) >> (int)right);
+
+            return left;
+        }
+
+        public static object RightShiftScalarIntegerAssign(Runtime runtime, P5Scalar left, int right)
+        {
+            left.AssignObject(runtime, left.AsInteger(runtime) >> right);
+
+            return left;
+        }
     }
 }

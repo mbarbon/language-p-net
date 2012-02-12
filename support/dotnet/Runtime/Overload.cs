@@ -8,20 +8,16 @@ namespace org.mbarbon.p.runtime
 {
     public enum OverloadOperation
     {
-        ADD,
-        ADD_ASSIGN,
-        SUBTRACT,
-        SUBTRACT_ASSIGN,
-        MULTIPLY,
-        MULTIPLY_ASSIGN,
-        DIVIDE,
-        DIVIDE_ASSIGN,
-        SHIFT_LEFT,
-        SHIFT_LEFT_ASSIGN,
-        SHIFT_RIGHT,
-        SHIFT_RIGHT_ASSIGN,
-        CONCATENATE,
-        CONCATENATE_ASSIGN,
+        ADD, ADD_ASSIGN,
+        SUBTRACT, SUBTRACT_ASSIGN,
+        MULTIPLY, MULTIPLY_ASSIGN,
+        DIVIDE, DIVIDE_ASSIGN,
+        SHIFT_LEFT, SHIFT_LEFT_ASSIGN,
+        SHIFT_RIGHT, SHIFT_RIGHT_ASSIGN,
+        CONCATENATE, CONCATENATE_ASSIGN,
+        AND, AND_ASSIGN,
+        OR, OR_ASSIGN,
+        XOR, XOR_ASSIGN,
         MAX,
     }
 
