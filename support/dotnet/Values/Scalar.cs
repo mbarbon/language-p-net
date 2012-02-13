@@ -420,7 +420,7 @@ namespace org.mbarbon.p.values
         }
 
         public object CallMethod(Runtime runtime, Opcode.ContextValues context,
-                                 string method, P5Array args)
+                                 string method, object args)
         {
             if (!IsDefined(runtime))
                 throw new P5Exception(runtime, string.Format("Can't call method \"{0:S}\" on an undefined value", method));

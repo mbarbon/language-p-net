@@ -57,9 +57,13 @@ namespace org.mbarbon.p.runtime
             return methods;
         }
 
-        private static bool Matches(Runtime runtime, Type type, IP5Any value)
+        private static bool Matches(Runtime runtime, Type type, object obj)
         {
+            var value = obj as IP5Any;
             var scalar = value as P5Scalar;
+
+            if (value == null)
+                throw new System.Exception("Implement Matches() for object");
 
             if (   type == typeof(bool)
                 || type == typeof(string)
@@ -112,7 +116,7 @@ namespace org.mbarbon.p.runtime
             return true;
         }
 
-        private static bool Matches(Runtime runtime, MethodBase meth, P5Scalar[] args)
+        private static bool Matches(Runtime runtime, MethodBase meth, object[] args)
         {
             var parms = meth.GetParameters();
 
@@ -136,8 +140,13 @@ namespace org.mbarbon.p.runtime
             return true;
         }
 
-        private static object Convert(Runtime runtime, IP5Any arg, Type type)
+        private static object Convert(Runtime runtime, object obj, Type type)
         {
+            var arg = obj as IP5Any;
+
+            if (arg == null)
+                throw new System.Exception("Implement Matches() for object");
+
             if (type == typeof(int))
                 return arg.AsInteger(runtime);
             if (type.IsEnum)
@@ -168,7 +177,7 @@ namespace org.mbarbon.p.runtime
             return net_wrapper.Object;
         }
 
-        private static object[] ConvertArgs(Runtime runtime, MethodBase meth, P5Scalar[] args)
+        private static object[] ConvertArgs(Runtime runtime, MethodBase meth, object[] args)
         {
             var parms = meth.GetParameters();
             var res = new object[parms.Length];
@@ -288,7 +297,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public static IP5Any CallMethod(Runtime runtime, object obj,
-                                        string method, P5Scalar[] args)
+                                        string method, object[] args)
         {
             var type = obj.GetType();
 
@@ -309,7 +318,7 @@ namespace org.mbarbon.p.runtime
         }
 
         public static IP5Any CallStaticMethod(Runtime runtime, System.Type type,
-                                              string method, P5Scalar[] args)
+                                              string method, object[] args)
         {
             foreach (var meth in SortMethods(type.GetMethods(BindingFlags.FlattenHierarchy|BindingFlags.Public|BindingFlags.Static)))
             {

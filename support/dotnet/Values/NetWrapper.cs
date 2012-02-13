@@ -4,6 +4,7 @@ using Builtins = org.mbarbon.p.runtime.Builtins;
 using NetGlue = org.mbarbon.p.runtime.NetGlue;
 using IdDispenser = Microsoft.Scripting.Runtime.IdDispenser;
 using System.Collections.Generic;
+using IList = System.Collections.IList;
 
 namespace org.mbarbon.p.values
 {
@@ -178,13 +179,14 @@ namespace org.mbarbon.p.values
         }
 
         public IP5Any CallMethod(Runtime runtime, Opcode.ContextValues context,
-                                 string method, P5Array args)
+                                 string method, object obj)
         {
-            int count = args.GetCount(runtime);
-            var arg = new P5Scalar[count - 1];
+            var args = obj as IList; // XXX
+            int count = args.Count;
+            var arg = new object[count];
 
             for (int i = 1; i < count; ++i)
-                arg[i - 1] = args.GetItem(runtime, i) as P5Scalar;
+                arg[i - 1] = args[i];
 
             var type = obj as System.Type;
             if (type != null)

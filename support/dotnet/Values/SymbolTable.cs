@@ -7,6 +7,7 @@ using Overloads = org.mbarbon.p.runtime.Overloads;
 using Glue = org.mbarbon.p.runtime.NetGlue;
 using Generator = org.mbarbon.p.runtime.Generator;
 using Serializer = org.mbarbon.p.runtime.Serializer;
+using IList = System.Collections.IList;
 
 namespace org.mbarbon.p.values
 {
@@ -307,10 +308,10 @@ namespace org.mbarbon.p.values
             version.Scalar = new P5Scalar(runtime, 5.008);
 
             // // UNIVERSAL
-            // universal = GetPackage(runtime, "UNIVERSAL", true);
+            universal = GetPackage(runtime, "UNIVERSAL", true);
 
-            // var isa = universal.GetStashGlob(runtime, "isa", true);
-            // isa.Code = new P5NativeCode("UNIVERSAL::isa", new P5Code.Sub(WrapIsa));
+            var isa = universal.GetStashGlob(runtime, "isa", true);
+            isa.Code = new P5NativeCode("UNIVERSAL::isa", new P5Code.Sub(WrapIsa));
 
             // // Internals
             // var internals = GetPackage(runtime, "Internals", true);
@@ -350,14 +351,14 @@ namespace org.mbarbon.p.values
 //                                             new P5Code.Sub(WrapCompileAssembly));
         }
 
-        private static IP5Any WrapIsa(Runtime runtime, Opcode.ContextValues context,
-                                      P5ScratchPad pad, P5Array args)
+        private static object WrapIsa(Runtime runtime, Opcode.ContextValues context,
+                                      P5ScratchPad pad, object obj)
         {
-            var value = args.GetItem(runtime, 0) as P5Scalar;
-            var parent = args.GetItem(runtime, 1);
-            bool is_derived = Builtins.IsDerivedFrom(runtime, value, parent);
+            var args = obj as List<object>; // XXX
+            var parent = Builtins.ConvertToString(runtime, args[1]);
+            bool is_derived = Builtins.IsDerivedFrom(runtime, args[0], parent);
 
-            return new P5Scalar(runtime, is_derived);
+            return is_derived;
         }
 
         private static IP5Any WrapAddOverload(Runtime runtime, Opcode.ContextValues context,

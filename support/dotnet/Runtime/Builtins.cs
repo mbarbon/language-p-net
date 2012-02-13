@@ -245,15 +245,15 @@ namespace org.mbarbon.p.runtime
             return new P5Scalar(runtime, 1);
         }
 
-        public static P5Exception Die(Runtime runtime, P5Array args)
+        public static P5Exception Die(Runtime runtime, List<object> args)
         {
-            int argc = args.GetCount(runtime);
+            int argc = args.Count;
 
             if (argc == 1)
             {
-                var s = args.GetItem(runtime, 0) as P5Scalar;
+                var s = args[0] as P5Scalar;
 
-                if (s.IsReference(runtime))
+                if (s != null && s.IsReference(runtime))
                     return new P5Exception(runtime, s);
             }
 
@@ -271,7 +271,7 @@ namespace org.mbarbon.p.runtime
             {
                 var t = new System.Text.StringBuilder();
                 foreach (var e in args)
-                    t.Append(e.AsString(runtime));
+                    t.Append(Builtins.ConvertToString(runtime, e));
                 message = t.ToString();
             }
 
@@ -512,22 +512,6 @@ namespace org.mbarbon.p.runtime
             }
 
             return new P5Scalar(runtime, t.ToString());
-        }
-
-        public static bool IsDerivedFrom(Runtime runtime, P5Scalar value, IP5Any pack)
-        {
-            P5SymbolTable stash = value.BlessedReferenceStash(runtime);
-
-            if (stash == null)
-                stash = runtime.SymbolTable.GetPackage(runtime, value.AsString(runtime), false);
-
-            string pack_name = pack.AsString(runtime);
-            P5SymbolTable parent = runtime.SymbolTable.GetPackage(runtime, pack_name, false);
-
-            if (parent == null || stash == null)
-                return false;
-
-            return stash.IsDerivedFrom(runtime, parent);
         }
 
         public static IP5Any HashEach(Runtime runtime, Opcode.ContextValues cxt, P5Hash hash)

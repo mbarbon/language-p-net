@@ -1422,18 +1422,20 @@ namespace org.mbarbon.p.runtime
 
                 return
                     Expression.Call(
+                        typeof(Builtins).GetMethod("CallMethod"),
+                        Runtime,
                         Generate(sub, op.Childs[0]),
-                        typeof(P5Array).GetMethod("CallMethod"),
-                        Runtime, OpContext(op),
+                        OpContext(op),
                         Expression.Constant(cm.Method));
             }
             case Opcode.OpNumber.OP_CALL_METHOD_INDIRECT:
             {
                 return
                     Expression.Call(
+                        typeof(Builtins).GetMethod("CallMethodIndirect"),
+                        Runtime,
                         Generate(sub, op.Childs[1]),
-                        typeof(P5Array).GetMethod("CallMethodIndirect"),
-                        Runtime, OpContext(op),
+                        OpContext(op),
                         Generate(sub, op.Childs[0]));
             }
             case Opcode.OpNumber.OP_FIND_METHOD:
@@ -1449,7 +1451,8 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_CALL:
             {
                 var lexicals = new List<Lexical>();
-                var code = Generate(sub, op.Childs[1]);
+                var code = Expression.Convert(
+                    Generate(sub, op.Childs[1]), typeof(P5Code));
 
                 foreach (var opc in op.Childs[0].Childs)
                 {
