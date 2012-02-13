@@ -78,9 +78,9 @@ namespace org.mbarbon.p.runtime
             return Caller(true, 0, cxt);
         }
 
-        public IP5Any CallerWithArg(IP5Any level, Opcode.ContextValues cxt)
+        public IP5Any CallerWithArg(object level, Opcode.ContextValues cxt)
         {
-            return Caller(false, level.AsScalar(this).AsInteger(this), cxt);
+            return Caller(false, Builtins.ConvertToInteger(this, level), cxt);
         }
 
         private IP5Any Caller(bool noarg, int level, Opcode.ContextValues cxt)
