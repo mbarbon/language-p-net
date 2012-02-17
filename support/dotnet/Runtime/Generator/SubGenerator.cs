@@ -537,28 +537,184 @@ namespace org.mbarbon.p.runtime
 
         private Expression ScalarAssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue)
         {
+            return ScalarAssignmentExpression(sub, cxt, lvalue,
+                                              Generate(sub, rvalue));
+        }
+
+        private Expression ScalarAssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Expression rvalue)
+        {
             switch (lvalue.Number)
             {
             case Opcode.OpNumber.OP_ARRAY_ELEMENT:
                 return ArrayItemAssign(sub, cxt, Generate(sub, lvalue.Childs[0]),
                                        Generate(sub, lvalue.Childs[1]),
-                                       Generate(sub, rvalue));
+                                       rvalue);
             case Opcode.OpNumber.OP_HASH_ELEMENT:
                 return HashItemAssign(sub, cxt, Generate(sub, lvalue.Childs[0]),
                                       Generate(sub, lvalue.Childs[1]),
-                                      Generate(sub, rvalue));
+                                      rvalue);
             case Opcode.OpNumber.OP_LEXICAL:
             {
                 var lvalue_exp = Generate(sub, lvalue);
 
                 return Expression.Assign(
                     lvalue_exp, ScalarAssign(sub, cxt, lvalue_exp,
-                                             Generate(sub, rvalue)));
+                                             rvalue));
             }
             default:
                 return ScalarAssign(sub, cxt, Generate(sub, lvalue),
-                                    Generate(sub, rvalue));
+                                    rvalue);
             }
+        }
+
+        private bool IsArray(Opcode.Sigil sigil)
+        {
+            return sigil == Opcode.Sigil.ARRAY || sigil == Opcode.Sigil.HASH;
+        }
+
+        private bool IsArray(Opcode op)
+        {
+            switch (op.Number)
+            {
+            case Opcode.OpNumber.OP_LEXICAL:
+            case Opcode.OpNumber.OP_LEXICAL_PAD:
+                return IsArray(((Lexical)op).Slot);
+            case Opcode.OpNumber.OP_GLOBAL:
+                return IsArray(((Global)op).Slot);
+            case Opcode.OpNumber.OP_GLOB_SLOT:
+                return IsArray(((GlobSlot)op).Slot);
+            default:
+                // TODO missing cases
+                return false;
+            }
+        }
+
+        private bool IsScalar(Opcode op)
+        {
+            return !IsArray(op);
+        }
+
+        private Expression ArrayAssignmentExpressionHelper(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue, bool common)
+        {
+            var exps = new List<Expression>();
+            var src = Expression.Variable(typeof(object));
+            var rvalue_exp = Generate(sub, rvalue);
+            var lvalue_exp = Expression.Variable(typeof(List<object>));
+
+            if (common)
+            {
+                exps.Add(
+                    Expression.Assign(
+                        src,
+                        Expression.Call(
+                            typeof(Builtins).GetMethod("CloneObject"),
+                            Runtime,
+                            rvalue_exp,
+                            Expression.Constant(1))));
+            }
+            else
+                exps.Add(
+                    Expression.Assign(
+                        src,
+                        rvalue_exp));
+
+            Opcode[] lvalues = null;
+            bool single_lvalue;
+            bool list_context =
+                cxt == Opcode.ContextValues.CALLER ||
+                cxt == Opcode.ContextValues.LIST;
+
+            if (list_context)
+                exps.Add(
+                    Expression.Assign(
+                        lvalue_exp,
+                        Expression.New(
+                            typeof(List<object>).GetConstructor(new Type[0]))));
+
+            if (lvalue.Number == Opcode.OpNumber.OP_MAKE_LIST)
+            {
+                lvalues = lvalue.Childs;
+                single_lvalue = false;
+            }
+            else
+            {
+                lvalues = new Opcode[] { lvalue };
+                single_lvalue = true;
+            }
+
+            var count = Expression.Variable(typeof(int));
+            var iter = Expression.Variable(typeof(IEnumerator));
+
+            exps.Add(
+                Expression.Call(
+                    typeof(Builtins).GetMethod("PrepareArrayAssignment"),
+                    Runtime,
+                    src, iter, count));
+
+            var next = Expression.Condition(
+                Expression.Call(
+                    iter,
+                    typeof(IEnumerator).GetMethod("MoveNext")),
+                Expression.Property(iter, "Current"),
+                Expression.Constant(null, typeof(object)));
+            var method = typeof(Builtins).GetMethod("PushFlattenListObject");
+
+            foreach (var e in lvalues)
+            {
+                if (IsScalar(e))
+                {
+                    var item_assign =
+                        ScalarAssignmentExpression(sub, cxt, e, next);
+
+                    if (list_context)
+                        exps.Add(
+                            Expression.Call(
+                                method, Runtime, lvalue_exp, item_assign));
+                    else
+                        exps.Add(item_assign);
+                }
+                else
+                {
+                    // TODO assign to undefined array/hash
+                    var item_assign = Expression.Call(
+                        typeof(Builtins).GetMethod("AssignObjectIterator"),
+                        Runtime,
+                        Generate(sub, e),
+                        iter);
+
+                    if (single_lvalue && list_context)
+                        // TODO optimize and avoid copy
+                        exps.Add(
+                            Expression.Call(
+                                method, Runtime, lvalue_exp, item_assign));
+                    else if (list_context)
+                        exps.Add(
+                            Expression.Call(
+                                method, Runtime, lvalue_exp, item_assign));
+                    else
+                        exps.Add(item_assign);
+                }
+            }
+
+            if (cxt == Opcode.ContextValues.CALLER)
+                exps.Add(
+                    Expression.Condition(
+                        Expression.Equal(
+                            Context,
+                            Expression.Constant(Opcode.ContextValues.SCALAR)),
+                        Expression.Convert(count, typeof(object)),
+                        lvalue_exp,
+                        typeof(object)));
+            else if (cxt == Opcode.ContextValues.SCALAR)
+                exps.Add(Expression.Convert(count, typeof(object)));
+            else
+                exps.Add(lvalue_exp);
+
+            var parms = new ParameterExpression[] {
+                iter, count, src, lvalue_exp };
+
+            return Expression.Block(
+                typeof(object), parms, exps);
         }
 
         private Expression ArrayAssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue, bool common)
@@ -570,12 +726,12 @@ namespace org.mbarbon.p.runtime
                 var lvalue_exp = Generate(sub, lvalue);
 
                 return Expression.Assign(
-                    lvalue_exp, ArrayAssign(sub, cxt, lvalue_exp,
-                                            Generate(sub, rvalue), common));
+                    lvalue_exp, ArrayAssignmentExpressionHelper(
+                        sub, cxt, lvalue, rvalue, common));
             }
             default:
-                return ArrayAssign(sub, cxt, Generate(sub, lvalue),
-                                   Generate(sub, rvalue), common);
+                return ArrayAssignmentExpressionHelper(
+                    sub, cxt, lvalue, rvalue, common);
             }
         }
 
