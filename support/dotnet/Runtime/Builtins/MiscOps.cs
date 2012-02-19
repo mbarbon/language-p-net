@@ -34,6 +34,42 @@ namespace org.mbarbon.p.runtime
             return str.ToString();
         }
 
+        // Reverse
+
+        public static object Reverse(Runtime runtime, Opcode.ContextValues context,
+                                     List<object> args)
+        {
+            if (context == Opcode.ContextValues.LIST)
+            {
+                var list = new List<object>(args);
+
+                list.Reverse();
+
+                return list;
+            }
+
+            char[] value;
+
+            if (args.Count == 0)
+                value = runtime.SymbolTable.GetStashScalar(runtime, "_", true).AsString(runtime).ToCharArray();
+            else if (args.Count == 1)
+                value = ConvertToString(runtime, args[0]).ToCharArray();
+            else
+            {
+                var t = new System.Text.StringBuilder();
+
+                foreach (var i in args)
+                    t.Append(ConvertToString(runtime, i));
+
+                value = t.ToString().ToCharArray();
+            }
+
+            // TODO does not handle UCS-4
+            System.Array.Reverse(value);
+
+            return new string(value);
+        }
+
         // Array assignment helpers
 
         public static object CloneObject(Runtime runtime, object value, int level)
@@ -89,19 +125,35 @@ namespace org.mbarbon.p.runtime
             }
         }
 
+        public static object AssignHashIterator(Runtime runtime, object value, IEnumerator iter)
+        {
+            if (value == null)
+                // TODO lightweight objects
+                value = new P5Hash(runtime);
+
+            return AssignObjectIterator(runtime, value, iter);
+        }
+
+        public static object AssignArrayIterator(Runtime runtime, object value, IEnumerator iter)
+        {
+            if (value == null)
+                value = new List<object>();
+
+            return AssignObjectIterator(runtime, value, iter);
+        }
+
         public static object AssignObjectIterator(Runtime runtime, object value, IEnumerator iter)
         {
             var iany = value as IP5Any;
             var list = value as List<object>;
 
-            if (value == null)
-                // TODO assign to undefined hash
-                value = list = new List<object>();
-
             if (iany != null)
                 iany.AssignIterator(runtime, iter);
             else if (list != null)
                 AssignEnumerator(runtime, list, iter);
+            else
+                throw new System.Exception(
+                    "Unhandled type in array assignment: " + value.GetType());
 
             return value;
         }

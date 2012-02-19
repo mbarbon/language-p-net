@@ -58,7 +58,23 @@ namespace org.mbarbon.p.runtime
             if (value is bool)
                 return (bool)value ? 1 : 0;
 
-            throw new System.Exception("Unhandled type in string coercion");
+            throw new System.Exception("Unhandled type in integer coercion");
+        }
+
+        public static double ConvertToFloat(Runtime runtime, object value)
+        {
+            var iany = value as IP5Any;
+
+            if (iany != null)
+                return iany.AsScalar(runtime).AsFloat(runtime);
+            if (value is int)
+                return (double) (int) value;
+            if (value is double)
+                return (double) value;
+            if (value is bool)
+                return (bool) value ? 1.0 : 0.0;
+
+            throw new System.Exception("Unhandled type in float coercion");
         }
 
         public static object ConvertToScalarValue(Runtime runtime, object value)

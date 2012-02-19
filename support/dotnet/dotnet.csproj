@@ -92,7 +92,6 @@
     <Compile Include="Runtime\Binders\BinderUtils.cs" />
     <Compile Include="Runtime\Binders\BinaryOperationBinder.cs" />
     <Compile Include="Runtime\Binders\StringOperationBinder.cs" />
-    <Compile Include="Runtime\Binders\ArrayAssignmentBinder.cs" />
     <Compile Include="Runtime\Binders\UnaryOperationBinder.cs" />
     <Compile Include="Runtime\Binders\UnaryIncrementBinder.cs" />
     <Compile Include="Runtime\Binders\NumericCompareBinder.cs" />

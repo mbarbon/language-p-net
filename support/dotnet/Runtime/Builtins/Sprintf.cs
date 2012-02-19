@@ -28,9 +28,9 @@ namespace org.mbarbon.p.runtime
                 return string.Format("{{0,{0}:{1}}}", width, specifier);
         }
 
-        public static P5Scalar Sprintf(Runtime runtime, P5Array args)
+        public static P5Scalar Sprintf(Runtime runtime, List<object> args)
         {
-            string format = args.GetItem(runtime, 0).AsString(runtime);
+            string format = ConvertToString(runtime, args[0]);
             var result = new System.Text.StringBuilder();
             int index = 1, last_pos = 0;
 
@@ -70,7 +70,7 @@ namespace org.mbarbon.p.runtime
                 {
                 case 'd':
                 {
-                    var value = args.GetItem(runtime, index++).AsInteger(runtime);
+                    var value = ConvertToInteger(runtime, args[index++]);
 
                     if (!has_width && !zero_pad)
                         result.Append(value);
@@ -80,7 +80,7 @@ namespace org.mbarbon.p.runtime
                 }
                 case 'x':
                 {
-                    var value = args.GetItem(runtime, index++).AsInteger(runtime);
+                    var value = ConvertToInteger(runtime, args[index++]);
 
                     if (!has_width && !zero_pad)
                         result.AppendFormat("{0:x}", value);
@@ -90,7 +90,7 @@ namespace org.mbarbon.p.runtime
                 }
                 case 's':
                 {
-                    var value = args.GetItem(runtime, index++).AsString(runtime);
+                    var value = ConvertToString(runtime, args[index++]);
 
                     if (!has_width && !zero_pad)
                         result.Append(value);
@@ -100,7 +100,7 @@ namespace org.mbarbon.p.runtime
                 }
                 case 'f':
                 {
-                    var value = args.GetItem(runtime, index++).AsFloat(runtime);
+                    var value = ConvertToFloat(runtime, args[index++]);
 
                     if (!has_width && !zero_pad && !has_precision)
                         result.Append(value);

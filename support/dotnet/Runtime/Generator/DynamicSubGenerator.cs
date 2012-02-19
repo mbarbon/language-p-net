@@ -148,13 +148,6 @@ namespace org.mbarbon.p.runtime
                 new P5ScalarAssignmentBinder(runtime));
         }
 
-        protected override Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue, bool common)
-        {
-            return BinaryOperator<object>(
-                sub, lvalue, rvalue,
-                new P5ArrayAssignmentBinder(runtime, cxt, common));
-        }
-
         protected override Expression ArrayItem(Subroutine sub, Opcode.ContextValues cxt, Expression value, Expression index, bool create)
         {
             return BinaryOperator<object>(

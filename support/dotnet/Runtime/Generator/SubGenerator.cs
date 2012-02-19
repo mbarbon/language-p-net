@@ -567,34 +567,63 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        private bool IsArray(Opcode.Sigil sigil)
+        // TODO move to opcode
+
+        private static bool IsArray(Opcode.Sigil sigil)
+        {
+            return sigil == Opcode.Sigil.ARRAY;
+        }
+
+        private static bool IsHash(Opcode.Sigil sigil)
+        {
+            return sigil == Opcode.Sigil.HASH;
+        }
+
+        private static bool IsList(Opcode.Sigil sigil)
         {
             return sigil == Opcode.Sigil.ARRAY || sigil == Opcode.Sigil.HASH;
         }
 
-        private bool IsArray(Opcode op)
+        private static bool IsList(Opcode op)
         {
             switch (op.Number)
             {
             case Opcode.OpNumber.OP_LEXICAL:
             case Opcode.OpNumber.OP_LEXICAL_PAD:
-                return IsArray(((Lexical)op).Slot);
+                return IsList(((Lexical)op).Slot);
             case Opcode.OpNumber.OP_GLOBAL:
-                return IsArray(((Global)op).Slot);
+                return IsList(((Global)op).Slot);
             case Opcode.OpNumber.OP_GLOB_SLOT:
-                return IsArray(((GlobSlot)op).Slot);
+                return IsList(((GlobSlot)op).Slot);
             default:
                 // TODO missing cases
                 return false;
             }
         }
 
-        private bool IsScalar(Opcode op)
+        private static bool IsHash(Opcode op)
         {
-            return !IsArray(op);
+            switch (op.Number)
+            {
+            case Opcode.OpNumber.OP_LEXICAL:
+            case Opcode.OpNumber.OP_LEXICAL_PAD:
+                return IsHash(((Lexical)op).Slot);
+            case Opcode.OpNumber.OP_GLOBAL:
+                return IsHash(((Global)op).Slot);
+            case Opcode.OpNumber.OP_GLOB_SLOT:
+                return IsHash(((GlobSlot)op).Slot);
+            default:
+                // TODO missing cases
+                return false;
+            }
         }
 
-        private Expression ArrayAssignmentExpressionHelper(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue, bool common)
+        private static bool IsScalar(Opcode op)
+        {
+            return !IsList(op);
+        }
+
+        private Expression ArrayAssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue, bool common)
         {
             var exps = new List<Expression>();
             var src = Expression.Variable(typeof(object));
@@ -675,24 +704,33 @@ namespace org.mbarbon.p.runtime
                 }
                 else
                 {
-                    // TODO assign to undefined array/hash
+                    var assign_method = IsHash(e) ? "AssignHashIterator" : "AssignArrayIterator";
+                    var item_exp = Generate(sub, e);
                     var item_assign = Expression.Call(
-                        typeof(Builtins).GetMethod("AssignObjectIterator"),
-                        Runtime,
-                        Generate(sub, e),
-                        iter);
+                        typeof(Builtins).GetMethod(assign_method),
+                        Runtime, item_exp, iter);
+                    Expression exp = item_assign;
+
+                    switch (e.Number)
+                    {
+                    case Opcode.OpNumber.OP_LEXICAL:
+                        // handles assignment to undefined lexical
+                        exp = Expression.Assign(item_exp, exp);
+                        break;
+                    default:
+                        // nothing to do
+                        break;
+                    }
 
                     if (single_lvalue && list_context)
                         // TODO optimize and avoid copy
-                        exps.Add(
-                            Expression.Call(
-                                method, Runtime, lvalue_exp, item_assign));
+                        exp = Expression.Call(
+                            method, Runtime, lvalue_exp, exp);
                     else if (list_context)
-                        exps.Add(
-                            Expression.Call(
-                                method, Runtime, lvalue_exp, item_assign));
-                    else
-                        exps.Add(item_assign);
+                        exp = Expression.Call(
+                            method, Runtime, lvalue_exp, exp);
+
+                    exps.Add(exp);
                 }
             }
 
@@ -717,24 +755,6 @@ namespace org.mbarbon.p.runtime
                 typeof(object), parms, exps);
         }
 
-        private Expression ArrayAssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue, bool common)
-        {
-            switch (lvalue.Number)
-            {
-            case Opcode.OpNumber.OP_LEXICAL:
-            {
-                var lvalue_exp = Generate(sub, lvalue);
-
-                return Expression.Assign(
-                    lvalue_exp, ArrayAssignmentExpressionHelper(
-                        sub, cxt, lvalue, rvalue, common));
-            }
-            default:
-                return ArrayAssignmentExpressionHelper(
-                    sub, cxt, lvalue, rvalue, common);
-            }
-        }
-
         protected abstract Expression ConstantInteger(int value);
         protected abstract Expression ConstantFloat(double value);
         protected abstract Expression ConstantSub(Subroutine sub);
@@ -753,7 +773,6 @@ namespace org.mbarbon.p.runtime
         protected abstract Expression ArrayItemAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression index, Expression rvalue);
         protected abstract Expression HashItem(Subroutine sub, Opcode.ContextValues cxt, Expression value, Expression index, bool create);
         protected abstract Expression HashItemAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression index, Expression rvalue);
-        protected abstract Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue, bool common);
         protected abstract Expression Iterator(Subroutine sub, Expression value);
         protected abstract Expression Defined(Subroutine sub, Opcode op);
         protected abstract void DefinePackage(string pack);
@@ -1351,7 +1370,7 @@ namespace org.mbarbon.p.runtime
                     for (int i = 3; i < op.Childs.Length; ++i)
                         list.Add(Generate(sub, op.Childs[i]));
 
-                    args.Add(Expression.NewArrayInit(typeof(IP5Any), list));
+                    args.Add(Expression.NewArrayInit(typeof(object), list));
                 }
 
                 if (op.Childs.Length <= 3)

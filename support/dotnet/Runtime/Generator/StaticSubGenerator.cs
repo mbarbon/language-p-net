@@ -170,17 +170,6 @@ namespace org.mbarbon.p.runtime
                     ModuleGenerator.InitRuntime));
         }
 
-        protected override Expression ArrayAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue, bool common)
-        {
-            return BinaryOperator<object>(
-                sub, lvalue, rvalue,
-                Expression.New(
-                    typeof(P5ArrayAssignmentBinder).GetConstructor(ProtoRuntimeContextValuesBool),
-                    ModuleGenerator.InitRuntime,
-                    Expression.Constant(cxt),
-                    Expression.Constant(common)));
-        }
-
         protected override Expression ArrayItem(Subroutine sub, Opcode.ContextValues cxt, Expression value, Expression index, bool create)
         {
             return null;

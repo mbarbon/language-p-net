@@ -534,35 +534,6 @@ namespace org.mbarbon.p.runtime
             }
         }
 
-        public static IP5Any Reverse(Runtime runtime, Opcode.ContextValues context,
-                                     P5Array args)
-        {
-            if (context == Opcode.ContextValues.LIST)
-                return args.Reversed(runtime);
-
-            int count = args.GetCount(runtime);
-            char[] value;
-
-            if (count == 0)
-                value = runtime.SymbolTable.GetStashScalar(runtime, "_", true).AsString(runtime).ToCharArray();
-            else if (count == 1)
-                value = args.GetItem(runtime, 0).AsString(runtime).ToCharArray();
-            else
-            {
-                var t = new System.Text.StringBuilder();
-
-                foreach (var i in args)
-                    t.Append(i.AsString(runtime));
-
-                value = t.ToString().ToCharArray();
-            }
-
-            // TODO does not handle UCS-4
-            System.Array.Reverse(value);
-
-            return new P5Scalar(runtime, new string(value));
-        }
-
         public static IP5Any ArraySplice(Runtime runtime, IP5Array array,
                                          IP5Any offset, IP5Any count)
         {
