@@ -1351,37 +1351,36 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_SPLICE:
             {
-                var args = new List<Expression>();
+                var args = new Expression[
+                    op.Childs.Length > 3 ? 4 :
+                    op.Childs.Length < 3 ? 2 : 3];
 
-                args.Add(Runtime);
-                args.Add(Generate(sub, op.Childs[0]));
+                args[0] = Generate(sub, op.Childs[0]);
 
                 if (op.Childs.Length > 1)
-                    args.Add(Generate(sub, op.Childs[1]));
+                    args[1] = Generate(sub, op.Childs[1]);
                 else
-                    args.Add(Expression.Constant(null, typeof(IP5Any)));
+                    args[1] = Expression.Constant(0);
 
                 if (op.Childs.Length > 2)
-                    args.Add(Generate(sub, op.Childs[2]));
-                else
-                    args.Add(Expression.Constant(null, typeof(IP5Any)));
+                    args[2] = Generate(sub, op.Childs[2]);
 
                 if (op.Childs.Length > 3)
                 {
-                    var list = new List<Expression>();
+                    var list = new Expression[op.Childs.Length - 3];
 
                     for (int i = 3; i < op.Childs.Length; ++i)
-                        list.Add(Generate(sub, op.Childs[i]));
+                        list[i - 3] = Generate(sub, op.Childs[i]);
 
-                    args.Add(Expression.NewArrayInit(typeof(object), list));
+                    args[3] = Expression.NewArrayInit(typeof(object), list);
                 }
 
-                if (op.Childs.Length <= 3)
-                    return Expression.Call(
-                        typeof(Builtins).GetMethod("ArraySplice"), args);
+                if (op.Childs.Length == 3)
+                    return Builtin(sub, null, "SpliceCount", 0, args);
+                else if (op.Childs.Length < 3)
+                    return Builtin(sub, null, "SpliceAll", 0, args);
                 else
-                    return Expression.Call(
-                        typeof(Builtins).GetMethod("ArrayReplace"), args);
+                    return Builtin(sub, null, "Replace", 0, args);
             }
             case Opcode.OpNumber.OP_ARRAY_SLICE:
             {

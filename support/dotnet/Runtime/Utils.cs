@@ -6,6 +6,14 @@ using System.Dynamic;
 using Microsoft.Scripting.Ast;
 using System.Runtime.CompilerServices;
 
+// TODO only for .Net 3.5
+public delegate TResult Func<in T1, in T2, in T3, in T4, in T5, out TResult>(
+	T1 arg1,
+	T2 arg2,
+	T3 arg3,
+	T4 arg4,
+	T5 arg5);
+
 namespace org.mbarbon.p.runtime
 {
     class Utils
@@ -179,6 +187,11 @@ namespace org.mbarbon.p.runtime
                 delegateType = typeof(Func<CallSite, object, object, object, object>);
                 siteType = typeof(CallSite<Func<CallSite, object, object, object, object>>);
                 callSite = CallSite<Func<CallSite, object, object, object, object>>.Create(binder);
+                break;
+            case 4:
+                delegateType = typeof(Func<CallSite, object, object, object, object, object>);
+                siteType = typeof(CallSite<Func<CallSite, object, object, object, object, object>>);
+                callSite = CallSite<Func<CallSite, object, object, object, object, object>>.Create(binder);
                 break;
             default:
                 throw new System.Exception("Unhandled argument count " + expressions.Length);

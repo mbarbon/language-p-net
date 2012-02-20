@@ -20,10 +20,11 @@ namespace org.mbarbon.p.values
         P5Scalar UnshiftList(Runtime runtime, IEnumerable items);
         IP5Any PopElement(Runtime runtime);
         IP5Any ShiftElement(Runtime runtime);
-
+/*
         P5List Splice(Runtime runtime, int start, int length);
-        P5List Replace(Runtime runtime, int start, int length, IP5Any[] values);
-
+        P5List Replace(Runtime runtime, int start, int length,
+                       object[] values);
+*/
         IP5Any LocalizeElement(Runtime runtime, int index);
         void RestoreElement(Runtime runtime, int index, IP5Any value);
     }
@@ -458,35 +459,62 @@ namespace org.mbarbon.p.values
             return new P5List(runtime, list);
         }
 
-        public P5List Splice(Runtime runtime, int start, int length)
+        public P5List SpliceAll(Runtime runtime, int offset)
         {
-            var res = array.GetRange(start, length);
+            int count = Builtins.GetRangeOffsets(GetCount(runtime), ref offset);
 
-            array.RemoveRange(start, length);
+            return SpliceCount(runtime, offset, count);
+        }
+
+        public P5List SpliceCount(Runtime runtime, int offset, int count)
+        {
+            Builtins.GetRangeOffsets(GetCount(runtime), ref offset, ref count);
+
+            // TODO void/scalar context
+            var res = array.GetRange(offset, count);
+
+            array.RemoveRange(offset, count);
 
             return new P5List(runtime, res);
         }
 
-        public P5List Replace(Runtime runtime, int start, int length, IP5Any[] values)
+        public P5List Replace(Runtime runtime, int start, int length,
+                              object[] values)
         {
+            Builtins.GetRangeOffsets(GetCount(runtime), ref start, ref length);
+
             var spliced = new List<IP5Any>();
 
+            // TODO merge in builtins after changing array into List<object>
             foreach (var i in values)
             {
-                var a = i as P5Array;
-                var h = i as P5Hash;
+                var p5enumerable = i as IP5Enumerable;
+                var enumerable = i as IEnumerable;
+                var iany = i as IP5Any;
                 IEnumerator enumerator = null;
 
-                if (h != null)
-                    enumerator = ((P5Hash)h.Clone(runtime, 1)).GetEnumerator(runtime);
-                else if (a != null)
-                    enumerator = ((P5Array)a.Clone(runtime, 1)).GetEnumerator(runtime);
+                if (p5enumerable != null)
+                    enumerator = p5enumerable.GetEnumerator(runtime);
+                else if (enumerable != null)
+                    enumerator = enumerable.GetEnumerator();
 
                 if (enumerator != null)
+                {
                     while (enumerator.MoveNext())
-                        spliced.Add(Builtins.UpgradeScalar(runtime, enumerator.Current));
+                    {
+                        var iany2 = enumerator.Current as IP5Any;
+
+                        if (iany2 != null)
+                            spliced.Add(iany2.Clone(runtime, 0));
+                        else
+                            spliced.Add(Builtins.UpgradeScalar(
+                                            runtime, enumerator.Current));
+                    }
+                }
+                else if (iany != null)
+                    spliced.Add(iany.Clone(runtime, 0));
                 else
-                    spliced.Add(i.Clone(runtime, 0));
+                    spliced.Add(Builtins.UpgradeScalar(runtime, i));
             }
 
             var res = array.GetRange(start, length);

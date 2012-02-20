@@ -91,6 +91,28 @@ namespace org.mbarbon.p.runtime
                 return -2;
         }
 
+        public static void GetRangeOffsets(int count, ref int offset,
+                                           ref int length)
+        {
+            if (offset < 0)
+                offset = count + offset;
+
+            if (length < 0)
+                length = count + length - offset;
+        }
+
+        public static int GetRangeOffsets(int count, ref int offset)
+        {
+            if (offset < 0)
+                offset = count + offset;
+
+            int length = count - offset;
+            if (length < 0)
+                length = count + length - offset;
+
+            return length;
+        }
+
         public static object GetListItemOrUndefInt(List<object> array, int index, bool create)
         {
             int idx = GetItemIndex(array.Count, index, create);
@@ -278,6 +300,76 @@ namespace org.mbarbon.p.runtime
                       });
 
             return list;
+        }
+
+        public static object SpliceAll(Runtime runtime, List<object> array,
+                                       int offset)
+        {
+            int count = GetRangeOffsets(array.Count, ref offset);
+
+            return SpliceCount(runtime, array, offset, count);
+        }
+
+        public static object SpliceCount(Runtime runtime, List<object> array,
+                                         int offset, int count)
+        {
+            GetRangeOffsets(array.Count, ref offset, ref count);
+
+            // TODO void/scalar context
+            var res = array.GetRange(offset, count);
+
+            array.RemoveRange(offset, count);
+
+            return res;
+        }
+
+        public static object Replace(Runtime runtime, List<object> array,
+                                     int offset, int count,
+                                     object[] values)
+        {
+            GetRangeOffsets(array.Count, ref offset, ref count);
+
+            var spliced = new List<object>();
+
+            // TODO merge with P5Array/NetArray
+            foreach (var i in values)
+            {
+                var p5enumerable = i as IP5Enumerable;
+                var enumerable = i as IEnumerable;
+                var iany = i as IP5Any;
+                IEnumerator enumerator = null;
+
+                if (p5enumerable != null)
+                    enumerator = p5enumerable.GetEnumerator(runtime);
+                else if (enumerable != null)
+                    enumerator = enumerable.GetEnumerator();
+
+                if (enumerator != null)
+                {
+                    while (enumerator.MoveNext())
+                    {
+                        var iany2 = enumerator.Current as IP5Any;
+
+                        if (iany2 != null)
+                            spliced.Add(iany2.Clone(runtime, 0));
+                        else
+                            spliced.Add(enumerator.Current);
+                    }
+                }
+                else if (iany != null)
+                    spliced.Add(iany.Clone(runtime, 0));
+                else
+                    spliced.Add(i);
+            }
+
+            // TODO void/scalar context
+            var res = array.GetRange(offset, count);
+
+            // TODO optimize
+            array.RemoveRange(offset, count);
+            array.InsertRange(offset, spliced);
+
+            return res;
         }
     }
 }

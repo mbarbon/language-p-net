@@ -21,11 +21,12 @@ namespace org.mbarbon.p.runtime
         protected override Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, params Expression[] extra)
         {
             var binder = new P5BuiltinBinder(runtime, prefix, count);
-            var exps = new Expression[op.Childs.Length + 1 + extra.Length];
+            var exps = new Expression[(op != null ? op.Childs.Length : 0) + 1 + extra.Length];
             int index = 1;
 
-            foreach (var child in op.Childs)
-                exps[index++] = Generate(sub, child);
+            if (op != null)
+                foreach (var child in op.Childs)
+                    exps[index++] = Generate(sub, child);
             foreach (var exp in extra)
                 exps[index++] = Expression.Convert(exp, typeof(object));
 
