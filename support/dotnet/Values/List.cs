@@ -98,7 +98,7 @@ namespace org.mbarbon.p.values
             return new List<object>();
         }
     }
-
+/*
     public class P5LvalueList : P5List, IP5Enumerable
     {
         public P5LvalueList(Runtime runtime, params IP5Any[] data) :
@@ -165,4 +165,5 @@ namespace org.mbarbon.p.values
 
         bool flattened;
     }
+*/
 }

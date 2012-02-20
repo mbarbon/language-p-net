@@ -509,6 +509,8 @@ namespace org.mbarbon.p.runtime
 
         private Expression MakeNonFlatArray(Subroutine sub, Opcode op)
         {
+            throw new System.Exception("Should not be used");
+/*
             var data = new List<Expression>();
             var temp = Expression.Variable(typeof(List<IP5Any>));
             var method = typeof(List<IP5Any>).GetMethod("Add");
@@ -533,6 +535,7 @@ namespace org.mbarbon.p.runtime
 
             return Expression.Block(
                 new ParameterExpression[] { temp }, data);
+*/
         }
 
         private Expression ScalarAssignmentExpression(Subroutine sub, Opcode.ContextValues cxt, Opcode lvalue, Opcode rvalue)
