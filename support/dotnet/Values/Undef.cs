@@ -43,17 +43,17 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceScalar(runtime, this, true);
+            return Builtins.DereferenceScalar(runtime, AsString(runtime));
         }
 
         public virtual IP5Array DereferenceArray(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceArray(runtime, this, true);
+            return Builtins.DereferenceArray(runtime, AsString(runtime));
         }
 
         public virtual P5Hash DereferenceHash(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceHash(runtime, this, true);
+            return Builtins.DereferenceHash(runtime, AsString(runtime));
         }
 
         public virtual P5Typeglob DereferenceGlob(Runtime runtime)

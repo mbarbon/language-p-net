@@ -168,32 +168,32 @@ namespace org.mbarbon.p.values
 
         public virtual P5Scalar DereferenceScalar(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceScalar(runtime, this, true);
+            return Builtins.DereferenceScalar(runtime, AsString(runtime));
         }
 
         public virtual IP5Array DereferenceArray(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceArray(runtime, this, true);
+            return Builtins.DereferenceArray(runtime, AsString(runtime));
         }
 
         public virtual P5Hash DereferenceHash(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceHash(runtime, this, true);
+            return Builtins.DereferenceHash(runtime, AsString(runtime));
         }
 
         public virtual P5Typeglob DereferenceGlob(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceGlob(runtime, this, true);
+            return Builtins.DereferenceGlob(runtime, AsString(runtime));
         }
 
         public virtual P5Code DereferenceSubroutine(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceCode(runtime, this, true);
+            return Builtins.DereferenceCode(runtime, AsString(runtime));
         }
 
         public virtual P5Handle DereferenceHandle(Runtime runtime)
         {
-            return Builtins.SymbolicReferenceHandle(runtime, this, true);
+            return Builtins.DereferenceHandle(runtime, AsString(runtime));
         }
 
         public virtual int GetPos(Runtime runtime)

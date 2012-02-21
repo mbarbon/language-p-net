@@ -12,6 +12,14 @@ namespace org.mbarbon.p.runtime
 {
     internal abstract class SubGenerator
     {
+        private static Opcode NullOpcode;
+
+        static SubGenerator()
+        {
+            NullOpcode = new Opcode();
+            NullOpcode.Childs = new Opcode[0];
+        }
+
         private static Type[] ProtoRuntime =
             new Type[] { typeof(Runtime) };
         private static Type[] ProtoRuntimeString =
@@ -999,11 +1007,9 @@ namespace org.mbarbon.p.runtime
                 // TODO handle goto $LABEL
                 var exit_scope = new List<Expression>();
                 var value = Expression.Parameter(typeof(P5Code));
-                var code =
-                    Expression.Call(
-                        Generate(sub, op.Childs[0]),
-                        typeof(IP5Any).GetMethod("DereferenceSubroutine"),
-                        Runtime);
+                var code = Expression.Convert(
+                    Builtin(sub, op, "DereferenceSubroutine", 0),
+                    typeof(P5Code));
 
                 exit_scope.Add(
                     Expression.Assign(value, code));
@@ -1376,11 +1382,11 @@ namespace org.mbarbon.p.runtime
                 }
 
                 if (op.Childs.Length == 3)
-                    return Builtin(sub, null, "SpliceCount", 0, args);
+                    return Builtin(sub, NullOpcode, "SpliceCount", 0, args);
                 else if (op.Childs.Length < 3)
-                    return Builtin(sub, null, "SpliceAll", 0, args);
+                    return Builtin(sub, NullOpcode, "SpliceAll", 0, args);
                 else
-                    return Builtin(sub, null, "Replace", 0, args);
+                    return Builtin(sub, NullOpcode, "Replace", 0, args);
             }
             case Opcode.OpNumber.OP_ARRAY_SLICE:
             {
@@ -1718,40 +1724,15 @@ namespace org.mbarbon.p.runtime
                     typeof(IP5Any).GetMethod("VivifyHash"),
                     Runtime);
             case Opcode.OpNumber.OP_DEREFERENCE_SCALAR:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Any).GetMethod("DereferenceScalar"),
-                    Runtime);
-            }
+                return Builtin(sub, op, "DereferenceScalar", 0);
             case Opcode.OpNumber.OP_DEREFERENCE_ARRAY:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Any).GetMethod("DereferenceArray"),
-                    Runtime);
-            }
+                return Builtin(sub, op, "DereferenceArray", 0);
             case Opcode.OpNumber.OP_DEREFERENCE_HASH:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Any).GetMethod("DereferenceHash"),
-                    Runtime);
-            }
+                return Builtin(sub, op, "DereferenceHash", 0);
             case Opcode.OpNumber.OP_DEREFERENCE_GLOB:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Any).GetMethod("DereferenceGlob"),
-                    Runtime);
-            }
+                return Builtin(sub, op, "DereferenceGlob", 0);
             case Opcode.OpNumber.OP_DEREFERENCE_SUB:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Any).GetMethod("DereferenceSubroutine"),
-                    Runtime);
-            }
+                return Builtin(sub, op, "DereferenceSubroutine", 0);
             case Opcode.OpNumber.OP_MAKE_CLOSURE:
             {
                 return Expression.Call(
