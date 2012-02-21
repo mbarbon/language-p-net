@@ -44,5 +44,14 @@ namespace org.mbarbon.p.runtime
 
             return stash.IsDerivedFrom(runtime, parent);
         }
+
+        public static P5Scalar Bless(Runtime runtime, P5Scalar reference, string pack)
+        {
+            var stash = runtime.SymbolTable.GetPackage(runtime, pack, true);
+
+            reference.BlessReference(runtime, stash);
+
+            return reference;
+        }
     }
 }

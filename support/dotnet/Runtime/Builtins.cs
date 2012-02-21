@@ -64,16 +64,6 @@ namespace org.mbarbon.p.runtime
             return P5List.EmptyList;
         }
 
-        public static P5Scalar Bless(Runtime runtime, P5Scalar reference, IP5Any pack)
-        {
-            var pack_str = pack.AsString(runtime);
-            var stash = runtime.SymbolTable.GetPackage(runtime, pack_str, true);
-
-            reference.BlessReference(runtime, stash);
-
-            return reference;
-        }
-
         public static P5Scalar WantArray(Runtime runtime, Opcode.ContextValues cxt)
         {
             if (cxt == Opcode.ContextValues.VOID)

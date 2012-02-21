@@ -1592,12 +1592,15 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_BLESS:
             {
-                return
+                return Expression.Call(
+                    typeof(Builtins).GetMethod("Bless"),
+                    Runtime,
+                    Expression.Convert(
+                        Generate(sub, op.Childs[0]), typeof(P5Scalar)),
                     Expression.Call(
-                        typeof(Builtins).GetMethod("Bless"),
+                        typeof(Builtins).GetMethod("ConvertToString"),
                         Runtime,
-                        Expression.Convert(Generate(sub, op.Childs[0]), typeof(P5Scalar)),
-                        Generate(sub, op.Childs[1]));
+                        Generate(sub, op.Childs[1])));
             }
             case Opcode.OpNumber.OP_CALL_METHOD:
             {
