@@ -397,21 +397,6 @@ namespace org.mbarbon.p.runtime
             return count;
         }
 
-        public static P5Scalar QuoteMeta(Runtime runtime, IP5Any value)
-        {
-            var t = new System.Text.StringBuilder();
-
-            foreach (char c in value.AsString(runtime))
-            {
-                if (!char.IsLetterOrDigit(c) && c != '_')
-                    t.Append('\\');
-
-                t.Append(c);
-            }
-
-            return new P5Scalar(runtime, t.ToString());
-        }
-
         public static IP5Any HashEach(Runtime runtime, Opcode.ContextValues cxt, P5Hash hash)
         {
             P5Scalar key, value;
