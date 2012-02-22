@@ -7,6 +7,7 @@ using MethodInfo = System.Reflection.MethodInfo;
 using System.Collections.Generic;
 using IEnumerable = System.Collections.IEnumerable;
 using IEnumerator = System.Collections.IEnumerator;
+using IList = System.Collections.IList;
 
 namespace org.mbarbon.p.runtime
 {
@@ -31,6 +32,8 @@ namespace org.mbarbon.p.runtime
 
             if (typeof(IP5Any).IsAssignableFrom(type))
                 yield return "IP5Any";
+            if (typeof(IList).IsAssignableFrom(type))
+                yield return "IList";
             if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))
                 yield return "Enumerator";
 

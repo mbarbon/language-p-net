@@ -496,7 +496,7 @@ namespace org.mbarbon.p.runtime
         {
             var data = new List<Expression>();
             var temp = Expression.Variable(typeof(List<object>));
-            var method = typeof(Builtins).GetMethod("PushFlattenListObject");
+            var method = typeof(Builtins).GetMethod("PushFlattenIListObject");
 
             data.Add(
                 Expression.Assign(
@@ -697,7 +697,7 @@ namespace org.mbarbon.p.runtime
                     typeof(IEnumerator).GetMethod("MoveNext")),
                 Expression.Property(iter, "Current"),
                 Expression.Constant(null, typeof(object)));
-            var method = typeof(Builtins).GetMethod("PushFlattenListObject");
+            var method = typeof(Builtins).GetMethod("PushFlattenIListObject");
 
             foreach (var e in lvalues)
             {
@@ -1294,7 +1294,7 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_PUSH_ELEMENT:
                 return Expression.Call(
-                    typeof(Builtins).GetMethod("PushListListObject"),
+                    typeof(Builtins).GetMethod("PushListIListObject"),
                     Runtime,
                     Expression.Convert(
                         Generate(sub, op.Childs[0]),
@@ -1303,27 +1303,11 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_ARRAY_PUSH:
                 return Builtin(sub, op, "PushList", 2);
             case Opcode.OpNumber.OP_ARRAY_UNSHIFT:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Array).GetMethod("UnshiftList"),
-                    Runtime,
-                    Generate(sub, op.Childs[1]));
-            }
+                return Builtin(sub, op, "UnshiftList", 2);
             case Opcode.OpNumber.OP_ARRAY_POP:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Array).GetMethod("PopElement"),
-                    Runtime);
-            }
+                return Builtin(sub, op, "PopElement", 1);
             case Opcode.OpNumber.OP_ARRAY_SHIFT:
-            {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(IP5Array).GetMethod("ShiftElement"),
-                    Runtime);
-            }
+                return Builtin(sub, op, "ShiftElement", 1);
             case Opcode.OpNumber.OP_QUOTEMETA:
             {
                 return Expression.Call(
@@ -1662,7 +1646,7 @@ namespace org.mbarbon.p.runtime
                             Expression.Assign(
                                 GetLexical(lx.LexicalIndex, lx.Slot),
                                 Expression.Call(
-                                    typeof(Builtins).GetMethod("UpgradeValue"),
+                                    typeof(Builtins).GetMethod("UpgradeScalar"),
                                     Runtime,
                                     GetLexical(lx.LexicalIndex, lx.Slot))));
 

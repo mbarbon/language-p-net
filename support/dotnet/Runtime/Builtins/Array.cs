@@ -9,31 +9,66 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Builtins
     {
-        public static void PushFlattenListObject(Runtime runtime, IList list, object value)
+        // Push
+
+        public static void PushFlattenIListObject(Runtime runtime, IList list, object value)
         {
             var p5e = value as IP5Enumerable;
             var e = value as IEnumerable;
 
             if (p5e != null)
-                PushFlattenListEnumerator(list, p5e.GetEnumerator(runtime));
+                PushFlattenIListEnumerator(list, p5e.GetEnumerator(runtime));
             else if (e != null)
-                PushFlattenListEnumerator(list, e.GetEnumerator());
+                PushFlattenIListEnumerator(list, e.GetEnumerator());
             else
                 list.Add(value);
         }
 
-        public static void PushFlattenListEnumerator(IList list, IEnumerator values)
+        public static void PushFlattenIListEnumerator(IList list, IEnumerator values)
         {
             while (values.MoveNext())
                 list.Add(values.Current);
         }
 
-        public static object PushListListObject(Runtime runtime, IList list, object value)
+        public static object PushListIListObject(Runtime runtime, IList list, object value)
         {
-            PushFlattenListObject(runtime, list, value);
+            PushFlattenIListObject(runtime, list, value);
 
             return list.Count;
         }
+
+        // Unshift
+
+        public static void UnshiftFlattenIListObject(Runtime runtime, IList list, object value)
+        {
+            var p5e = value as IP5Enumerable;
+            var e = value as IEnumerable;
+
+            if (p5e != null)
+                UnshiftFlattenIListEnumerator(list, p5e.GetEnumerator(runtime));
+            else if (e != null)
+                UnshiftFlattenIListEnumerator(list, e.GetEnumerator());
+            else
+                list.Insert(0, value);
+        }
+
+        public static void UnshiftFlattenIListEnumerator(IList list, IEnumerator values)
+        {
+            // TODO add efficient implementation for List<T>
+            int index = 0;
+
+            while (values.MoveNext())
+                list.Insert(index++, values.Current);
+        }
+
+        public static object UnshiftListIListObject(Runtime runtime, IList list, object value)
+        {
+            UnshiftFlattenIListObject(runtime, list, value);
+
+            return list.Count;
+        }
+
+        // Shift
 
         public static object ShiftElementIList(IList array)
         {
@@ -46,16 +81,7 @@ namespace org.mbarbon.p.runtime
             return e;
         }
 
-        public static object ShiftElementList<T>(List<T> array)
-        {
-            if (array.Count == 0)
-                return null;
-
-            var e = array[0];
-            array.RemoveAt(0);
-
-            return e;
-        }
+        // Join
 
         public static string JoinEnumerator(Runtime runtime, IEnumerator iter)
         {
@@ -75,6 +101,8 @@ namespace org.mbarbon.p.runtime
 
             return res.ToString();
         }
+
+        // Index/slice
 
         public static int GetItemIndex(int count, int i, bool create)
         {

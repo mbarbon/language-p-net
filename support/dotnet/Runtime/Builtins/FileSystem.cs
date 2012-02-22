@@ -6,7 +6,7 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Builtins
     {
-        public static P5Scalar Unlink(Runtime runtime, P5Array files)
+        public static P5Scalar Unlink(Runtime runtime, List<object> files)
         {
             int count = 0;
 
@@ -14,7 +14,7 @@ namespace org.mbarbon.p.runtime
             {
                 try
                 {
-                    System.IO.File.Delete(file.AsString(runtime));
+                    System.IO.File.Delete(ConvertToString(runtime, file));
 
                     count += 1;
                 }
