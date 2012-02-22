@@ -52,5 +52,22 @@ namespace org.mbarbon.p.runtime
         {
             return value.ToLower();
         }
+
+        // Quotemeta
+
+        public static string QuoteMeta(Runtime runtime, string value)
+        {
+            var t = new System.Text.StringBuilder();
+
+            foreach (char c in value)
+            {
+                if (!char.IsLetterOrDigit(c) && c != '_')
+                    t.Append('\\');
+
+                t.Append(c);
+            }
+
+            return t.ToString();
+        }
     }
 }

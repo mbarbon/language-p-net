@@ -1286,11 +1286,18 @@ namespace org.mbarbon.p.runtime
             }
             case Opcode.OpNumber.OP_EXISTS_HASH:
             {
-                return Expression.Call(
-                    Generate(sub, op.Childs[0]),
-                    typeof(P5Hash).GetMethod("Exists"),
-                    Runtime,
-                    Generate(sub, op.Childs[1]));
+                return Expression.Convert(
+                    Expression.Call(
+                        Expression.Convert(
+                            Generate(sub, op.Childs[0]),
+                            typeof(P5Hash)),
+                        typeof(P5Hash).GetMethod("ExistsKey"),
+                        Runtime,
+                        Expression.Call(
+                            typeof(Builtins).GetMethod("ConvertToKeyString"),
+                            Runtime,
+                            Generate(sub, op.Childs[1]))),
+                    typeof(object));
             }
             case Opcode.OpNumber.OP_PUSH_ELEMENT:
                 return Expression.Call(
@@ -1309,12 +1316,7 @@ namespace org.mbarbon.p.runtime
             case Opcode.OpNumber.OP_ARRAY_SHIFT:
                 return Builtin(sub, op, "ShiftElement", 1);
             case Opcode.OpNumber.OP_QUOTEMETA:
-            {
-                return Expression.Call(
-                    typeof(Builtins).GetMethod("QuoteMeta"),
-                    Runtime,
-                    Generate(sub, op.Childs[0]));
-            }
+                return Builtin(sub, op, "QuoteMeta", 1);
             case Opcode.OpNumber.OP_STRINGIFY:
                 // TODO use Builtin() binder
                 return Expression.Call(

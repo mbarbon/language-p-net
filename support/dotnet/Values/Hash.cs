@@ -91,16 +91,9 @@ namespace org.mbarbon.p.values
             return list;
         }
 
-        internal bool ExistsKey(Runtime runtime, string key)
+        public bool ExistsKey(Runtime runtime, string key)
         {
             return hash.ContainsKey(key);
-        }
-
-        public IP5Any Exists(Runtime runtime, IP5Any key)
-        {
-            string k = key.AsScalar(runtime).KeyString(runtime);
-
-            return new P5Scalar(runtime, hash.ContainsKey(k));
         }
 
         public IP5Any Delete(Runtime runtime, IP5Any key)
