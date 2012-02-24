@@ -846,7 +846,7 @@ namespace org.mbarbon.p.runtime
                 string name = PropertyForSlot(gop.Slot);
 
                 return Expression.Property(
-                    Expression.Convert(
+                    Utils.CheckedConvert(
                         Generate(sub, op.Childs[0]),
                         typeof(P5Typeglob)),
                     name);
@@ -856,7 +856,7 @@ namespace org.mbarbon.p.runtime
                 GlobSlot gop = (GlobSlot)op;
                 string name = PropertyForSlot(gop.Slot);
                 var property = Expression.Property(
-                    Expression.Convert(
+                    Utils.CheckedConvert(
                         Generate(sub, op.Childs[1]),
                         typeof(P5Typeglob)),
                     name);
@@ -1007,7 +1007,7 @@ namespace org.mbarbon.p.runtime
                 // TODO handle goto $LABEL
                 var exit_scope = new List<Expression>();
                 var value = Expression.Parameter(typeof(P5Code));
-                var code = Expression.Convert(
+                var code = Utils.CheckedConvert(
                     Builtin(sub, op, "DereferenceSubroutine", 0),
                     typeof(P5Code));
 
@@ -1156,7 +1156,7 @@ namespace org.mbarbon.p.runtime
             {
                 Expression len =
                     Expression.Call(
-                        Expression.Convert(
+                        Utils.CheckedConvert(
                             Generate(sub, op.Childs[0]),
                             typeof(IP5Array)),
                         typeof(IP5Array).GetMethod("GetCount"),
@@ -1288,7 +1288,7 @@ namespace org.mbarbon.p.runtime
             {
                 return Expression.Convert(
                     Expression.Call(
-                        Expression.Convert(
+                        Utils.CheckedConvert(
                             Generate(sub, op.Childs[0]),
                             typeof(P5Hash)),
                         typeof(P5Hash).GetMethod("ExistsKey"),
@@ -1455,7 +1455,7 @@ namespace org.mbarbon.p.runtime
 
                 return Expression.Assign(
                     lexvar,
-                    Expression.Convert(Generate(sub, op.Childs[0]), lexvar.Type));
+                    Utils.CheckedConvert(Generate(sub, op.Childs[0]), lexvar.Type));
             }
             case Opcode.OpNumber.OP_LEXICAL_PAD:
             {
@@ -1581,7 +1581,7 @@ namespace org.mbarbon.p.runtime
                 return Expression.Call(
                     typeof(Builtins).GetMethod("Bless"),
                     Runtime,
-                    Expression.Convert(
+                    Utils.CheckedConvert(
                         Generate(sub, op.Childs[0]), typeof(P5Scalar)),
                     Expression.Call(
                         typeof(Builtins).GetMethod("ConvertToString"),
@@ -1692,6 +1692,7 @@ namespace org.mbarbon.p.runtime
                     });
             }
             case Opcode.OpNumber.OP_VIVIFY_SCALAR:
+                // TODO test/handle aliasing
                 return Expression.Call(
                     Expression.Convert(
                         Generate(sub, op.Childs[0]),
@@ -1699,6 +1700,7 @@ namespace org.mbarbon.p.runtime
                     typeof(IP5Any).GetMethod("VivifyScalar"),
                     Runtime);
             case Opcode.OpNumber.OP_VIVIFY_ARRAY:
+                // TODO test/handle aliasing
                 return Expression.Call(
                     Expression.Convert(
                         Generate(sub, op.Childs[0]),
@@ -1706,6 +1708,7 @@ namespace org.mbarbon.p.runtime
                     typeof(IP5Any).GetMethod("VivifyArray"),
                     Runtime);
             case Opcode.OpNumber.OP_VIVIFY_HASH:
+                // TODO test/handle aliasing
                 return Expression.Call(
                     Expression.Convert(
                         Generate(sub, op.Childs[0]),
@@ -1938,10 +1941,7 @@ namespace org.mbarbon.p.runtime
                 return Expression.Call(
                     typeof(Builtins).GetMethod("CompileRegex"),
                     Runtime,
-                    Expression.Call(
-                        Generate(sub, re.Childs[0]),
-                        typeof(IP5Any).GetMethod("AsScalar"),
-                        Runtime),
+                    Generate(sub, re.Childs[0]),
                     Expression.Constant(re.Flags));
             }
             case Opcode.OpNumber.OP_POS:

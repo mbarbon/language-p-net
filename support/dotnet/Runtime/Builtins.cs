@@ -5,6 +5,14 @@ namespace org.mbarbon.p.runtime
 {
     public partial class Builtins
     {
+        public static T CheckedConvert<T>(object value)
+        {
+            if (!typeof(T).IsAssignableFrom(value.GetType()))
+                throw new System.InvalidCastException("Unable to cast from type " + value.GetType() + " to type " + typeof(T));
+
+            return (T)value;
+        }
+
         public static void TracePosition(string file, int line)
         {
             System.Console.WriteLine(string.Format("{0:S}:{1:D}", file, line));
@@ -323,18 +331,20 @@ namespace org.mbarbon.p.runtime
             return new P5Range(runtime, start, end);
         }
 
-        public static IP5Regex CompileRegex(Runtime runtime, P5Scalar value, int flags)
+        public static IP5Regex CompileRegex(Runtime runtime, object value, int flags)
         {
-            if (value.IsReference(runtime))
+            var scalar = value as P5Scalar;
+
+            if (scalar.IsReference(runtime))
             {
-                var rx = value.DereferenceRegex(runtime);
+                var rx = scalar.DereferenceRegex(runtime);
 
                 if (rx != null)
                     return rx;
             }
 
             if (runtime.NativeRegex)
-                return new NetRegex(value.AsString(runtime));
+                return new NetRegex(ConvertToString(runtime, value));
             else
                 throw new System.Exception("P5: Needs compiler to recompile string expression");
         }

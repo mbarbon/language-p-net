@@ -32,7 +32,7 @@ namespace org.mbarbon.p.runtime
             P5SymbolTable stash = null;
 
             if (scalar != null)
-                scalar.BlessedReferenceStash(runtime);
+                stash = scalar.BlessedReferenceStash(runtime);
 
             if (stash == null)
                 stash = runtime.SymbolTable.GetPackage(runtime, Builtins.ConvertToString(runtime, value), false);

@@ -73,6 +73,17 @@ namespace org.mbarbon.p.runtime
             return o.RuntimeType == typeof(string);
         }
 
+        public static Expression CheckedConvert(Expression exp, Type type)
+        {
+/*
+            var method = typeof(Builtins).GetMethod("CheckedConvert")
+                .MakeGenericMethod(type);
+
+            return Expression.Call(method, exp);
+*/
+            return Expression.Convert(exp, type);
+        }
+
         public static Expression CastObject(DynamicMetaObject o)
         {
             return Expression.Convert(o.Expression, typeof(object));

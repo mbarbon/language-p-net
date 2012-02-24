@@ -22,8 +22,8 @@ namespace org.mbarbon.p.runtime
                 return BindFloat(target);
             else if (Utils.IsBoolean(target))
                 return BindBoolean(target);
-            else
-                return BindFallback(target);
+
+            throw new System.Exception("Unhandled type in boolean conversion " + target.RuntimeType);
         }
 
         private DynamicMetaObject BindAny(DynamicMetaObject target)
@@ -65,15 +65,6 @@ namespace org.mbarbon.p.runtime
             return new DynamicMetaObject(
                 target.Expression,
                 Utils.RestrictToBoolean(target));
-        }
-
-        private DynamicMetaObject BindFallback(DynamicMetaObject target)
-        {
-            return new DynamicMetaObject(
-                Expression.Convert(
-                    Expression.Convert(target.Expression, typeof(bool)),
-                    typeof(object)),
-                Utils.RestrictToRuntimeType(target));
         }
 
         Runtime runtime;

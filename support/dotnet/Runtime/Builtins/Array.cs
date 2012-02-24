@@ -298,7 +298,7 @@ namespace org.mbarbon.p.runtime
 
         public static object SliceListListEnumerator(Runtime runtime, List<object> array, IEnumerator keys)
         {
-            var list = new List<object>();
+            var list = new List<IP5Any>();
             bool found = false;
 
             while (keys.MoveNext())
@@ -307,13 +307,15 @@ namespace org.mbarbon.p.runtime
 
                 if (idx < array.Count)
                     found = true;
-                list.Add(GetListItemOrUndefInt(array, idx, false));
+                list.Add(UpgradeScalar(
+                             runtime, GetListItemOrUndefInt(array, idx, false)));
             }
 
+            // TODO return a List<object> subclass
             if (found)
-                return list;
+                return new P5List(runtime, list);
 
-            return new List<object>();
+            return new P5List(runtime);
         }
 
         public static object Sort(Runtime runtime, List<object> array)
