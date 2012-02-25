@@ -343,9 +343,6 @@ namespace org.mbarbon.p.values
 
         public virtual IP5Any LocalizeElement(Runtime runtime, int index)
         {
-            if (index == -1)
-                throw new System.Exception("Modification of non-creatable array value attempted, subscript " + index.ToString());
-
             var value = array[index];
             var new_value = new P5Scalar(runtime);
 

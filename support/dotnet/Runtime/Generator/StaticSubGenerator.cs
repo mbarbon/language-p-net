@@ -20,8 +20,6 @@ namespace org.mbarbon.p.runtime
             new Type[] { typeof(Runtime), typeof(double) };
         private static Type[] ProtoRuntimeExpressionType =
             new Type[] { typeof(Runtime), typeof(ExpressionType) };
-        private static Type[] ProtoRuntimeContextValuesBool =
-            new Type[] { typeof(Runtime), typeof(Opcode.ContextValues), typeof(bool) };
 
         internal StaticSubGenerator(StaticModuleGenerator module_generator,
                                     Dictionary<Subroutine, StaticModuleGenerator.SubInfo> subroutines)
@@ -30,7 +28,7 @@ namespace org.mbarbon.p.runtime
             Subroutines = subroutines;
         }
 
-        protected override Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, params Expression[] extra)
+        protected override Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, System.Type delegateType = null, params Expression[] extra)
         {
             return null;
         }

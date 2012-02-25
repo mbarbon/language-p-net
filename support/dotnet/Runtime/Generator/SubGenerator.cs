@@ -766,12 +766,17 @@ namespace org.mbarbon.p.runtime
                 typeof(object), parms, exps);
         }
 
+        protected Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, params Expression[] extra)
+        {
+            return Builtin(sub, op, prefix, count, null, extra);
+        }
+
         protected abstract Expression ConstantInteger(int value);
         protected abstract Expression ConstantFloat(double value);
         protected abstract Expression ConstantSub(Subroutine sub);
         protected abstract Expression ConstantRegex(Subroutine sub);
 
-        protected abstract Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, params Expression[] extra);
+        protected abstract Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, System.Type delegateType = null, params Expression[] extra);
         protected abstract Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation);
         protected abstract Expression UnaryIncrement(Subroutine sub, Opcode op, ExpressionType operation);
         protected abstract Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation);
@@ -1837,7 +1842,10 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("LocalizeArrayElement"),
                     Runtime,
                     Generate(sub, le.Childs[0]),
-                    Generate(sub, le.Childs[1]),
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("ConvertToInteger"),
+                        Runtime,
+                        Generate(sub, le.Childs[1])),
                     GetTemporary(le.Index, typeof(SavedValue)));
             }
             case Opcode.OpNumber.OP_RESTORE_ARRAY_ELEMENT:
@@ -1857,7 +1865,10 @@ namespace org.mbarbon.p.runtime
                     typeof(Builtins).GetMethod("LocalizeHashElement"),
                     Runtime,
                     Generate(sub, le.Childs[0]),
-                    Generate(sub, le.Childs[1]),
+                    Expression.Call(
+                        typeof(Builtins).GetMethod("ConvertToString"),
+                        Runtime,
+                        Generate(sub, le.Childs[1])),
                     GetTemporary(le.Index, typeof(SavedValue)));
             }
             case Opcode.OpNumber.OP_RESTORE_HASH_ELEMENT:

@@ -32,6 +32,8 @@ namespace org.mbarbon.p.runtime
 
             if (typeof(IP5Any).IsAssignableFrom(type))
                 yield return "IP5Any";
+            if (typeof(IP5Array).IsAssignableFrom(type))
+                yield return "IP5Array";
             if (typeof(IList).IsAssignableFrom(type))
                 yield return "IList";
             if (typeof(System.Collections.IEnumerable).IsAssignableFrom(type))

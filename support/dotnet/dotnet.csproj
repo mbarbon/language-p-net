@@ -65,6 +65,7 @@
     <Compile Include="Runtime\Builtins\Conversion.cs" />
     <Compile Include="Runtime\Builtins\References.cs" />
     <Compile Include="Runtime\Builtins\Objects.cs" />
+    <Compile Include="Runtime\Builtins\Local.cs" />
     <Compile Include="Runtime\NetGlue.cs" />
     <Compile Include="Runtime\Overload.cs" />
     <Compile Include="Values\List.cs" />

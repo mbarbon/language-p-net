@@ -18,7 +18,7 @@ namespace org.mbarbon.p.runtime
             module_generator = _module_generator;
         }
 
-        protected override Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, params Expression[] extra)
+        protected override Expression Builtin(Subroutine sub, Opcode op, string prefix, int count, System.Type delegateType = null, params Expression[] extra)
         {
             var binder = new P5BuiltinBinder(runtime, prefix, count);
             var exps = new Expression[op.Childs.Length + 1 + extra.Length];
@@ -29,7 +29,7 @@ namespace org.mbarbon.p.runtime
             foreach (var exp in extra)
                 exps[index++] = Expression.Convert(exp, typeof(object));
 
-            var res = Utils.GenerateCall(exps, binder);
+            var res = Utils.GenerateCall(exps, binder, delegateType);
 
             if (res.Type == typeof(int) ||
                 res.Type == typeof(bool) ||
@@ -120,7 +120,7 @@ namespace org.mbarbon.p.runtime
         protected override Expression StringOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return BinaryOperator<object>(
-                sub, op, new P5StringOperationBinder(operation, runtime));
+                sub, op, new P5StringOperationBinder(runtime, operation));
         }
 
         protected override Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
@@ -160,7 +160,7 @@ namespace org.mbarbon.p.runtime
             var binder = new P5ArrayItemAssignmentBinder(runtime);
             var exps = new Expression[] { null, lvalue, index, rvalue };
 
-            return Utils.GenerateCall(exps, binder);
+            return Utils.GenerateCall(exps, binder, null);
         }
 
         protected override Expression HashItem(Subroutine sub, Opcode.ContextValues cxt, Expression value, Expression index, bool create)
@@ -175,7 +175,7 @@ namespace org.mbarbon.p.runtime
             var binder = new P5HashItemAssignmentBinder(runtime);
             var exps = new Expression[] { null, lvalue, index, rvalue };
 
-            return Utils.GenerateCall(exps, binder);
+            return Utils.GenerateCall(exps, binder, null);
         }
 
         protected override Expression Iterator(Subroutine sub, Expression value)

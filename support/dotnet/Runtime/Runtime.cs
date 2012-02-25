@@ -11,8 +11,8 @@ namespace org.mbarbon.p.runtime
 
     public struct SavedValue
     {
-        public IP5Any container;
-        public IP5Any value;
+        public object container;
+        public object value;
         public int int_key;
         public string str_key;
     }

@@ -176,37 +176,31 @@ namespace org.mbarbon.p.runtime
             return BindingRestrictions.GetTypeRestriction(a.Expression, typeof(string));
         }
 
-        public static Expression GenerateCall(Expression[] expressions, DynamicMetaObjectBinder binder)
+        private static System.Type DelegateType(int count)
         {
-            System.Type delegateType, siteType;
-            CallSite callSite;
-
-            // TODO could use reflection
-            switch (expressions.Length - 1)
+            switch (count)
             {
             case 1:
-                delegateType = typeof(Func<CallSite, object, object>);
-                siteType = typeof(CallSite<Func<CallSite, object, object>>);
-                callSite = CallSite<Func<CallSite, object, object>>.Create(binder);
-                break;
+                return typeof(Func<CallSite, object, object>);
             case 2:
-                delegateType = typeof(Func<CallSite, object, object, object>);
-                siteType = typeof(CallSite<Func<CallSite, object, object, object>>);
-                callSite = CallSite<Func<CallSite, object, object, object>>.Create(binder);
-                break;
+                return typeof(Func<CallSite, object, object, object>);
             case 3:
-                delegateType = typeof(Func<CallSite, object, object, object, object>);
-                siteType = typeof(CallSite<Func<CallSite, object, object, object, object>>);
-                callSite = CallSite<Func<CallSite, object, object, object, object>>.Create(binder);
-                break;
+                return typeof(Func<CallSite, object, object, object, object>);
             case 4:
-                delegateType = typeof(Func<CallSite, object, object, object, object, object>);
-                siteType = typeof(CallSite<Func<CallSite, object, object, object, object, object>>);
-                callSite = CallSite<Func<CallSite, object, object, object, object, object>>.Create(binder);
-                break;
+                return typeof(Func<CallSite, object, object, object, object, object>);
             default:
-                throw new System.Exception("Unhandled argument count " + expressions.Length);
+                throw new System.Exception("Unhandled argument count " + count);
             }
+        }
+
+        public static Expression GenerateCall(Expression[] expressions, DynamicMetaObjectBinder binder, System.Type delegateType)
+        {
+            if (delegateType == null)
+                delegateType = DelegateType(expressions.Length - 1);
+            System.Type siteType =
+                typeof(CallSite<>).MakeGenericType(delegateType);
+            CallSite callSite = siteType.GetMethod("Create").Invoke(
+                null, new object[] { binder }) as CallSite;
 
             expressions[0] = Expression.Constant(callSite);
 
