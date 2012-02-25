@@ -18,26 +18,6 @@ namespace org.mbarbon.p.runtime
             module_generator = _module_generator;
         }
 
-        protected override Expression ConstantInteger(int value)
-        {
-            return Expression.Constant(new P5Scalar(runtime, value));
-        }
-
-        protected override Expression ConstantFloat(double value)
-        {
-            return Expression.Constant(new P5Scalar(runtime, value));
-        }
-
-        protected override Expression ConstantSub(Subroutine sub)
-        {
-            return Expression.Constant(module_generator.GetSubroutine(sub));
-        }
-
-        protected override Expression ConstantRegex(Subroutine sub)
-        {
-            return Expression.Constant(module_generator.GetRegex(sub));
-        }
-
         // TODO duplicated in StaticSubGenerator
         protected Expression UnaryOperator(Subroutine sub, Opcode op, CallSiteBinder binder)
         {
@@ -142,6 +122,26 @@ namespace org.mbarbon.p.runtime
         protected override void DefinePackage(string pack)
         {
             runtime.SymbolTable.GetPackage(runtime, pack, true);
+        }
+
+        protected override Expression ConstantInteger(int value)
+        {
+            return Expression.Constant(new P5Scalar(runtime, value));
+        }
+
+        protected override Expression ConstantFloat(double value)
+        {
+            return Expression.Constant(new P5Scalar(runtime, value));
+        }
+
+        protected override Expression ConstantSub(Subroutine sub)
+        {
+            return Expression.Constant(module_generator.GetSubroutine(sub));
+        }
+
+        protected override Expression ConstantRegex(Subroutine sub)
+        {
+            return Expression.Constant(module_generator.GetRegex(sub));
         }
 
         protected override Expression AccessGlobal(Expression runtime_exp, Opcode.Sigil slot, string name, bool create)
