@@ -7,7 +7,7 @@ namespace org.mbarbon.p.runtime
 {
     public class P5NumericCompareBinder : BinaryOperationBinder
     {
-        public P5NumericCompareBinder(ExpressionType _op, Runtime _runtime) :
+        public P5NumericCompareBinder(Runtime _runtime, ExpressionType _op) :
             base(_op)
         {
             runtime = _runtime;

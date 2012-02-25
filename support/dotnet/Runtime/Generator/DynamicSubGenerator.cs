@@ -40,13 +40,13 @@ namespace org.mbarbon.p.runtime
         protected override Expression UnaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return UnaryOperator(
-                sub, op, new P5UnaryOperationBinder(operation, runtime));
+                sub, op, new P5UnaryOperationBinder(runtime, operation));
         }
 
         protected override Expression UnaryIncrement(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return UnaryOperator(
-                sub, op, new P5UnaryIncrementBinder(operation, runtime));
+                sub, op, new P5UnaryIncrementBinder(runtime, operation));
         }
 
         // TODO duplicated in StaticSubGenerator
@@ -84,19 +84,19 @@ namespace org.mbarbon.p.runtime
         protected override Expression BinaryOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return BinaryOperator<object>(
-                sub, op, new P5BinaryOperationBinder(operation, runtime));
+                sub, op, new P5BinaryOperationBinder(runtime, operation));
         }
 
         protected override Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return BinaryOperator<object>(
-                sub, op, new P5NumericCompareBinder(operation, runtime));
+                sub, op, new P5NumericCompareBinder(runtime, operation));
         }
 
         protected override Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
         {
             return BinaryOperator<object>(
-                sub, op, new P5StringCompareBinder(operation, runtime));
+                sub, op, new P5StringCompareBinder(runtime, operation));
         }
 
         protected override Expression ScalarAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)

@@ -7,7 +7,7 @@ namespace org.mbarbon.p.runtime
 {
     public class P5UnaryIncrementBinder : DynamicMetaObjectBinder
     {
-        public P5UnaryIncrementBinder(ExpressionType _operation, Runtime _runtime)
+        public P5UnaryIncrementBinder(Runtime _runtime, ExpressionType _operation)
         {
             runtime = _runtime;
             operation = _operation;

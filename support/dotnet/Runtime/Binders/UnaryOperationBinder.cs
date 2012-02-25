@@ -7,7 +7,7 @@ namespace org.mbarbon.p.runtime
 {
     public class P5UnaryOperationBinder : UnaryOperationBinder
     {
-        public P5UnaryOperationBinder(ExpressionType op, Runtime runtime) :
+        public P5UnaryOperationBinder(Runtime runtime, ExpressionType op) :
             base(op)
         {
             Runtime = runtime;

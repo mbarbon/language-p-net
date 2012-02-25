@@ -7,7 +7,7 @@ namespace org.mbarbon.p.runtime
 {
     public class P5BinaryOperationBinder : BinaryOperationBinder
     {
-        public P5BinaryOperationBinder(ExpressionType op, Runtime runtime) :
+        public P5BinaryOperationBinder(Runtime runtime, ExpressionType op) :
             base(op)
         {
             Runtime = runtime;

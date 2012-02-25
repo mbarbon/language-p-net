@@ -12,10 +12,16 @@ namespace org.mbarbon.p.runtime
 {
     internal class StaticSubGenerator : SubGenerator
     {
+        private static Type[] ProtoRuntime =
+            new Type[] { typeof(Runtime) };
         private static Type[] ProtoRuntimeInt =
             new Type[] { typeof(Runtime), typeof(int) };
         private static Type[] ProtoRuntimeDouble =
             new Type[] { typeof(Runtime), typeof(double) };
+        private static Type[] ProtoRuntimeExpressionType =
+            new Type[] { typeof(Runtime), typeof(ExpressionType) };
+        private static Type[] ProtoRuntimeContextValuesBool =
+            new Type[] { typeof(Runtime), typeof(Opcode.ContextValues), typeof(bool) };
 
         internal StaticSubGenerator(StaticModuleGenerator module_generator,
                                     Dictionary<Subroutine, StaticModuleGenerator.SubInfo> subroutines)
@@ -51,9 +57,9 @@ namespace org.mbarbon.p.runtime
             return UnaryOperator(
                 sub, op,
                 Expression.New(
-                    typeof(P5UnaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
+                    typeof(P5UnaryOperationBinder).GetConstructor(ProtoRuntimeExpressionType),
+                    ModuleGenerator.InitRuntime,
+                    Expression.Constant(operation)));
         }
 
         protected override Expression UnaryIncrement(Subroutine sub, Opcode op, ExpressionType operation)
@@ -61,9 +67,9 @@ namespace org.mbarbon.p.runtime
             return UnaryOperator(
                 sub, op,
                 Expression.New(
-                    typeof(P5UnaryIncrementBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
+                    typeof(P5UnaryIncrementBinder).GetConstructor(ProtoRuntimeExpressionType),
+                    ModuleGenerator.InitRuntime,
+                    Expression.Constant(operation)));
         }
 
         protected Expression BinaryOperator<Result>(Subroutine sub, Expression left, Expression right, Expression binder)
@@ -105,9 +111,9 @@ namespace org.mbarbon.p.runtime
             return BinaryOperator<object>(
                 sub, op,
                 Expression.New(
-                    typeof(P5BinaryOperationBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
+                    typeof(P5BinaryOperationBinder).GetConstructor(ProtoRuntimeExpressionType),
+                    ModuleGenerator.InitRuntime,
+                    Expression.Constant(operation)));
         }
 
         protected override Expression NumericRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
@@ -115,9 +121,9 @@ namespace org.mbarbon.p.runtime
             return BinaryOperator<object>(
                 sub, op,
                 Expression.New(
-                    typeof(P5NumericCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
+                    typeof(P5NumericCompareBinder).GetConstructor(ProtoRuntimeExpressionType),
+                    ModuleGenerator.InitRuntime,
+                    Expression.Constant(operation)));
         }
 
         protected override Expression StringRelOperator(Subroutine sub, Opcode op, ExpressionType operation)
@@ -125,9 +131,9 @@ namespace org.mbarbon.p.runtime
             return BinaryOperator<object>(
                 sub, op,
                 Expression.New(
-                    typeof(P5StringCompareBinder).GetConstructor(new[] { typeof(ExpressionType), typeof(Runtime) }),
-                    Expression.Constant(operation),
-                    ModuleGenerator.InitRuntime));
+                    typeof(P5StringCompareBinder).GetConstructor(ProtoRuntimeExpressionType),
+                    ModuleGenerator.InitRuntime,
+                    Expression.Constant(operation)));
         }
 
         protected override Expression ScalarAssign(Subroutine sub, Opcode.ContextValues cxt, Expression lvalue, Expression rvalue)
@@ -135,7 +141,7 @@ namespace org.mbarbon.p.runtime
             return BinaryOperator<P5Scalar>(
                 sub, lvalue, rvalue,
                 Expression.New(
-                    typeof(P5ScalarAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime) }),
+                    typeof(P5ScalarAssignmentBinder).GetConstructor(ProtoRuntime),
                     ModuleGenerator.InitRuntime));
         }
 
@@ -144,7 +150,7 @@ namespace org.mbarbon.p.runtime
             return BinaryOperator<object>(
                 sub, lvalue, rvalue,
                 Expression.New(
-                    typeof(P5ArrayAssignmentBinder).GetConstructor(new Type[] { typeof(Runtime), typeof(Opcode.ContextValues), typeof(bool) }),
+                    typeof(P5ArrayAssignmentBinder).GetConstructor(ProtoRuntimeContextValuesBool),
                     ModuleGenerator.InitRuntime,
                     Expression.Constant(cxt),
                     Expression.Constant(common)));
@@ -155,7 +161,7 @@ namespace org.mbarbon.p.runtime
             return UnaryOperator(
                 sub, op,
                 Expression.New(
-                    typeof(P5DefinedBinder).GetConstructor(new[] { typeof(Runtime) }),
+                    typeof(P5DefinedBinder).GetConstructor(ProtoRuntime),
                     ModuleGenerator.InitRuntime));
         }
 
